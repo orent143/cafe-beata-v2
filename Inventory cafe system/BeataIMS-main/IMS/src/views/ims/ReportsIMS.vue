@@ -107,10 +107,9 @@ export default {
     getStockStatus(quantity, threshold) {
       // Ensure quantity is treated as a number
       quantity = Number(quantity);
-      threshold = Number(threshold || 10);
       
       if (quantity <= 0) return "Out of Stock";
-      if (quantity <= threshold) return "Low Stock";
+      if (quantity <= 10) return "Low Stock";
       return "In Stock";
     },
     
@@ -163,7 +162,7 @@ export default {
       this.filteredItems.forEach(item => {
         if (item.Quantity <= 0) {
           outOfStock++;
-        } else if (item.Quantity <= item.Threshold) {
+        } else if (item.Quantity <= 10) {
           lowStock++;
         }
       });

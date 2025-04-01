@@ -60,8 +60,8 @@
           </div>
           <div class="card-content">
             <h3>Total Orders</h3>
-            <p class="product-name">{{ topSellingProduct }}</p>
-            <p class="subtitle">Orders</p>
+            <p class="amount">{{ Math.round(animatedOrdersCount) }}</p>
+            <p class="subtitle">Orders Completed</p>
           </div>
         </div>
       </div>
@@ -150,13 +150,14 @@ export default {
       lowStockCount: 0,
       outOfStockCount: 0,
       lowStockItems: [],
-      topSellingProduct: 'Espresso',
+      ordersCount: 0,
       recentActivities: [],
       recentOrders: [],
       totalRevenue: 0, // This will store the fetched total revenue
       animatedTotalRevenue: 0,
       animatedTotalProducts: 0,
       animatedLowStockCount: 0,
+      animatedOrdersCount: 0
     };
   },
   methods: {
@@ -294,25 +295,39 @@ export default {
     },
     goToLowStockReport() {
       this.$router.push('/reportsims/lowStock');
+    },
+    async fetchTotalOrders() {
+      try {
+        const response = await axios.get(`${ORDER_SUMMARY_API}/orders/history`);
+        this.ordersCount = response.data.length;
+        console.log(`Total orders: ${this.ordersCount}`);
+      } catch (error) {
+        console.error("Error fetching total orders:", error);
+        this.ordersCount = 0;
+      }
     }
   },
   watch: {
     totalRevenue(newVal) {
-      this.animateValue('animatedTotalRevenue', newVal); // Animate the total revenue
+      this.animateValue('animatedTotalRevenue', newVal);
     },
     totalProducts(newVal) {
       this.animateValue('animatedTotalProducts', newVal);
     },
     lowStockCount(newVal) {
       this.animateValue('animatedLowStockCount', newVal);
+    },
+    ordersCount(newVal) {
+      this.animateValue('animatedOrdersCount', newVal);
     }
   },
   mounted() {
-    this.fetchTotalRevenue(); // Fetch total revenue when the component is mounted
+    this.fetchTotalRevenue();
     this.fetchTotalProducts();
     this.fetchTotalLowStocks();
     this.fetchActivityLogs();
     this.fetchRecentOrders();
+    this.fetchTotalOrders();
   }
 };
 </script>

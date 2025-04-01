@@ -6,6 +6,8 @@ from datetime import datetime, timedelta
 import logging
 import json
 import statistics
+import asyncio
+from fastapi.background import BackgroundTasks
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -41,6 +43,53 @@ class ForecastResponse(BaseModel):
     forecast_data: List[Dict]
     product_forecasts: List[Dict]
     metrics: Dict
+
+# Global variable to keep track of the background task
+background_fix_task = None
+
+# Background task to fix sales records with missing data
+async def fix_sales_records_background():
+    """
+    Background task to fix sales records with missing product information
+    This runs every 6 hours and updates any sales records with empty fields
+    """
+    while True:
+        try:
+            logger.info("Running background task to fix sales records with missing data")
+            with db_connection() as db:
+                cursor = db.cursor()
+                
+                # Update sales records with missing product information
+                cursor.execute("""
+                    UPDATE sales s
+                    JOIN inventoryproduct ip ON s.product_id = ip.id
+                    SET 
+                        s.product_name = ip.ProductName,
+                        s.unit_price = ip.UnitPrice,
+                        s.Image = ip.Image
+                    WHERE 
+                        s.product_name = '' OR s.product_name IS NULL
+                        OR s.unit_price = 0 OR s.unit_price IS NULL
+                        OR s.Image IS NULL
+                """)
+                
+                records_updated = cursor.rowcount
+                db.commit()
+                
+                logger.info(f"Fixed {records_updated} sales records with missing data")
+                cursor.close()
+        except Exception as e:
+            logger.error(f"Error in fix_sales_records_background: {str(e)}")
+        
+        # Sleep for 6 hours before running again
+        await asyncio.sleep(6 * 60 * 60)  # 6 hours in seconds
+
+# Start the background task when the module is loaded
+def start_background_task():
+    global background_fix_task
+    if background_fix_task is None:
+        background_fix_task = asyncio.create_task(fix_sales_records_background())
+        logger.info("Started background task to fix sales records")
 
 # Fetch sales data
 @SalesRouter.get("/sales", response_model=List[SalesResponse])
@@ -136,28 +185,50 @@ async def get_daily_sales_data(date: Optional[str] = None, db=Depends(get_db)):
 @SalesRouter.post("/update")
 async def update_sales(sales_update: SalesUpdateRequest, db=Depends(get_db)):
     try:
-        cursor = db.cursor()
+        cursor = db.cursor(dictionary=True)
 
-        cursor.execute("SELECT Quantity FROM inventoryproduct WHERE id = %s", (sales_update.product_id,))
+        # Get product information including name, price, and image
+        cursor.execute("""
+            SELECT id, ProductName, UnitPrice, Quantity, Image 
+            FROM inventoryproduct 
+            WHERE id = %s
+        """, (sales_update.product_id,))
+        
         product = cursor.fetchone()
 
         if not product:
             cursor.close()
             raise HTTPException(status_code=404, detail="Product not found")
 
-        available_stock = product[0]
+        available_stock = product['Quantity']
 
         if available_stock < sales_update.quantity_sold:
             cursor.close()
             raise HTTPException(status_code=400, detail="Not enough stock available")
 
+        # Insert into sales with product details
         cursor.execute("""
-            INSERT INTO sales (product_id, quantity_sold, remitted, created_at)
-            VALUES (%s, %s, %s, NOW())
+            INSERT INTO sales (
+                product_id, 
+                product_name, 
+                Image, 
+                quantity_sold, 
+                unit_price,
+                remitted, 
+                created_at
+            )
+            VALUES (%s, %s, %s, %s, %s, %s, NOW())
             ON DUPLICATE KEY UPDATE 
                 quantity_sold = quantity_sold + VALUES(quantity_sold), 
                 remitted = remitted + VALUES(remitted)
-        """, (sales_update.product_id, sales_update.quantity_sold, sales_update.remitted))
+        """, (
+            sales_update.product_id, 
+            product['ProductName'], 
+            product['Image'], 
+            sales_update.quantity_sold, 
+            product['UnitPrice'],
+            sales_update.remitted
+        ))
 
         cursor.execute("""
             UPDATE inventoryproduct 
@@ -261,7 +332,7 @@ async def generate_sales_forecast(days_ahead: int = Query(7, ge=1, le=30), db=De
         end_date = datetime.now().date()
         start_date = end_date - timedelta(days=30)
         
-        # Get inventory system daily sales totals
+        # Get inventory system daily sales totals - this query doesn't depend on product names
         cursor.execute("""
             SELECT 
                 DATE(created_at) as sale_date,
@@ -275,19 +346,20 @@ async def generate_sales_forecast(days_ahead: int = Query(7, ge=1, le=30), db=De
         
         daily_sales = cursor.fetchall()
         
-        # Get product level sales data
+        # Modified query to handle missing product data by using LEFT JOIN
+        # and COALESCE to handle NULL values
         cursor.execute("""
             SELECT 
-                p.id as product_id,
-                p.ProductName as product_name,
+                s.product_id,
+                COALESCE(p.ProductName, CONCAT('Product ID: ', s.product_id)) as product_name,
                 p.Image as image_url,
                 SUM(s.quantity_sold) as total_quantity,
                 SUM(s.remitted) as total_sales,
                 COUNT(DISTINCT DATE(s.created_at)) as days_with_sales
             FROM sales s
-            JOIN inventoryproduct p ON s.product_id = p.id
+            LEFT JOIN inventoryproduct p ON s.product_id = p.id
             WHERE DATE(s.created_at) BETWEEN %s AND %s AND s.quantity_sold > 0
-            GROUP BY p.id, p.ProductName, p.Image
+            GROUP BY s.product_id, product_name, image_url
             ORDER BY total_sales DESC
         """, (start_date, end_date))
         
@@ -299,12 +371,28 @@ async def generate_sales_forecast(days_ahead: int = Query(7, ge=1, le=30), db=De
         # Format historical data
         historical_data = []
         for day in daily_sales:
-            if day['sale_date'] and day['daily_total']:
+            if day['sale_date']:
                 historical_data.append({
                     "date": day['sale_date'].strftime('%Y-%m-%d'),
-                    "sales": float(day['daily_total']),
+                    "sales": float(day['daily_total'] if day['daily_total'] else 0),
                     "items": int(day['items_sold'] if day['items_sold'] else 0)
                 })
+        
+        # If we have no historical data, return empty forecast
+        if len(historical_data) == 0:
+            return {
+                "historical_data": [],
+                "forecast_data": [],
+                "product_forecasts": [],
+                "metrics": {
+                    "predicted_sales_total": 0,
+                    "sales_growth_rate": 0,
+                    "predicted_orders": 0,
+                    "orders_growth_rate": 0,
+                    "top_category": "",
+                    "top_category_items": 0
+                }
+            }
         
         # Simple forecasting based on moving average and trend analysis
         forecast_data = []
@@ -414,4 +502,123 @@ async def generate_sales_forecast(days_ahead: int = Query(7, ge=1, le=30), db=De
         
     except Exception as e:
         logger.error(f"Error generating sales forecast: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Internal Server Error: {str(e)}")
+
+@SalesRouter.get("/forecasting/historical-sales", response_model=List[dict])
+async def get_historical_sales_for_forecasting(days: int = Query(30, ge=7, le=90), db=Depends(get_db)):
+    """
+    Get historical sales data specifically for forecasting chart
+    Returns daily sales data from the sales table for the specified number of days
+    """
+    try:
+        cursor = db.cursor(dictionary=True)
+        
+        # Calculate date range
+        end_date = datetime.now().date()
+        start_date = end_date - timedelta(days=days)
+        
+        logger.info(f"Fetching historical sales data for forecasting from {start_date} to {end_date}")
+        
+        # Modified query to handle all cases - even if database is empty or has no data in the range
+        cursor.execute("""
+            SELECT 
+                DATE(created_at) as sale_date,
+                SUM(remitted) as daily_total,
+                SUM(quantity_sold) as items_sold
+            FROM sales
+            WHERE DATE(created_at) BETWEEN %s AND %s
+            GROUP BY DATE(created_at)
+            ORDER BY sale_date ASC
+        """, (start_date, end_date))
+        
+        sales_data = cursor.fetchall()
+        cursor.close()
+        
+        # Format the response
+        result = []
+        for day in sales_data:
+            if day['sale_date']:
+                result.append({
+                    "date": day['sale_date'].strftime('%Y-%m-%d'),
+                    "sales": float(day['daily_total'] if day['daily_total'] else 0),
+                    "items": int(day['items_sold'] if day['items_sold'] else 0)
+                })
+        
+        # If no data found, return at least one data point to prevent frontend errors
+        if not result:
+            today = datetime.now().date()
+            result.append({
+                "date": today.strftime('%Y-%m-%d'),
+                "sales": 0.0,
+                "items": 0
+            })
+            
+        return result
+        
+    except Exception as e:
+        logger.error(f"Error getting historical sales data for forecasting: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Internal Server Error: {str(e)}")
+
+# Add new endpoint to update existing sales records with missing product information
+@SalesRouter.post("/update-product-details")
+async def update_sales_product_details(db=Depends(get_db)):
+    """
+    Update existing sales records to include product names and details if they're missing.
+    This helps fix old sales records that don't have product information.
+    """
+    try:
+        cursor = db.cursor(dictionary=True)
+        records_updated = 0
+        
+        # Find sales records with missing product names
+        cursor.execute("""
+            SELECT s.id, s.product_id 
+            FROM sales s 
+            WHERE s.product_name IS NULL OR s.product_name = ''
+        """)
+        
+        sales_to_update = cursor.fetchall()
+        
+        if not sales_to_update:
+            return {"message": "No sales records need updating", "updated": 0}
+            
+        # Update each record with missing product information
+        for sale in sales_to_update:
+            # Get product information
+            cursor.execute("""
+                SELECT ProductName, UnitPrice, Image 
+                FROM inventoryproduct 
+                WHERE id = %s
+            """, (sale["product_id"],))
+            
+            product = cursor.fetchone()
+            
+            if product:
+                # Update the sales record with product details
+                cursor.execute("""
+                    UPDATE sales 
+                    SET 
+                        product_name = %s,
+                        unit_price = %s,
+                        Image = %s
+                    WHERE id = %s
+                """, (
+                    product["ProductName"],
+                    product["UnitPrice"],
+                    product["Image"],
+                    sale["id"]
+                ))
+                records_updated += 1
+        
+        db.commit()
+        cursor.close()
+        
+        return {
+            "message": "Sales records updated successfully",
+            "updated": records_updated
+        }
+        
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Error updating sales product details: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Internal Server Error: {str(e)}")

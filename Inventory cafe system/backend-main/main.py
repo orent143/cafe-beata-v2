@@ -15,7 +15,7 @@ from model.inventoryproduct import InventoryRouter
 from model.stockin import StockRouter
 from model.createorder import CreateOrderRouter
 from model.ordersummary import OrderSummaryRouter
-from model.sales import SalesRouter
+from model.sales import SalesRouter, start_background_task
 from model.reports import ReportRouter
 from model.categories import CategoryRouter
 from model.suppliers import SupplierRouter
@@ -165,6 +165,13 @@ async def startup_event():
         logger.error(f"Error initializing database services: {e}")
     
     logger.info("Inventory System API is ready")
+    
+    # Start background task
+    try:
+        logger.info("Starting background task...")
+        start_background_task()
+    except Exception as e:
+        logger.error(f"Error starting background task: {e}")
     
 # Shutdown event
 @app.on_event("shutdown")

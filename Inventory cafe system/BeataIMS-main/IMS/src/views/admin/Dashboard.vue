@@ -72,12 +72,33 @@
         </div>
       </main>
     </div>
+    
+    <!-- Add maintenance section -->
+    <div class="maintenance-section">
+      <div class="card maintenance-card">
+        <h3>Database Maintenance</h3>
+        <p>Use these tools to fix and maintain the database.</p>
+        
+        <div class="maintenance-actions">
+          <button class="maintenance-btn" @click="fixSalesRecords" :disabled="isFixingRecords">
+            <i class="pi pi-refresh" :class="{'pi-spin': isFixingRecords}"></i>
+            Fix Sales Records ({{ isFixingRecords ? 'Processing...' : 'Add Missing Product Names' }})
+          </button>
+          <div v-if="fixResult" class="fix-result" :class="{ 'success': fixResult.success }">
+            {{ fixResult.message }}
+          </div>
+        </div>
+      </div>
+    </div>
 </div>
   </template>
   
   <script>
   import sidebar from '@/components/admin/sidebar.vue';
   import Header from '@/components/Header.vue';
+  import axios from 'axios';
+  import { SALES_API } from '@/api/config.js';
+  
   export default {
     name: 'Dashboard',
     components: {
@@ -91,7 +112,36 @@
           { id: '1235', customer: 'Jane Smith', items: '2', total: '32.50', status: 'Pending' },
           { id: '1236', customer: 'Bob Wilson', items: '1', total: '18.00', status: 'Processing' },
           { id: '1237', customer: 'Alice Brown', items: '4', total: '67.25', status: 'Completed' },
-        ]
+        ],
+        isFixingRecords: false,
+        fixResult: null
+      }
+    },
+    methods: {
+      // Add method to fix sales records with missing product information
+      async fixSalesRecords() {
+        try {
+          this.isFixingRecords = true;
+          this.fixResult = null;
+          
+          // Call the API endpoint to update sales records
+          const response = await axios.post(`${SALES_API}/update-product-details`);
+          
+          this.fixResult = {
+            success: true,
+            message: `Success! Updated ${response.data.updated} sales records with missing product information.`
+          };
+          
+          console.log('Fixed sales records:', response.data);
+        } catch (error) {
+          console.error('Error fixing sales records:', error);
+          this.fixResult = {
+            success: false,
+            message: `Error: ${error.response?.data?.detail || error.message || 'Unknown error'}`
+          };
+        } finally {
+          this.isFixingRecords = false;
+        }
       }
     }
   }
@@ -258,5 +308,59 @@
     .chart, .recent-orders {
       grid-column: span 1;
     }
+  }
+  
+  /* Add styles for maintenance section */
+  .maintenance-section {
+    margin-left: 230px;
+    padding: 0 20px 20px;
+  }
+  
+  .maintenance-card {
+    margin-top: 20px;
+  }
+  
+  .maintenance-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 15px;
+  }
+  
+  .maintenance-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    background: #2196F3;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: background 0.3s;
+  }
+  
+  .maintenance-btn:hover {
+    background: #1976D2;
+  }
+  
+  .maintenance-btn:disabled {
+    background: #90CAF9;
+    cursor: not-allowed;
+  }
+  
+  .fix-result {
+    padding: 10px;
+    border-radius: 5px;
+    background: #FFECB3;
+    color: #FF8F00;
+    margin-top: 10px;
+  }
+  
+  .fix-result.success {
+    background: #E8F5E9;
+    color: #2E7D32;
   }
   </style>

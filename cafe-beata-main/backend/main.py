@@ -597,6 +597,94 @@ async def update_order_status(order_id: str, status_update: OrderStatusUpdate):
                     except Exception as item_error:
                         print(f"Error processing item {item.get('name', 'unknown')}: {str(item_error)}")
                         # Continue processing other items
+                
+                # ADDED: Update the sales table for each item in the order
+                try:
+                    print("Updating sales records in inventory system...")
+                    for item in items:
+                        try:
+                            # Get item information
+                            cursor.execute("SELECT id, external_source, external_id, name FROM itemso WHERE name = %s", (item["name"],))
+                            item_result = cursor.fetchone()
+                            
+                            if item_result and item_result["external_source"] == "inventory" and item_result["external_id"]:
+                                # Calculate remitted amount (price * quantity)
+                                quantity_sold = item["quantity"]
+                                unit_price = item.get("price", 0)
+                                remitted = quantity_sold * unit_price
+                                product_id = item_result["external_id"]
+                                
+                                print(f"Adding sales record for product ID {product_id}: {quantity_sold} units at {unit_price} each")
+                                
+                                # Option 1: Direct database update (since both systems share the same database)
+                                try:
+                                    # Get product details from inventory system
+                                    cursor.execute("""
+                                        SELECT ProductName, Image, UnitPrice FROM inventoryproduct 
+                                        WHERE id = %s
+                                    """, (product_id,))
+                                    product_data = cursor.fetchone()
+                                    
+                                    if product_data:
+                                        product_name = product_data.get("ProductName", item_result["name"])
+                                        image = product_data.get("Image", None)
+                                        db_unit_price = product_data.get("UnitPrice", unit_price)
+                                        
+                                        # Insert or update sales record
+                                        cursor.execute("""
+                                            INSERT INTO sales (
+                                                product_id, 
+                                                product_name, 
+                                                Image, 
+                                                quantity_sold, 
+                                                unit_price,
+                                                remitted, 
+                                                created_at
+                                            )
+                                            VALUES (%s, %s, %s, %s, %s, %s, NOW())
+                                            ON DUPLICATE KEY UPDATE 
+                                                quantity_sold = quantity_sold + VALUES(quantity_sold), 
+                                                remitted = remitted + VALUES(remitted)
+                                        """, (
+                                            product_id, 
+                                            product_name, 
+                                            image, 
+                                            quantity_sold, 
+                                            db_unit_price,
+                                            remitted
+                                        ))
+                                        print(f"Sales record updated for {product_name} (ID: {product_id})")
+                                except Exception as sales_db_error:
+                                    print(f"Error directly updating sales table: {str(sales_db_error)}")
+                                
+                                # Option 2: API call to inventory system (as fallback)
+                                try:
+                                    # Call the inventory API to update sales
+                                    sales_url = "http://127.0.0.1:8001/api/sales/update"
+                                    sales_data = {
+                                        "product_id": int(product_id),
+                                        "quantity_sold": quantity_sold,
+                                        "remitted": remitted
+                                    }
+                                    
+                                    sales_response = requests.post(
+                                        sales_url,
+                                        json=sales_data,
+                                        headers={"Content-Type": "application/json"},
+                                        timeout=5
+                                    )
+                                    
+                                    if sales_response.status_code == 200:
+                                        print(f"Successfully updated sales via API for item {product_id}")
+                                    else:
+                                        print(f"Failed to update sales via API: {sales_response.text}")
+                                except Exception as sales_api_error:
+                                    print(f"Error updating sales via API: {str(sales_api_error)}")
+                        except Exception as item_sales_error:
+                            print(f"Error processing sales for item {item.get('name', 'unknown')}: {str(item_sales_error)}")
+                except Exception as sales_error:
+                    print(f"Error updating sales records: {str(sales_error)}")
+                    # Don't fail the order status update if sales update fails
             except Exception as items_error:
                 print(f"Error processing order items: {str(items_error)}")
                 # Don't fail the order status update if stock update fails

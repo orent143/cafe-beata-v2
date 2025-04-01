@@ -19,15 +19,9 @@
     </div>
 
     <!-- Stock Summary Banner -->
-    <div v-if="stockSummary.total > 0" class="stock-summary-banner">
+    <div v-if="stockSummary.total > 0" class="stock-summary-banner" style="display: none;">
       <span class="summary-title">Stock Status:</span>
       <div class="summary-stats">
-        <span v-if="stockSummary.outOfStock > 0" class="out-of-stock-count">
-          {{ stockSummary.outOfStock }} Out of Stock
-        </span>
-        <span v-if="stockSummary.lowStock > 0" class="low-stock-count">
-          {{ stockSummary.lowStock }} Low Stock
-        </span>
         <span class="total-stock-count">
           {{ stockSummary.total }} Total Items
         </span>
@@ -55,13 +49,13 @@
             </td>
             <td>
               <div class="quantity-container">
-                <div class="quantity-indicator" :class="getQuantityClass(product.Quantity, product.Threshold)">
+                <div class="quantity-value">
                   {{ product.Quantity !== undefined ? product.Quantity : 0 }}
                 </div>
-                <div v-if="product.Quantity <= 0 || (product.Threshold && product.Quantity <= product.Threshold)" 
+                <div v-if="product.Quantity <= 0 || product.Quantity <= 10" 
                      class="stock-status"
-                     :class="getStockStatusClass(product.Quantity, product.Threshold)">
-                  {{ getStockStatus(product.Quantity, product.Threshold) }}
+                     :class="getStockStatusClass(product.Quantity)">
+                  {{ getStockStatus(product.Quantity) }}
                 </div>
               </div>
             </td>
@@ -200,10 +194,12 @@ export default {
     },
 
     // Method to get the text status
-    getStockStatus(quantity, threshold) {
+    getStockStatus(quantity) {
+      quantity = Number(quantity);
+      
       if (quantity <= 0) {
         return 'Out of Stock';
-      } else if (quantity <= threshold) {
+      } else if (quantity <= 10) {
         return 'Low Stock';
       } else {
         return 'In Stock';
@@ -211,10 +207,12 @@ export default {
     },
 
     // Get CSS class for stock status
-    getStockStatusClass(quantity, threshold) {
+    getStockStatusClass(quantity) {
+      quantity = Number(quantity);
+      
       if (quantity <= 0) {
         return 'out-of-stock-status';
-      } else if (quantity <= threshold) {
+      } else if (quantity <= 10) {
         return 'low-stock-status';
       } else {
         return 'in-stock-status';
@@ -571,53 +569,35 @@ export default {
     gap: 8px;
   }
   
-  .quantity-indicator {
-    display: inline-block;
-    padding: 5px 10px;
-    border-radius: 5px;
+  .quantity-value {
     font-weight: bold;
     min-width: 60px;
     text-align: center;
+    color: #000;
   }
 
-  .out-of-stock {
-    background-color: rgba(244, 67, 54, 0.15);
-    color: #F44336;
-    font-weight: bold;
-  }
-
-  .low-stock {
-    background-color: rgba(255, 152, 0, 0.15);
-    color: #FF9800;
-    font-weight: bold;
-  }
-
-  .in-stock {
-    background-color: rgba(76, 175, 80, 0.15);
-    color: #4CAF50;
-  }
-  
   .stock-status {
     padding: 4px 8px;
     border-radius: 15px;
     font-size: 12px;
     font-weight: 500;
+    background-color: transparent;
   }
 
   /* Stock status specific styles */
   .out-of-stock-status {
-    background-color: #F44336;
-    color: white;
+    color: #F44336;
+    background-color: transparent;
   }
 
   .low-stock-status {
-    background-color: #FF9800;
-    color: white;
+    color: #FF9800;
+    background-color: transparent;
   }
 
   .in-stock-status {
-    background-color: #4CAF50;
-    color: white;
+    color: #4CAF50;
+    background-color: transparent;
   }
 
   .modal-overlay {

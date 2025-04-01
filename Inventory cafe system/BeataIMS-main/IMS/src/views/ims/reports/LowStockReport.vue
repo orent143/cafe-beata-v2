@@ -4,13 +4,12 @@
   <div class="app-container">
     <div class="header-container">
       <div class="title-section">
-        <h1 class="products-header">Out of Stock Report</h1>
-        <div v-if="getStatusCount('Out of Stock') > 0" class="header-alert">
-          {{ getStatusCount('Out of Stock') }} Out of Stock
-        </div>
+        <h1 class="products-header">Low Stock Report</h1>
       </div>
       <div class="header-actions">
-        <button class="export-btn" @click="exportLowStockReport">Export CSV</button>
+        <button class="export-btn" @click="exportLowStockReport">
+          <i class="pi pi-download"></i> Export CSV
+        </button>
       </div>
     </div>
 
@@ -20,28 +19,20 @@
         <p>Loading report data...</p>
       </div>
       
-      <div v-else-if="outOfStockItems.length === 0" class="no-data-container">
-        <p>No out-of-stock items found.</p>
+      <div v-else-if="lowStockItems.length === 0" class="no-data-container">
+        <i class="pi pi-check-circle" style="font-size: 3rem; color: #4caf50; margin-bottom: 15px;"></i>
+        <p>No low stock items found.</p>
+        <p style="color: #6c757d; font-size: 14px;">All items are adequately stocked.</p>
       </div>
       
       <div v-else>
         <div class="summary-banner">
           <div class="summary-header">
-            <span class="summary-title">Out of Stock Report</span>
+            <span class="summary-title"><i class="pi pi-exclamation-triangle" style="margin-right: 8px;"></i>Low Stock Report</span>
             <span class="summary-date">{{ formatDate(reportData.date) }}</span>
           </div>
-          <div class="stock-alert-info">
-            <div class="critical-alert" v-if="getStatusCount('Out of Stock') > 0">
-              <span class="alert-count">{{ getStatusCount('Out of Stock') }}</span> Out of Stock
-            </div>
-          </div>
-          <div class="summary-counts">
-            <span class="summary-count total">
-              <span class="count-num">{{ outOfStockItems.length }}</span> Items Need Attention
-            </span>
-            <span class="summary-count out">
-              <span class="count-num">{{ getStatusCount('Out of Stock') }}</span> Out of Stock
-            </span>
+          <div class="stock-alert-badge">
+            {{ getStatusCount('Out of Stock') }} Out of Stock | {{ getStatusCount('Low Stock') }} Low Stock
           </div>
         </div>
         
@@ -58,7 +49,7 @@
               </tr>
             </thead>
             <tbody>
-              <tr v-for="item in outOfStockItems" :key="item.ProductID || item.StockID || item.ReportID">
+              <tr v-for="item in lowStockItems" :key="item.ProductID || item.StockID || item.ReportID">
                 <td>
                   <div class="stock-info">
                     <img 
@@ -70,11 +61,14 @@
                     <span class="stock-name">{{ item.StockName || item.ProductName }}</span>
                   </div>
                 </td>
-                <td :class="{ 'zero-quantity': item.Quantity <= 0 }">{{ item.Quantity }}</td>
+                <td class="quantity-cell">
+                  <span :class="{ 'zero-quantity': item.Quantity <= 0 }">{{ item.Quantity }}</span>
+                </td>
                 <td>{{ item.Threshold || 10 }}</td>
                 <td>₱{{ parseFloat(item.CostPrice || item.UnitPrice).toFixed(2) }}</td>
                 <td>
                   <span :class="'status status-' + getStatus(item.Quantity, item.Threshold).toLowerCase().replace(' ', '-')">
+                    <i :class="getStatusIcon(item.Quantity, item.Threshold)" style="margin-right: 5px;"></i>
                     {{ getStatus(item.Quantity, item.Threshold) }}
                   </span>
                 </td>
@@ -90,14 +84,17 @@
 
         <div class="totals-container">
           <div class="totals-item">
+            <i class="pi pi-calendar" style="margin-right: 8px;"></i>
             <span>Report Date: </span>
             <span>{{ formatDate(reportData.date) }}</span>
           </div>
           <div class="totals-item">
-            <span>Total Out of Stock Items: </span>
-            <span>{{ outOfStockItems.length }}</span>
+            <i class="pi pi-exclamation-circle" style="margin-right: 8px;"></i>
+            <span>Total Low Stock Items: </span>
+            <span>{{ lowStockItems.length }}</span>
           </div>
           <div class="totals-item">
+            <i class="pi pi-money-bill" style="margin-right: 8px;"></i>
             <span>Total Value: </span>
             <span>₱{{ parseFloat(reportData.total_value).toFixed(2) }}</span>
           </div>
@@ -159,10 +156,10 @@ export default {
           const threshold = Number(item.Threshold || 10);
           
           let status = '';
-          // Determine status based on quantity and threshold
+          // Determine status based on quantity
           if (qty <= 0) {
             status = 'Out of Stock';
-          } else if (qty <= threshold) {
+          } else if (qty <= 10) {
             status = 'Low Stock';
           } else {
             status = 'In Stock';
@@ -188,13 +185,16 @@ export default {
           item.ProcessType === "Ready-Made"
         );
         
-        // Filter to only include out-of-stock items
-        this.outOfStockItems = this.filteredItems.filter(item => 
-          item.Quantity <= 0 || item.Status === 'Out of Stock'
+        // Filter to include low stock and out of stock items
+        this.lowStockItems = this.filteredItems.filter(item => 
+          item.Quantity <= 10 || item.Status === 'Out of Stock'
         );
         
+        // Sort by quantity (ascending) so out of stock appears first, then low stock
+        this.lowStockItems.sort((a, b) => a.Quantity - b.Quantity);
+        
         console.log("Filtered Ready-Made products:", this.filteredItems.length);
-        console.log("Out of stock items:", this.outOfStockItems.length);
+        console.log("Low and out of stock items:", this.lowStockItems.length);
         
         // Set report data
         this.reportData = {
@@ -203,15 +203,15 @@ export default {
           total_value: this.calculateTotalValue(this.filteredItems),
         };
         
-        if (this.outOfStockItems.length === 0) {
-          this.toast.info("No out-of-stock items found.");
+        if (this.lowStockItems.length === 0) {
+          this.toast.info("No low stock items found.");
         }
       } catch (error) {
-        console.error("Error fetching out-of-stock report:", error);
+        console.error("Error fetching low stock report:", error);
         this.error = error.message || "Failed to load report";
-        this.toast.error(`Error fetching out-of-stock report: ${this.error}`);
+        this.toast.error(`Error fetching low stock report: ${this.error}`);
         this.filteredItems = [];
-        this.outOfStockItems = [];
+        this.lowStockItems = [];
         this.reportData = {
           date: new Date().toISOString(),
           total_items: 0,
@@ -231,7 +231,7 @@ export default {
     },
     
     getStatusCount(status) {
-      return this.outOfStockItems.filter(item => 
+      return this.lowStockItems.filter(item => 
         this.getStatus(item.Quantity, item.Threshold) === status
       ).length;
     },
@@ -255,11 +255,18 @@ export default {
     getStatus(quantity, threshold = 10) {
       // Ensure quantity is treated as a number
       quantity = Number(quantity);
-      threshold = Number(threshold || 10);
       
       if (quantity <= 0) return "Out of Stock";
-      if (quantity <= threshold) return "Low Stock";
+      if (quantity <= 10) return "Low Stock";
       return "In Stock";
+    },
+    
+    getStatusIcon(quantity, threshold = 10) {
+      quantity = Number(quantity);
+      
+      if (quantity <= 0) return "pi pi-times-circle";
+      if (quantity <= 10) return "pi pi-exclamation-triangle";
+      return "pi pi-check-circle";
     },
     
     formatDate(dateString) {
@@ -279,14 +286,14 @@ export default {
     },
     
     exportLowStockReport() {
-      if (!this.outOfStockItems.length) {
+      if (!this.lowStockItems.length) {
         this.toast.warning("No data to export");
         return;
       }
 
       try {
         const headers = ["Product Name", "Current Quantity", "Threshold", "Price", "Status"];
-        const data = this.outOfStockItems.map((item) => [
+        const data = this.lowStockItems.map((item) => [
           item.StockName || item.ProductName,
           item.Quantity,
           item.Threshold || 10,
@@ -300,7 +307,7 @@ export default {
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
-        a.download = `out-of-stock-report-${new Date().toISOString().split('T')[0]}.csv`;
+        a.download = `low-stock-report-${new Date().toISOString().split('T')[0]}.csv`;
         a.click();
         
         this.toast.success("Report exported successfully");
@@ -327,14 +334,17 @@ export default {
   flex-grow: 1;
   margin-left: 230px;
   height: 100%;
+  background-color: #f8f9fa;
+  padding: 20px 30px;
 }
 
 .header-container {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-left: 18px;
-  width: 95%;
+  margin-bottom: 25px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid #e9ecef;
 }
 
 .title-section {
@@ -343,23 +353,57 @@ export default {
 }
 
 .products-header {
-  color: #333;
-  font-size: 30px;
-  font-family: 'Arial', sans-serif;
-  font-weight: 900;
+  color: #212529;
+  font-size: 32px;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-weight: 700;
+  margin: 0;
 }
 
 .header-alert {
-  background-color: #ffebee;
-  color: #d32f2f;
-  padding: 8px 15px;
+  background-color: #fff3cd;
+  color: #856404;
+  padding: 10px 18px;
   border-radius: 8px;
-  margin-left: 10px;
-  font-weight: bold;
+  margin-left: 16px;
+  font-weight: 600;
   font-size: 16px;
   display: flex;
   align-items: center;
-  border: 1px solid #f44336;
+  border: 1px solid #ffeeba;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+}
+
+.header-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.export-btn {
+  background-color: #E54F70;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 5px rgba(229, 79, 112, 0.3);
+}
+
+.export-btn:hover {
+  background-color: #d33f5f;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(229, 79, 112, 0.4);
+}
+
+.export-btn:active {
+  transform: translateY(0);
 }
 
 .loading-container {
@@ -367,36 +411,46 @@ export default {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-height: 200px;
+  min-height: 300px;
+  background-color: white;
+  border-radius: 15px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
 .loading-spinner {
-  border: 4px solid rgba(0, 0, 0, 0.1);
+  border: 4px solid rgba(229, 79, 112, 0.1);
   border-radius: 50%;
   border-top: 4px solid #E54F70;
-  width: 40px;
-  height: 40px;
-  animation: spin 1s linear infinite;
-  margin-bottom: 10px;
+  width: 50px;
+  height: 50px;
+  animation: spin 0.8s linear infinite;
+  margin-bottom: 20px;
 }
 
 .no-data-container {
   display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
-  min-height: 200px;
+  min-height: 300px;
   font-size: 18px;
-  color: #666;
+  color: #6c757d;
+  background-color: white;
+  border-radius: 15px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  padding: 30px;
 }
 
 .summary-banner {
-  background-color: #f5f5f5;
-  padding: 15px;
-  margin-bottom: 10px;
-  border-radius: 8px;
+  background: linear-gradient(to right, #ffffff, #f8f9fa);
+  padding: 20px 25px;
+  margin-bottom: 20px;
+  border-radius: 12px;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+  border-left: 4px solid #E54F70;
 }
 
 .summary-header {
@@ -405,104 +459,83 @@ export default {
 }
 
 .summary-title {
-  font-size: 16px;
-  font-weight: bold;
-  color: #333;
+  font-size: 18px;
+  font-weight: 700;
+  color: #343a40;
+  margin-bottom: 5px;
 }
 
 .summary-date {
   font-size: 14px;
-  color: #666;
+  color: #6c757d;
 }
 
-.stock-alert-info {
-  display: flex;
-  align-items: center;
-}
-
-.critical-alert {
-  background-color: #ffebee;
-  color: #d32f2f;
-  padding: 8px 15px;
-  border-radius: 8px;
-  margin-right: 10px;
-  font-weight: bold;
-  font-size: 16px;
-  display: flex;
-  align-items: center;
-  border: 1px solid #f44336;
-}
-
-.alert-count {
-  background-color: #f44336;
+.stock-alert-badge {
+  background-color: #E54F70;
   color: white;
-  font-weight: bold;
-  border-radius: 50%;
-  width: 30px;
-  height: 30px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  margin-right: 8px;
+  padding: 10px 18px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 16px;
+  box-shadow: 0 2px 5px rgba(229, 79, 112, 0.3);
 }
 
-.summary-counts {
-  display: flex;
-  gap: 15px;
+.inventory-container {
+  position: relative;
+  flex-grow: 1;
+  height: calc(100vh - 180px);
+  background-color: #ffffff;
+  border-radius: 15px;
+  overflow-y: auto;
+  padding: 0;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
 }
 
-.summary-count {
-  padding: 5px 10px;
-  border-radius: 4px;
-  font-size: 14px;
-}
-
-.summary-count.out {
-  background-color: #ffebee;
-  color: #d32f2f;
-}
-
-.summary-count.low {
-  background-color: #fff8e1;
-  color: #ff8f00;
-}
-
-.count-num {
-  font-weight: bold;
-  margin-right: 5px;
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+.table-container {
+  flex-grow: 1;
+  overflow-y: auto;
+  border-radius: 15px;
+  padding: 0 10px;
 }
 
 .stock-table {
   width: 100%;
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0;
+  margin-bottom: 10px;
 }
 
 .stock-table th,
 .stock-table td {
-  padding: 10px;
+  padding: 15px 10px;
   text-align: center;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid #e9ecef;
 }
 
-.stock-table tbody {
-  font-size: 15px;
+.stock-table tbody tr {
+  transition: all 0.2s ease;
+}
+
+.stock-table tbody tr:hover {
+  background-color: #f1f3f5;
 }
 
 .stock-table th {
-  background-color: #f4f4f4;
-  padding: 13px;
-  color: #333;
-  font-weight: bold;
+  background-color: #ffffff;
+  padding: 18px 10px;
+  color: #495057;
+  font-weight: 600;
+  font-size: 15px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  border-bottom: 2px solid #dee2e6;
 }
 
 .stock-name {
-  font-size: 14px;
-  color: #333;
+  font-size: 15px;
+  color: #212529;
   font-weight: 500;
 }
 
@@ -510,102 +543,117 @@ export default {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
 }
 
 .stock-image {
-  width: 50px;
-  height: 50px;
+  width: 60px;
+  height: 60px;
   object-fit: cover;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  transition: transform 0.2s ease;
+  border-radius: 10px;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
 }
 
-.inventory-container {
-  position: relative;
-  flex-grow: 1;
-  height: 37dvw;
-  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
-  background-color: #ffffff;
-  border-radius: 15px;
-  overflow-y: auto;
-  margin-left: 5px;
-  padding: 15px;
-}
-
-.table-container {
-  flex-grow: 1;
-  overflow-y: auto;
-  border-radius: 15px;
+.stock-image:hover {
+  transform: scale(1.1);
+  box-shadow: 0 5px 10px rgba(0, 0, 0, 0.15);
 }
 
 .totals-container {
   display: flex;
   justify-content: space-between;
-  padding: 15px;
-  background-color: #f4f4f4;
+  padding: 18px 25px;
+  background-color: #f8f9fa;
   margin-top: auto; 
   border-bottom-right-radius: 15px;
   border-bottom-left-radius: 15px;
   position: sticky;
   bottom: 0;
+  box-shadow: 0 -3px 10px rgba(0, 0, 0, 0.05);
+  border-top: 1px solid #e9ecef;
 }
 
 .totals-item {
   width: 30%;
-  font-weight: bold;
-}
-
-.export-btn {
-  background-color: #E54F70;
-  color: white;
-  padding: 8px 15px;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
+  font-weight: 600;
+  color: #343a40;
+  font-size: 15px;
 }
 
 .status {
-  padding: 4px 8px;
-  border-radius: 15px;
-  font-size: 12px;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
   display: inline-block;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 .status-in-stock {
-  background: #E8F5E9; 
-  color: #4CAF50; 
+  background-color: #e8f5e9; 
+  color: #2e7d32; 
+  border: 1px solid #c8e6c9;
 }
 
 .status-low-stock {
-  background: #FFF3E0; 
-  color: #FF9800;
+  background-color: #fff3e0; 
+  color: #ef6c00;
+  border: 1px solid #ffe0b2;
 }
 
 .status-out-of-stock {
-  background: #F8D7DA; 
-  color: #721c24; 
+  background-color: #ffebee; 
+  color: #c62828; 
+  border: 1px solid #ffcdd2;
 }
 
 .action-btn {
-  background-color: #2196F3;
+  background-color: #E54F70;
   color: white;
   border: none;
-  border-radius: 4px;
-  padding: 5px 10px;
+  border-radius: 6px;
+  padding: 8px 16px;
   cursor: pointer;
-  font-size: 12px;
-  transition: background-color 0.3s;
+  font-size: 14px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: 0 2px 5px rgba(229, 79, 112, 0.3);
 }
 
 .action-btn:hover {
-  background-color: #0d8bf2;
+  background-color: #d33f5f;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(229, 79, 112, 0.4);
+}
+
+.action-btn:active {
+  transform: translateY(0);
+}
+
+.action-btn i {
+  font-size: 16px;
 }
 
 .zero-quantity {
-  color: #d32f2f;
+  color: #E54F70;
   font-weight: bold;
-  background-color: rgba(211, 47, 47, 0.1);
+  background-color: white;
+  padding: 5px 10px;
+  border-radius: 4px;
+}
+
+.quantity-cell {
+  background-color: white;
+  padding: 15px 10px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 </style>
