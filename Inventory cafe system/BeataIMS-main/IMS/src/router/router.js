@@ -22,6 +22,7 @@ import OrderDetailsVue from '@/views/ims/OrderDetails.vue';
 //admin
 import Dashboard from '@/views/admin/Dashboard.vue';
 import Users from '@/views/admin/Users.vue';
+import Forecasting from '@/views/admin/Forecasting.vue';
 
 import Welcome from '@/views/Welcome.vue'; 
 import Login from '@/views/Login.vue'; 
@@ -48,7 +49,8 @@ const routes = [
   { path: '/createorder', component: CreateOrder, meta: { requiresAuth: true } },
   { path: '/ordershistory', component: OrdersHistory, meta: { requiresAuth: true } },
   { path: '/dashboard', component: Dashboard, meta: { requiresAuth: true, adminOnly: true } },
-  { path: '/users', component: Users, meta: { requiresAuth: true, adminOnly: true } }
+  { path: '/users', component: Users, meta: { requiresAuth: true, adminOnly: true } },
+  { path: '/forecasting', component: Forecasting, meta: { requiresAuth: true, adminOnly: true } }
 ];
 
 const router = createRouter({

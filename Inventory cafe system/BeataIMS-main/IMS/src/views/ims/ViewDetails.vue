@@ -8,24 +8,27 @@
           <i class="pi pi-arrow-left"></i> Back
         </button>
         <h1>Product Details</h1>
-        <button class="debug-btn" @click="toggleDebugMode">
-          {{ showDebug ? 'Hide Debug' : 'Debug Mode' }}
-        </button>
       </div>
 
       <div v-if="loading" class="loading">Loading...</div>
       <div v-else-if="error" class="error">{{ error }}</div>
-      <div v-else-if="product" class="content-layout">
+      <div v-else class="content-layout">
+
         <div class="main-content">
           <div class="product-details-container">
             <!-- Product Details -->
             <div class="product-details">
-              <img :src="product.Image || 'https://via.placeholder.com/150'" 
+              <img :src="product?.Image || (product ? null : 'https://via.placeholder.com/150?text=No+Connection')" 
                    alt="Product Image" 
-                   class="product-image" />
-              <div class="product-title">
+                   class="product-image"
+                   @error="handleImageError" />
+              <div class="product-title" v-if="product">
                 <h2>{{ product.ProductName }}</h2>
                 <span class="product-id">ID: {{ product.ProductID }}</span>
+              </div>
+              <div class="product-title" v-else>
+                <h2>Product Not Found</h2>
+                <span class="product-id">ID: {{ $route.params.id }}</span>
               </div>
             </div>
 
@@ -156,36 +159,15 @@
           </div>
         </div>
       </div>
-      <div v-else class="error">
-        No product found. Please check the product ID.
-      </div>
-
-      <!-- Debug Information Panel -->
-      <div v-if="showDebug" class="debug-panel">
-        <h3>Debug Information</h3>
-        <div class="debug-section">
-          <h4>Request Information</h4>
-          <p><strong>Product ID:</strong> {{ $route.params.id }}</p>
-          <p><strong>API Base URL:</strong> {{ INVENTORY_API }}</p>
-          <div class="debug-log" v-if="debugLogs.length > 0">
-            <h4>API Request Log</h4>
-            <div v-for="(log, index) in debugLogs" :key="index" class="log-entry">
-              <p><strong>{{ log.timestamp }}</strong></p>
-              <p>{{ log.message }}</p>
-            </div>
-          </div>
-        </div>
-      </div>
     </div>
   </div>
 </template>
 
 <script>
-import { useToast } from 'vue-toastification';
 import axios from 'axios';
 import Header from '@/components/Header.vue';
 import SideBar from '@/components/ims/SideBar.vue';
-import { INVENTORY_API } from '@/api/config.js';
+import { useToast } from 'vue-toastification';
 
 export default {
   components: {
@@ -205,9 +187,7 @@ export default {
       addedTransactions: [],
       deductedTransactions: [],
       transactionFilter: 'added', // Set initial filter to 'added'
-      showDebug: false,
-      debugLogs: [],
-      INVENTORY_API: INVENTORY_API
+      imageError: false
     };
   },
   computed: {
@@ -233,31 +213,128 @@ export default {
   },
   async created() {
     try {
-      // Get the product ID from route params
       let productId = this.$route.params.id;
+      productId = parseInt(productId, 10).toString();
+
+      // Check if the backend is running and determine the base URL
+      const possibleBaseUrls = [
+        'http://127.0.0.1:8000', 
+        'http://localhost:8000',
+        'http://127.0.0.1:5000',
+        'http://localhost:5000',
+        'http://127.0.0.1:8080',
+        'http://localhost:8080'
+      ];
       
-      this.addDebugLog(`Original product ID from route: ${productId}`);
+      let baseUrl = null;
+      let productResponse = null;
       
-      // Remove any leading zeros and convert to number if it's a numeric string
-      if (/^\d+$/.test(productId.replace(/^0+/, ''))) {
-        const numericId = parseInt(productId.replace(/^0+/, ''), 10);
-        this.addDebugLog(`Converted ID to numeric: ${numericId}`);
-        productId = numericId;
+      // Try API health check on all possible base URLs
+      for (const url of possibleBaseUrls) {
+        try {
+          // Try a simple health check or API info endpoint
+          await axios.get(`${url}/api/health`, { timeout: 1000 });
+          baseUrl = url;
+          break;
+        } catch (error) {
+          // If we get a 404 but the server responded, the base URL might be correct
+          if (error.response && error.response.status === 404) {
+            baseUrl = url;
+            break;
+          }
+          // Otherwise try next URL
+          continue;
+        }
       }
       
-      // Try to fetch the product data
-      const success = await this.fetchProductData(productId);
-      
-      if (!success) {
-        this.addDebugLog("Failed to fetch product data");
-        this.error = `Product with ID ${productId} not found. Please check the ID and try again.`;
-        useToast().error(this.error);
+      if (!baseUrl) {
+        throw new Error("Could not connect to any backend API servers. Please check if the server is running.");
       }
+      
+      // Now try to get the product with the detected base URL
+      const possibleEndpoints = [
+        `/api/stock/stockin/${productId}`,
+        `/api/inventory/products/${productId}`,
+        `/api/products/${productId}`,
+        `/api/inventory/items/${productId}`,
+        `/api/inventory/${productId}`
+      ];
+      
+      for (const endpoint of possibleEndpoints) {
+        try {
+          const response = await axios.get(`${baseUrl}${endpoint}`, { timeout: 2000 });
+          if (response.data) {
+            productResponse = response;
+            break;
+          }
+        } catch (error) {
+          continue;
+        }
+      }
+      
+      if (!productResponse) {
+        // Create a fallback dummy product for UI display when API fails
+        this.product = {
+          ProductID: productId,
+          ProductName: "Temporary Product",
+          ProcessType: "N/A",
+          Quantity: 0,
+          CurrentSupplier: "Unknown",
+          Status: "Out of Stock",
+          Image: null
+        };
+        
+        this.error = `Unable to fetch product data. Please ensure the product ID is correct and the server is running.`;
+        return;
+      }
+      
+      this.product = { ...productResponse.data };
+      
+      // Try to get stock details
+      let stockResponse = null;
+      
+      const stockEndpoints = [
+        `/api/stock/stockdetails/${productId}`,
+        `/api/inventory/stockdetails/${productId}`,
+        `/api/inventory/stock/${productId}`
+      ];
+      
+      for (const endpoint of stockEndpoints) {
+        try {
+          const response = await axios.get(`${baseUrl}${endpoint}`, { timeout: 2000 });
+          if (response.data) {
+            stockResponse = response;
+            break;
+          }
+        } catch (error) {
+          continue;
+        }
+      }
+      
+      if (stockResponse) {
+        this.addedTransactions = stockResponse.data.StockDetails || [];
+        this.deductedTransactions = stockResponse.data.DeductedTransactions || [];
+      } else {
+        // Use empty arrays if stock details can't be fetched
+        this.addedTransactions = [];
+        this.deductedTransactions = [];
+      }
+
     } catch (error) {
       console.error("API Error:", error);
-      this.error = error.response?.data?.detail || 'Failed to load product details';
-      this.addDebugLog(`Error: ${this.error}`);
+      this.error = error.message || `Failed to load product details (ID: ${this.$route.params.id})`;
       useToast().error(this.error);
+      
+      // Create a fallback dummy product for UI display when API fails
+      this.product = {
+        ProductID: this.$route.params.id,
+        ProductName: "Connection Error",
+        ProcessType: "N/A",
+        Quantity: 0,
+        CurrentSupplier: "Unknown",
+        Status: "Out of Stock",
+        Image: null
+      };
     } finally {
       this.loading = false;
     }
@@ -266,115 +343,6 @@ export default {
     handleSidebarToggle(collapsed) {
       this.isSidebarCollapsed = collapsed;
     },
-    
-    // New methods for debug logging
-    addDebugLog(message) {
-      const timestamp = new Date().toLocaleTimeString();
-      this.debugLogs.unshift({ timestamp, message });
-      // Keep logs limited to prevent UI clutter
-      if (this.debugLogs.length > 50) {
-        this.debugLogs.pop();
-      }
-      console.log(`[DEBUG] ${timestamp}: ${message}`);
-    },
-    
-    // New method to attempt fetching product data with different ID formats
-    async fetchProductData(productId) {
-      try {
-        // Reset error state before attempt
-        this.error = null;
-        
-        this.addDebugLog(`Fetching product with ID: ${productId}`);
-        
-        // Try all possible API endpoints for product data
-        const endpoints = [
-          // Main inventory endpoints
-          `${INVENTORY_API}/inventoryproducts/${productId}`,
-          // Stock-related endpoints
-          `${INVENTORY_API}/stockin/${productId}`,
-          // Try with and without trailing slash
-          `${INVENTORY_API}/inventoryproducts/${productId}/`,
-          `${INVENTORY_API}/stockin/${productId}/`,
-          // Try product singular endpoint
-          `${INVENTORY_API}/product/${productId}`,
-          `${INVENTORY_API}/product/${productId}/`
-        ];
-        
-        for (const endpoint of endpoints) {
-          try {
-            this.addDebugLog(`Trying endpoint: ${endpoint}`);
-            const response = await axios.get(endpoint);
-            
-            if (response.data) {
-              this.addDebugLog(`Success! Product found at endpoint: ${endpoint}`);
-              this.product = { 
-                ...response.data,
-                ProductID: productId,
-                Status: this.getProductStatus(
-                  response.data.Quantity || 0, 
-                  response.data.Threshold || 0
-                )
-              };
-              
-              // Now fetch stock transactions for this product
-              await this.fetchStockTransactions(productId);
-              return true;
-            }
-          } catch (endpointError) {
-            this.addDebugLog(`Failed: ${endpoint} - ${endpointError.message}`);
-            // Continue to next endpoint
-          }
-        }
-        
-        // If we get here, none of the endpoints worked
-        this.addDebugLog("Error: No endpoints returned product data");
-        throw new Error("No endpoints returned product data");
-      } catch (error) {
-        this.error = "Product not found with the given ID";
-        return false;
-      }
-    },
-    
-    // Separate method for fetching stock transactions
-    async fetchStockTransactions(productId) {
-      try {
-        this.addDebugLog(`Fetching stock transactions for product ${productId}`);
-        
-        // Try to get stock details
-        const response = await axios.get(`${INVENTORY_API}/stockdetails/${productId}`);
-        
-        if (response.data) {
-          // Handle added transactions
-          this.addedTransactions = (response.data.StockDetails || []).map(transaction => ({
-            id: transaction.id || transaction.TransactionID,
-            batch_number: transaction.batch_number || transaction.BatchNumber || 'N/A',
-            quantity: transaction.quantity || transaction.Quantity || 0,
-            expiration_date: transaction.expiration_date || transaction.ExpirationDate,
-            SupplierName: transaction.SupplierName || transaction.supplier_name || 'N/A',
-            created_at: transaction.created_at || transaction.CreatedAt || new Date().toISOString()
-          }));
-          
-          // Handle deducted transactions
-          this.deductedTransactions = (response.data.DeductedTransactions || []).map(transaction => ({
-            TransactionID: transaction.TransactionID || transaction.id,
-            QuantityDeducted: transaction.QuantityDeducted || transaction.quantity_deducted || 0,
-            TransactionDate: transaction.TransactionDate || transaction.transaction_date || new Date().toISOString()
-          }));
-          
-          this.addDebugLog(`Successfully loaded ${this.addedTransactions.length} added and ${this.deductedTransactions.length} deducted transactions`);
-        } else {
-          this.addDebugLog('No transaction data found in response');
-          this.addedTransactions = [];
-          this.deductedTransactions = [];
-        }
-      } catch (error) {
-        this.addDebugLog(`Error loading transactions: ${error.message}`);
-        // Don't fail the whole page if just transactions fail to load
-        this.addedTransactions = [];
-        this.deductedTransactions = [];
-      }
-    },
-    
     deleteAddedTransaction(id) {
       this.addedTransactions = this.addedTransactions.filter(item => item.id !== id);
       useToast().success('Added transaction deleted');
@@ -395,17 +363,9 @@ export default {
         return 'Invalid Date';
       }
     },
-    getProductStatus(quantity, threshold) {
-      if (quantity <= 0) {
-        return 'Out of Stock';
-      } else if (quantity <= threshold) {
-        return 'Low Stock';
-      } else {
-        return 'In Stock';
-      }
-    },
-    toggleDebugMode() {
-      this.showDebug = !this.showDebug;
+    handleImageError(e) {
+      this.imageError = true;
+      e.target.src = 'https://via.placeholder.com/150?text=No+Image';
     }
   }
 };
@@ -496,7 +456,14 @@ export default {
 }
 .product-details {
   flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
   max-width: 350px;
+  padding: 20px;
+  background: #f9f9f9;
+  border-radius: 12px;
 }
 .details-grid {
   flex: 1;
@@ -516,10 +483,12 @@ export default {
 .product-image {
   width: 180px;
   height: 180px;
-  object-fit: cover;
+  object-fit: contain;
   border-radius: 12px;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
   transition: transform 0.3s ease;
+  background: white;
+  padding: 10px;
 }
 
 .product-image:hover {
@@ -630,8 +599,15 @@ export default {
 }
 
 .error {
+  text-align: center;
+  padding: 20px;
+  border-radius: 12px;
+  font-size: 1.1rem;
+  font-weight: 500;
   background: #fff5f5;
   color: #dc3545;
+  margin-bottom: 20px;
+  border: 1px solid #f8d7da;
 }
 .supplier-name {
   color: #E54F70;
@@ -902,7 +878,7 @@ table tbody tr:hover {
 .combined-container {
   position: relative;
   flex-grow: 1;
-  max-height: 500px;
+  height: 37dvw;
   box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
   background-color: #ffffff;
   border-radius: 15px;
@@ -939,79 +915,6 @@ table tbody tr:hover {
   0% { opacity: 1; }
   50% { opacity: 0.7; }
   100% { opacity: 1; }
-}
-
-/* Debug panel styles */
-.debug-btn {
-  padding: 8px 15px;
-  background: #f3f3f3;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 12px;
-  margin-left: auto;
-  color: #555;
-}
-
-.debug-btn:hover {
-  background: #e5e5e5;
-}
-
-.debug-panel {
-  margin-top: 30px;
-  background: #f8f9fa;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  padding: 15px;
-  font-family: monospace;
-}
-
-.debug-section {
-  margin-bottom: 15px;
-}
-
-.debug-section h4 {
-  font-size: 14px;
-  color: #333;
-  margin: 0 0 10px 0;
-  border-bottom: 1px solid #ddd;
-  padding-bottom: 5px;
-}
-
-.debug-log {
-  max-height: 400px;
-  overflow-y: auto;
-  background: #2d2d2d;
-  color: #f8f8f8;
-  padding: 10px;
-  border-radius: 4px;
-}
-
-.log-entry {
-  margin-bottom: 10px;
-  padding-bottom: 10px;
-  border-bottom: 1px solid #444;
-}
-
-.log-entry p {
-  margin: 0;
-  padding: 2px 0;
-}
-
-.log-entry strong {
-  color: #9cdcfe;
-}
-
-/* Mobile responsiveness for debug panel */
-@media (max-width: 768px) {
-  .debug-btn {
-    font-size: 10px;
-    padding: 5px 10px;
-  }
-  
-  .debug-panel {
-    font-size: 11px;
-  }
 }
 
 /* Responsive Styles */

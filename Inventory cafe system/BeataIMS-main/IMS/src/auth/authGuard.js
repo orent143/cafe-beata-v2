@@ -30,7 +30,7 @@ export function hasPermission(route) {
   if (!user) return false;
   
   // Admin routes
-  const adminRoutes = ['/dashboard', '/users'];
+  const adminRoutes = ['/dashboard', '/users', '/forecasting'];
   // Staff and admin routes
   const staffRoutes = [
     '/homeims', '/products', '/viewinventory', '/stocks',

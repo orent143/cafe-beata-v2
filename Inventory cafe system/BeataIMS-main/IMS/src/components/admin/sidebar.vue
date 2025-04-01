@@ -59,7 +59,8 @@
         isCollapsed: false,
         links: [
           { name: 'Home', path: 'dashboard', icon: 'pi-home' },
-          { name: 'Users', path: '/users', icon: 'pi-user' }
+          { name: 'Users', path: '/users', icon: 'pi-user' },
+          { name: 'Forecasting', path: '/forecasting', icon: 'pi-chart-line' }
         ]
       };
     },
