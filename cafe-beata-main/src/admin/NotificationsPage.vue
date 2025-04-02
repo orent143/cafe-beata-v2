@@ -56,227 +56,238 @@
 
     <!-- Main Content -->
     <div :class="['content', { 'shifted': isSidebarOpen }]">
-      <div v-if="notificationVisible" :class="['notification-popup', notificationClass]">
-        <p>{{ notificationMessage }}</p>
+      <!-- Add the top bar with pink gradient at the very top -->
+      <div class="top-bar">
+        <div class="centered-content">
+          <div class="logo-container">
+            <div class="cafe-title">Cafe Preorder Admin Dashboard</div>
+          </div>
+        </div>
       </div>
 
-      <!-- Search Bar -->
-      <div class="search-bar">
-        <input 
-          type="text" 
-          v-model="searchQuery" 
-          placeholder="Search orders by ID, customer name..." 
-          class="search-input"
-        />
-      </div>
+      <div class="content-below-top-bar">
+        <div v-if="notificationVisible" :class="['notification-popup', notificationClass]">
+          <p>{{ notificationMessage }}</p>
+        </div>
 
-      <div v-if="isLoading" class="loading">Loading...</div>
+        <!-- Search Bar -->
+        <div class="search-bar">
+          <input 
+            type="text" 
+            v-model="searchQuery" 
+            placeholder="Search orders by ID, customer name..." 
+            class="search-input"
+          />
+        </div>
 
-      <div v-if="filteredOrders.length && !isLoading" class="orders-container">
-        <h2>Pending Orders</h2>
-        <div class="orders-list">
-          <div class="order-item" v-for="order in filteredOrders" :key="order.id">
-            <div class="order-details">
-              <h3>Order ID: {{ order.id }}</h3>
-              <p><strong>Customer:</strong> {{ order.customer_name }}</p>
-              <p><strong>Status:</strong> {{ order.status }}</p>
-              <p><strong>Time Order: </strong> {{ timeAgo(order.created_at) }}</p> <!-- Time Ago Display -->
+        <div v-if="isLoading" class="loading">Loading...</div>
 
-              <div class="items-section">
-                <strong>Items:</strong>
-                <ul>
-                  <li v-for="item in order.items" :key="item.name">
-                    {{ item.name }} - ₱{{ item.price }} x {{ item.quantity }}
-                  </li>
-                </ul>
+        <div v-if="filteredOrders.length && !isLoading" class="orders-container">
+          <h2>Pending Orders</h2>
+          <div class="orders-list">
+            <div class="order-item" v-for="order in filteredOrders" :key="order.id">
+              <div class="order-details">
+                <h3>Order ID: {{ order.id }}</h3>
+                <p><strong>Customer:</strong> {{ order.customer_name }}</p>
+                <p><strong>Status:</strong> {{ order.status }}</p>
+                <p><strong>Time Order: </strong> {{ timeAgo(order.created_at) }}</p> <!-- Time Ago Display -->
+
+                <div class="items-section">
+                  <strong>Items:</strong>
+                  <ul>
+                    <li v-for="item in order.items" :key="item.name">
+                      {{ item.name }} - ₱{{ item.price }} x {{ item.quantity }}
+                    </li>
+                  </ul>
+                </div>
+
+                <!-- Total Amount below items -->
+                <div class="order-total">
+                  <p><strong>Total Amount: ₱{{ calculateOrderTotal(order.items) }}</strong></p>
+                </div>
               </div>
 
-              <!-- Total Amount below items -->
-              <div class="order-total">
-                <p><strong>Total Amount: ₱{{ calculateOrderTotal(order.items) }}</strong></p>
-              </div>
-            </div>
-
-            <div class="order-actions">
-              <!-- Mark as Completed Buttons -->
-              <button 
-                @click="showCompletionConfirmation(order.id)" 
-                class="mark-completed-btn small-btn"
-                :disabled="!orderReadyStatus[order.id]"
-                :class="{ 'disabled': !orderReadyStatus[order.id] }"
-              >
-                Mark as Completed
-              </button>
-
-              <!-- Order Ready button -->
-              <button 
-                @click="sendOrderReadyNotification(order.id, order.customer_name, order.items)" 
-                class="order-ready-btn small-btn"
-              >
-                Order Ready  🔔
-              </button>
-
-              <!-- Decline button -->
-              <button @click="openDeclineDialog(order)" class="decline-btn">
-                Decline
-              </button>
-            </div>
-
-            <!-- Custom message input for decline -->
-            <div v-if="order.id === activeDeclineOrderId" class="decline-container">
-              <textarea v-model="customDeclineMessage" placeholder="Customize your message here..." rows="3" ref="declineText"></textarea>
-              
-              <!-- Button Container -->
-              <div class="decline-buttons">
-                <button @click="declineOrder(order.id, order.customer_name, order.items)" class="decline-submit-btn">
-                  Submit
+              <div class="order-actions">
+                <!-- Mark as Completed Buttons -->
+                <button 
+                  @click="showCompletionConfirmation(order.id)" 
+                  class="mark-completed-btn small-btn"
+                  :disabled="!orderReadyStatus[order.id]"
+                  :class="{ 'disabled': !orderReadyStatus[order.id] }"
+                >
+                  Mark as Completed
                 </button>
-                <button @click="activeDeclineOrderId = null" class="decline-cancel-btn">
-                  Cancel
+
+                <!-- Order Ready button -->
+                <button 
+                  @click="sendOrderReadyNotification(order.id, order.customer_name, order.items)" 
+                  class="order-ready-btn small-btn"
+                >
+                  Order Ready  🔔
+                </button>
+
+                <!-- Decline button -->
+                <button @click="openDeclineDialog(order)" class="decline-btn">
+                  Decline
                 </button>
               </div>
+
+              <!-- Custom message input for decline -->
+              <div v-if="order.id === activeDeclineOrderId" class="decline-container">
+                <textarea v-model="customDeclineMessage" placeholder="Customize your message here..." rows="3" ref="declineText"></textarea>
+                
+                <!-- Button Container -->
+                <div class="decline-buttons">
+                  <button @click="declineOrder(order.id, order.customer_name, order.items)" class="decline-submit-btn">
+                    Submit
+                  </button>
+                  <button @click="activeDeclineOrderId = null" class="decline-cancel-btn">
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Completion Confirmation Popup -->
+          <div v-if="confirmCompleteOrderId" class="completion-confirmation-popup">
+            <div class="completion-confirmation-content">
+              <h3>Confirm Completion</h3>
+              <p>Are you sure Order ID: {{ confirmCompleteOrderId }} is completed?</p>
+              <div class="confirmation-buttons">
+                <button @click="confirmCompletion" class="confirm-yes-btn">Yes</button>
+                <button @click="cancelCompletion" class="confirm-no-btn">No</button>
+              </div>
             </div>
           </div>
         </div>
 
-        <!-- Completion Confirmation Popup -->
-        <div v-if="confirmCompleteOrderId" class="completion-confirmation-popup">
-          <div class="completion-confirmation-content">
-            <h3>Confirm Completion</h3>
-            <p>Are you sure Order ID: {{ confirmCompleteOrderId }} is completed?</p>
-            <div class="confirmation-buttons">
-              <button @click="confirmCompletion" class="confirm-yes-btn">Yes</button>
-              <button @click="cancelCompletion" class="confirm-no-btn">No</button>
+        <div v-else-if="!isLoading" class="no-orders">
+          <p>No pending orders at the moment.</p>
+        </div>
+
+        <!-- Popup Notification Sent -->
+        <div v-if="notificationSent" class="notification-sent-popup">
+          <p>Notification Sent!</p>
+          <button @click="notificationSent = false" class="close-popup-btn">Close</button>
+        </div>
+
+        <!-- Menu Editor Popup Modal -->
+        <div v-if="showMenuEditor" class="menu-editor-modal">
+          <div class="menu-editor-content">
+            <div class="menu-editor-header">
+              <h2>Menu Editor</h2>
+              <button @click="toggleMenuEditor" class="close-modal-btn">
+                <i class="fa-solid fa-times"></i>
+              </button>
+            </div>
+            <div class="menu-editor-body">
+              <ItemEditor />
             </div>
           </div>
         </div>
-      </div>
 
-      <div v-else-if="!isLoading" class="no-orders">
-        <p>No pending orders at the moment.</p>
-      </div>
+        <!-- Stock Management Modal -->
+        <div v-if="showStockManager" class="stock-manager-modal">
+          <div class="stock-manager-content">
+            <div class="stock-manager-header">
+              <h2>Stock Management</h2>
+              <button @click="toggleStockManager" class="close-modal-btn">
+                <i class="fa-solid fa-times"></i>
+              </button>
+            </div>
+            <div class="stock-manager-body">
+              <!-- Search Bar -->
+              <div class="stock-search-bar">
+                <div class="stock-filters">
+                  <input 
+                    type="text" 
+                    v-model="stockSearchQuery" 
+                    placeholder="Search items..." 
+                    class="search-input"
+                  />
+                  <select v-model="selectedCategory" class="category-filter">
+                    <option value="">All Categories</option>
+                    <option v-for="category in uniqueCategories" :key="category" :value="category">
+                      {{ category }}
+                    </option>
+                  </select>
+                </div>
+              </div>
 
-      <!-- Popup Notification Sent -->
-      <div v-if="notificationSent" class="notification-sent-popup">
-        <p>Notification Sent!</p>
-        <button @click="notificationSent = false" class="close-popup-btn">Close</button>
-      </div>
-
-      <!-- Menu Editor Popup Modal -->
-      <div v-if="showMenuEditor" class="menu-editor-modal">
-        <div class="menu-editor-content">
-          <div class="menu-editor-header">
-            <h2>Menu Editor</h2>
-            <button @click="toggleMenuEditor" class="close-modal-btn">
-              <i class="fa-solid fa-times"></i>
-            </button>
-          </div>
-          <div class="menu-editor-body">
-            <ItemEditor />
+              <!-- Stock Items Table -->
+              <div class="stock-table-container">
+                <table class="stock-table">
+                  <thead>
+                    <tr>
+                      <th>Item Name</th>
+                      <th>Category</th>
+                      <th>Current Stock</th>
+                      <th>Status</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="item in filteredStockItems" :key="item.id">
+                      <td>{{ item.name }}</td>
+                      <td>{{ item.category }}</td>
+                      <td>{{ item.quantity >= 999999 ? 'Unlimited' : item.quantity }}</td>
+                      <td :class="getStockStatusClass(item)">{{ getStockStatus(item) }}</td>
+                      <td>
+                        <button @click="openStockUpdateModal(item)" class="update-stock-btn">
+                          Update Stock
+                        </button>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
 
-      <!-- Stock Management Modal -->
-      <div v-if="showStockManager" class="stock-manager-modal">
-        <div class="stock-manager-content">
-          <div class="stock-manager-header">
-            <h2>Stock Management</h2>
-            <button @click="toggleStockManager" class="close-modal-btn">
-              <i class="fa-solid fa-times"></i>
-            </button>
-          </div>
-          <div class="stock-manager-body">
-            <!-- Search Bar -->
-            <div class="stock-search-bar">
-              <div class="stock-filters">
-                <input 
-                  type="text" 
-                  v-model="stockSearchQuery" 
-                  placeholder="Search items..." 
-                  class="search-input"
-                />
-                <select v-model="selectedCategory" class="category-filter">
-                  <option value="">All Categories</option>
-                  <option v-for="category in uniqueCategories" :key="category" :value="category">
-                    {{ category }}
-                  </option>
+        <!-- Stock Update Modal -->
+        <div v-if="showStockUpdateModal" class="stock-update-modal">
+          <div class="stock-update-content">
+            <h3>Update Stock: {{ selectedItem?.name }}</h3>
+            <div class="stock-update-form">
+              <div class="form-group">
+                <label>Current Stock: {{ selectedItem?.quantity >= 999999 ? 'Unlimited' : selectedItem?.quantity }}</label>
+              </div>
+              <div class="form-group">
+                <label>Action:</label>
+                <select v-model="stockUpdateAction">
+                  <option value="add">Add Stock</option>
+                  <option value="subtract">Remove Stock</option>
+                  <option value="set">Set Stock</option>
+                  <option value="disabled">Disabled (Out of Stock)</option>
+                  <option value="enabled">Enabled (Unlimited Orders)</option>
                 </select>
               </div>
-            </div>
-
-            <!-- Stock Items Table -->
-            <div class="stock-table-container">
-              <table class="stock-table">
-                <thead>
-                  <tr>
-                    <th>Item Name</th>
-                    <th>Category</th>
-                    <th>Current Stock</th>
-                    <th>Status</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr v-for="item in filteredStockItems" :key="item.id">
-                    <td>{{ item.name }}</td>
-                    <td>{{ item.category }}</td>
-                    <td>{{ item.quantity >= 999999 ? 'Unlimited' : item.quantity }}</td>
-                    <td :class="getStockStatusClass(item)">{{ getStockStatus(item) }}</td>
-                    <td>
-                      <button @click="openStockUpdateModal(item)" class="update-stock-btn">
-                        Update Stock
-                      </button>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Stock Update Modal -->
-      <div v-if="showStockUpdateModal" class="stock-update-modal">
-        <div class="stock-update-content">
-          <h3>Update Stock: {{ selectedItem?.name }}</h3>
-          <div class="stock-update-form">
-            <div class="form-group">
-              <label>Current Stock: {{ selectedItem?.quantity >= 999999 ? 'Unlimited' : selectedItem?.quantity }}</label>
-            </div>
-            <div class="form-group">
-              <label>Action:</label>
-              <select v-model="stockUpdateAction">
-                <option value="add">Add Stock</option>
-                <option value="subtract">Remove Stock</option>
-                <option value="set">Set Stock</option>
-                <option value="disabled">Disabled (Out of Stock)</option>
-                <option value="enabled">Enabled (Unlimited Orders)</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label>Quantity:</label>
-              <input 
-                v-if="stockUpdateAction !== 'disabled' && stockUpdateAction !== 'enabled'"
-                type="number" 
-                v-model.number="stockUpdateQuantity" 
-                min="0"
-                :max="stockUpdateAction === 'subtract' ? selectedItem?.quantity : 999999"
-              />
-              <span v-else-if="stockUpdateAction === 'disabled'">
-                Item will be marked as out of stock and cannot be ordered.
-              </span>
-              <span v-else-if="stockUpdateAction === 'enabled'">
-                Item will be available for unlimited orders regardless of quantity.
-              </span>
-            </div>
-            <div class="form-group">
-              <label>Reason:</label>
-              <input type="text" v-model="stockUpdateReason" placeholder="Enter reason for update"/>
-            </div>
-            <div class="update-buttons">
-              <button @click="submitStockUpdate" class="confirm-btn">Update Stock</button>
-              <button @click="closeStockUpdateModal" class="cancel-btn">Cancel</button>
+              <div class="form-group">
+                <label>Quantity:</label>
+                <input 
+                  v-if="stockUpdateAction !== 'disabled' && stockUpdateAction !== 'enabled'"
+                  type="number" 
+                  v-model.number="stockUpdateQuantity" 
+                  min="0"
+                  :max="stockUpdateAction === 'subtract' ? selectedItem?.quantity : 999999"
+                />
+                <span v-else-if="stockUpdateAction === 'disabled'">
+                  Item will be marked as out of stock and cannot be ordered.
+                </span>
+                <span v-else-if="stockUpdateAction === 'enabled'">
+                  Item will be available for unlimited orders regardless of quantity.
+                </span>
+              </div>
+              <div class="form-group">
+                <label>Reason:</label>
+                <input type="text" v-model="stockUpdateReason" placeholder="Enter reason for update"/>
+              </div>
+              <div class="update-buttons">
+                <button @click="submitStockUpdate" class="confirm-btn">Update Stock</button>
+                <button @click="closeStockUpdateModal" class="cancel-btn">Cancel</button>
+              </div>
             </div>
           </div>
         </div>
@@ -579,6 +590,16 @@ export default {
           notifications.push(notification);
           localStorage.setItem(userNotificationsKey, JSON.stringify(notifications));
 
+          // Send real-time notification via WebSocket if connected
+          if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+            this.ws.send(JSON.stringify({
+              type: 'user_notification',
+              action: 'order_completed',
+              notification: notification,
+              target_user: customerName
+            }));
+          }
+
           // Emit an event to notify other components
           window.dispatchEvent(new Event("notificationUpdated"));
 
@@ -700,14 +721,21 @@ export default {
       // Save orderReadyStatus to localStorage
       localStorage.setItem('orderReadyStatus', JSON.stringify(this.orderReadyStatus));
 
-      // Emit event to notify other components (optional)
-      window.dispatchEvent(new Event("notificationUpdated"));
+      // Send real-time notification via WebSocket if connected
+      if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+        this.ws.send(JSON.stringify({
+          type: 'user_notification',
+          action: 'order_ready',
+          notification: notification,
+          target_user: customerName
+        }));
+      }
 
+      // Show success notification to admin
       this.notificationSent = true;
-
       setTimeout(() => {
         this.notificationSent = false;
-      }, 3000);  // Hide the popup after 3 seconds
+      }, 3000);
     },
 
     // Toggle menu editor popup visibility
@@ -1042,19 +1070,58 @@ export default {
 };
 </script>
 
-
-
-
-
-
-
-
 <style scoped>
 /* Base styles for all screen sizes */
 .notifications-page {
+  height: 100vh;
   display: flex;
-  min-height: 100vh;
-  background-color: #fce6e6;
+  background-color: #ffffff;
+}
+
+/* Top Bar Styles to match dashboard */
+.top-bar {
+  display: flex;
+  align-items: center;
+  background-image: linear-gradient(to right, #E54F70, #ed9598);
+  padding: 0 15px;
+  height: 60px;
+  width: 100%;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+}
+
+.content.shifted .top-bar {
+  left: 300px; /* Adjust left position when sidebar is open */
+  width: calc(100% - 300px); /* Adjust width when sidebar is open */
+}
+
+.content-below-top-bar {
+  margin-top: 70px; /* Add margin to account for the fixed top bar */
+  padding: 10px 20px;
+}
+
+.centered-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-grow: 1;
+}
+
+.logo-container {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.cafe-title {
+  color: white;
+  font-weight: bold;
+  font-size: 20px;
+  white-space: nowrap;
 }
 
 /* Menu Button */

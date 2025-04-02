@@ -299,7 +299,7 @@ export default {
 .profile-container {
   position: relative; /* Ensure this is positioned so that absolute elements inside it can be correctly aligned */
   padding: 30px;
-  background-color: #fce6e6;
+  background-color: white;
   height: 100vh; /* Auto height to fit the content */
   max-height: 95vh; /* Maximum height to avoid overflowing */
   overflow-y: auto; /* Enable scrolling if content exceeds the height */
@@ -313,7 +313,7 @@ h2 {
 }
 
 .profile-card {
-  background-color: rgb(243, 233, 233);
+  background-color: white;
   border-radius: 8px;
   padding: 20px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
@@ -321,6 +321,7 @@ h2 {
   max-width: 600px;  /* Limit the width on larger screens */
   margin: 20px auto;
   position: relative; /* Ensure the buttons can be positioned relative to this container */
+  border: 1px solid #E54F70;
 }
 
 /* Back Button Container - Position it at the top-left of the profile container */

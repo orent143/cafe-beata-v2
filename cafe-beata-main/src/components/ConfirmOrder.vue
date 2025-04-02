@@ -545,25 +545,28 @@ export default {
 
 .confirm-order {
   padding: 20px;
-  background-color: #fce6e6; /* Restored light pink background */
+  background-color: white; /* Updated to white background */
   max-width: 1200px;
   margin: 0 auto;
   font-family: Arial, sans-serif;
+  min-height: 100vh;
 }
 
 .cart-container {
   background-color: #ffffff;
   border-radius: 8px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border: 1px solid #E54F70;
 }
 
 .cart-header {
   display: grid;
   grid-template-columns: 3fr 1fr 1fr 1fr 0.5fr;
   padding: 15px;
-  border-bottom: 1px solid #e0e0e0;
+  border-bottom: 1px solid #E54F70;
   font-weight: bold;
   color: #333;
+  background-color: rgba(229, 79, 112, 0.05);
 }
 
 .cart-items {
@@ -702,13 +705,18 @@ export default {
 }
 
 .checkout-btn {
-  background-color: #000000;
+  background-color: #E54F70;
   color: white;
   border: none;
   padding: 10px 20px;
   border-radius: 4px;
   cursor: pointer;
   font-size: 14px;
+  transition: background-color 0.3s;
+}
+
+.checkout-btn:hover {
+  background-color: #d33d5e;
 }
 
 .empty-cart {

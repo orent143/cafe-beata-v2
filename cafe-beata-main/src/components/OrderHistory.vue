@@ -195,7 +195,7 @@ export default {
 .order-history {
   padding: 20px;
   font-family: Arial, sans-serif;
-  background-color: #fce6e6; /* Light pink background */
+  background-color: white; /* Changed to white background */
   color: #222; /* Dark text for light background */
   height: 110vh; /* Auto height to fit the content */
   max-height: 95vh; /* Maximum height to avoid overflowing */

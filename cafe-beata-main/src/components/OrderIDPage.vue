@@ -200,9 +200,10 @@ export default {
 
 /* Order Confirmation Box (Default Light Mode) */
 .order-confirmation-box {
-  background-color: #fce6e6; /* Light background for light mode */
+  background-color: white; /* Changed to white background */
   color: black; /* Ensure text is dark */
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Light shadow */
+  border: 1px solid #E54F70; /* Added pink border */
 }
 
 
@@ -351,7 +352,7 @@ h2 {
   overflow-y: auto;
   text-align: center;
   padding: 30px;
-  background-color: #fce6e6;
+  background-color: white; /* Changed to white background */
   border-radius: 15px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   width: 100%;
@@ -365,10 +366,11 @@ h2 {
   font-size: 28px;
   font-weight: bold;
   margin: 20px 0;
-  background: #ffe4ec;
+  background: rgba(229, 79, 112, 0.05); /* Lighter pink background */
   padding: 15px;
   border-radius: 10px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  border: 1px solid #E54F70; /* Added pink border */
 }
 
 .order-details {
@@ -388,21 +390,23 @@ h2 {
   align-items: center;
   margin: 12px 0;
   padding: 15px;
-  background: #f8d2e4;
+  background: rgba(229, 79, 112, 0.05); /* Lighter pink background */
   border-radius: 10px;
   font-size: 18px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(229, 79, 112, 0.3); /* Added soft pink border */
 }
 
 /* New message */
 .message {
   font-size: 20px;
   font-weight: bold;
-  background: #ffebcd;
+  background: rgba(229, 79, 112, 0.1); /* Light pink background */
   padding: 12px;
   border-radius: 10px;
   margin-bottom: 30px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  border: 1px solid #E54F70; /* Added pink border */
 }
 
 /* Glowing effect for the "Back to Dashboard" button */
@@ -425,7 +429,7 @@ h2 {
   position: absolute;
   width: 100%;
   height: 100%;
-  background-color: #333;
+  background-color: #E54F70; /* Changed to pink background */
   left: 0;
   top: 0;
   border-radius: 20px;
@@ -463,8 +467,8 @@ h2 {
 .back-button:active {
   color: #000;
   font-weight: bold;
-  background-color: #d12f7a;
-  border-color: #d12f7a;
+  background-color: #E54F70;
+  border-color: #E54F70;
 }
 
 /* Glow Animation */

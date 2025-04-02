@@ -4,7 +4,6 @@
     <button class="menu-button" @click="toggleSidebar">
       <div class="menu-icon-container">
         ≡
-        <span v-if="unreadNotificationsCount > 0" class="menu-notification-badge">{{ unreadNotificationsCount }}</span>
       </div>
     </button>
 
@@ -23,7 +22,8 @@
       <!-- User Profile Section -->
       <div class="user-profile-section">
         <div class="profile-image">
-          <img :src="userProfileImage || require('@/assets/default.png')" alt="Profile Picture">
+          <!-- Use the same method for getting avatar as in UserProfileCafe -->
+          <img :src="getAvatarUrl(userAvatar)" alt="Profile Picture">
         </div>
         <div class="profile-info">
           <span class="user-name">{{ userName }}</span>
@@ -43,20 +43,14 @@
 
       <hr class="utility-divider">
 
-      <!-- Utility Buttons (Removed Dark Mode from here) -->
+      <!-- Utility Buttons Section -->
       <div class="utility-section">
-        <router-link to="/user-notifications" class="utility-button notification-link">
-          <div class="notification-icon">
-            <i class="fas fa-bell"></i>
-            <span v-if="unreadNotificationsCount > 0" class="notification-badge">{{ unreadNotificationsCount }}</span>
-          </div>
-          <span>Notifications</span>
-        </router-link>
-
         <button class="utility-button" @click="handleOrderHistory">
           <i class="fas fa-history"></i>
           <span>Order History</span>
         </button>
+        
+        <!-- Other utility buttons can be added here if needed -->
       </div>
 
       <!-- Categories -->
@@ -157,11 +151,15 @@
             />
           </div>
           
-          <div class="live-time">{{ currentTime }}</div>
+          <div class="top-controls">
+            <div class="live-time">{{ currentTime }}</div>
+            <!-- Add UserNotifications component inside top bar -->
+            <UserNotifications />
+          </div>
         </div>
       </div>
       
-      <!-- Floating Cart Button -->
+      <!-- Floating Cart Button - keep this outside the top bar -->
       <div class="floating-cart" @click="goToCart">
         <i class="fas fa-shopping-cart"></i>
         <span v-if="cartItemCount > 0" class="floating-cart-badge">{{ cartItemCount }}</span>
@@ -264,26 +262,27 @@
 
 
 <script>
-import { eventBus } from "@/utils/eventBus"; // Correct the path if needed
 import StockIndicator from './StockIndicator.vue';
+// Import UserNotifications component
+import UserNotifications from '@/components/UserNotifications.vue';
+import { eventBus } from "@/utils/eventBus";
 
 export default {
   components: {
-    StockIndicator
+    StockIndicator,
+    UserNotifications
   },
   data() {
     return {
       userName: '',
       userProfileImage: '',
       userEmail: localStorage.getItem('userEmail'),
-      unreadNotificationsCount: 0,   
-      refreshInterval: null,  
       itemsRefreshInterval: null,
       searchQuery: '',
-      isDarkMode: localStorage.getItem("darkMode") === "enabled",
+      isDarkMode: localStorage.getItem("darkMode") === "true",
       currentCategory: 'All Drinks',
       currentTime: new Date().toLocaleTimeString(),
-      isSidebarOpen: localStorage.getItem('sidebarOpen') === 'true',
+      isSidebarOpen: false,
       isLoading: false,
       apiItems: [],
       filteredItems: [],
@@ -298,36 +297,38 @@ export default {
       wsConnected: false,
       isAdmin: localStorage.getItem('role') === 'admin',
       isSyncing: false,
+      userAvatar: '', // Add this property to store the user's avatar URL
+      unreadNotificationsCount: 0,
     };
   },
 
   
 
   created() {
-      this.updateNotificationCount();
-    window.addEventListener("notificationUpdated", this.updateNotificationCount); // Listen for changes
-    window.addEventListener("items-updated", this.handleItemsUpdated); // Listen for item updates
-    this.initWebSocket(); // Initialize WebSocket connection
+    // Just listen for notification updates to sync with UserNotifications
+    window.addEventListener("notificationUpdated", this.handleNotificationUpdate);
+    window.addEventListener("items-updated", this.handleItemsUpdated);
+    this.initWebSocket();
   },
-beforeUnmount() {
-      window.removeEventListener("notificationUpdated", this.updateNotificationCount);
-      window.removeEventListener("items-updated", this.handleItemsUpdated);
-      window.removeEventListener('categories-updated', this.handleCategoriesUpdated);
-      this.stopPollingForNewNotifications();
-      this.stopPollingForItems();
-      window.removeEventListener('storage', this.updateCartCount);
-      if (this.ws) {
-        this.ws.close();
-      }
+  
+  beforeUnmount() {
+    // Remove listeners
+    window.removeEventListener("notificationUpdated", this.handleNotificationUpdate);
+    window.removeEventListener("items-updated", this.handleItemsUpdated);
+    window.removeEventListener('categories-updated', this.handleCategoriesUpdated);
+    this.stopPollingForItems();
+    window.removeEventListener('storage', this.updateCartCount);
+    if (this.ws) {
+      this.ws.close();
+    }
   },
   
   async mounted() {
-    this.$watch(
-      () => eventBus.notificationsCount,
-      (newCount) => {
-        this.unreadNotificationsCount = newCount;
-      }
-    );
+    // Watch for notification updates through eventBus for UI updates
+    this.$watch(() => eventBus.notificationsCount, (newCount) => {
+      console.log('Notification count updated:', newCount);
+      // No need to store locally as UserNotifications manages this
+    });
     
     // Check for last viewed category first
     const lastViewedCategory = localStorage.getItem('lastViewedCategory');
@@ -340,7 +341,6 @@ beforeUnmount() {
     
     this.updateTime();
     this.applyDarkMode(this.isDarkMode);
-    this.startPollingForNewNotifications();
     await this.loadUserProfile();
     
     // Initialize WebSocket first for real-time updates
@@ -372,6 +372,13 @@ beforeUnmount() {
     
  
   methods: {
+    // Handle notification updates
+    handleNotificationUpdate() {
+      // This event is fired when notifications are updated
+      // The UserNotifications component already manages the badge state
+      console.log('Notification update detected');
+    },
+    
     // Handle item updates from ItemEditor
     handleItemsUpdated(event) {
       console.log('Items updated event received:', event.detail);
@@ -474,71 +481,60 @@ beforeUnmount() {
     },
 
     async loadUserProfile() {
-      try {
-        if (!this.userEmail) return;
+      const userName = localStorage.getItem('userName');
+      const userEmail = localStorage.getItem('userEmail');
+      if (userName) {
+        this.userName = userName;
         
-        const response = await fetch(`http://127.0.0.1:8000/profile/${this.userEmail}`);
-        const data = await response.json();
-        
-        if (response.ok) {
-          this.userName = data.username;
-          this.userProfileImage = data.avatar ? `http://127.0.0.1:8000${data.avatar}` : require('@/assets/default.png');
+        // Fetch profile data from the server to get avatar
+        if (userEmail) {
+          try {
+            const response = await fetch(`http://127.0.0.1:8000/profile/${encodeURIComponent(userEmail)}`);
+            const data = await response.json();
+            if (response.ok) {
+              // Set the avatar from the profile data
+              this.userAvatar = data.avatar || '';
+            }
+          } catch (error) {
+            console.error('Error loading profile:', error);
+            // Fall back to the avatar service if profile loading fails
+          }
         }
-      } catch (error) {
-        console.error('Error loading profile:', error);
+      } else {
+        // If no username, redirect to login
+        this.$router.push({ name: 'Login' });
       }
     },
 
-
-  updateNotificationCount() {
-      const userName = localStorage.getItem("userName");
-      if (userName) {
-        const userNotificationsKey = `user_notifications_${userName}`;
-        const notifications = JSON.parse(localStorage.getItem(userNotificationsKey)) || [];
-          const unreadCount = notifications.filter(notification => !notification.read).length;
-        // Manually trigger a reactivity update for unreadNotificationsCount
-        this.unreadNotificationsCount = unreadCount;
-  }
-  },
-    
-       startPollingForNewNotifications() {
-      this.refreshInterval = setInterval(() => {
-        this.updateNotificationCount(); // Check for new notifications
-      }, 5000); // Update every 5 seconds (you can adjust this interval)
-    },
-    
-      stopPollingForNewNotifications() {
-      clearInterval(this.refreshInterval);
+    // toggleDarkMode is the next method after removing the notification related methods
+    toggleDarkMode() {
+      this.isDarkMode = !this.isDarkMode;
+      localStorage.setItem("darkMode", this.isDarkMode ? "enabled" : "disabled");
+      this.applyDarkMode(this.isDarkMode);
     },
 
- toggleDarkMode() {
-    this.isDarkMode = !this.isDarkMode;
-    localStorage.setItem("darkMode", this.isDarkMode ? "enabled" : "disabled");
-    this.applyDarkMode(this.isDarkMode);
-  },
-  applyDarkMode(isDark) {
-    if (isDark) {
-      document.body.classList.add('dark-mode');
-    } else {
-      document.body.classList.remove('dark-mode');
-    }
-  },
+    applyDarkMode(isDark) {
+      if (isDark) {
+        document.body.classList.add('dark-mode');
+      } else {
+        document.body.classList.remove('dark-mode');
+      }
+    },
 
+    updateTime() {
+      setInterval(() => {
+        const now = new Date();
+        let hours = now.getHours();
+        let minutes = now.getMinutes();
+        let seconds = now.getSeconds();
+        let ampm = hours >= 12 ? 'PM' : 'AM';
 
- updateTime() {
-  setInterval(() => {
-    const now = new Date();
-    let hours = now.getHours();
-    let minutes = now.getMinutes();
-    let seconds = now.getSeconds();
-    let ampm = hours >= 12 ? 'PM' : 'AM';
+        hours = hours % 12 || 12; // Convert 24-hour time to 12-hour format
+        minutes = minutes < 10 ? '0' + minutes : minutes; // Ensure two digits for minutes
+        seconds = seconds < 10 ? '0' + seconds : seconds; // Ensure two digits for seconds
 
-    hours = hours % 12 || 12; // Convert 24-hour time to 12-hour format
-    minutes = minutes < 10 ? '0' + minutes : minutes; // Ensure two digits for minutes
-    seconds = seconds < 10 ? '0' + seconds : seconds; // Ensure two digits for seconds
-
-    this.currentTime = `${hours}:${minutes}:${seconds} ${ampm}`; // Example: 2:03:11 PM
-  }, 1000); // Update every second
+        this.currentTime = `${hours}:${minutes}:${seconds} ${ampm}`; // Example: 2:03:11 PM
+      }, 1000); // Update every second
     },
 
     filterCategory(category) {
@@ -1008,15 +1004,19 @@ beforeUnmount() {
       return item.external_source === 'inventory';
     },
     // Add this method to handle image loading errors
-    handleImageError(e) {
-      console.log('Image failed to load:', e.target.src);
-      e.target.src = require('@/assets/default.png');
+    handleImageError(event) {
+      // If image fails to load, use the default image
+      event.target.src = require('@/assets/default.png');
+      console.log('Profile image failed to load, using default image');
     },
     isInventoryItemStyled(item) {
       // Only apply special styling to inventory items when not in the Ready Made sections
       return this.isInventoryItem(item) && 
              this.currentCategory !== 'All Ready Made' && 
              !this.currentCategory.includes('Ready Made');
+    },
+    getAvatarUrl(avatar) {
+      return avatar ? `http://127.0.0.1:8000${avatar}` : `https://ui-avatars.com/api/?name=${encodeURIComponent(this.userName)}&background=E54F70&color=fff&size=128`;
     },
   },
   watch: {
@@ -1422,7 +1422,7 @@ beforeUnmount() {
   display: flex;
   min-height: 100vh;
   flex-direction: column;
-  background-color: #fce6e6;
+  background-color: #ffffff;
   width: 100%;
   overflow-x: hidden;
   position: relative;
@@ -1432,7 +1432,7 @@ html, body {
   min-height: 100vh;
   margin: 0;
   padding: 0;
-  background-color: #fce6e6;
+  background-color: #ffffff;
 }
 
 /* Sidebar */
@@ -1452,7 +1452,7 @@ html, body {
 }
 
 .sidebar.light-mode {
-  background-color: #fce6e6;
+  background-color: white;
 }
 
 .sidebar.dark-mode {
@@ -1612,7 +1612,7 @@ html, body {
 .logout-container {
   border-top: 1px solid rgba(0, 0, 0, 0.1);
   padding: 0;
-  background-color: #fce6e6;
+  background-color: white;
   margin-bottom: 20px; /* Add space after logout button */
 }
 
@@ -1670,8 +1670,8 @@ html, body {
   top: 15px;
   left: 15px;
   z-index: 300;
-  background: rgb(255, 255, 255);
-  color: black;
+  background: white;
+  color: #E54F70;
   padding: 10px 15px;
   font-size: 18px;
   border: none;
@@ -1806,13 +1806,14 @@ html, body {
 }
 
 .modal-content {
-  background-color: #fce6e6;
+  background-color: white;
   padding: 30px;
   border-radius: 15px;
   text-align: center;
   width: 90%;
   max-width: 400px;
   position: relative;
+  border: 2px solid #E54F70;
 }
 
 /* Update close button styles */
@@ -2060,11 +2061,11 @@ html, body {
 .top-bar {
   display: flex;
   align-items: center;
-  background-color: #fff9f9;
+  background-image: linear-gradient(to right, #E54F70, #ed9598);
   padding: 0 15px;
   height: 60px;
   width: 100%;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   position: sticky;
   top: 0;
   z-index: 100;
@@ -2089,6 +2090,7 @@ html, body {
   justify-content: center;
   flex-shrink: 0;
   z-index: 101;
+  color: white;
 }
 
 .logo-container {
@@ -2104,7 +2106,7 @@ html, body {
 }
 
 .cafe-title {
-  color: #d12f7a;
+  color: white;
   font-weight: bold;
   margin-left: 10px;
   font-size: 18px;
@@ -2134,7 +2136,7 @@ html, body {
 .live-time {
   font-weight: 500;
   font-size: 14px;
-  color: #333;
+  color: white;
   white-space: nowrap;
 }
 
@@ -2178,21 +2180,26 @@ html, body {
 
 /* Dark mode styles for top bar */
 .dark-mode .top-bar {
-  background-color: #333;
+  background-image: linear-gradient(to right, #333, #444);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
 }
 
 .dark-mode .cafe-title {
-  color: #f8c6d0;
+  color: white;
 }
 
 .dark-mode .live-time {
-  color: #fff;
+  color: white;
 }
 
 .dark-mode .search-container input {
   background-color: #444;
   color: white;
   border-color: #555;
+}
+
+.dark-mode .top-bar .menu-button {
+  color: white;
 }
 
 /* Responsive adjustments for top bar */
@@ -2353,7 +2360,7 @@ html, body {
 /* Item styling */
 .item {
   text-align: center;
-  background-color: #f8d1d1;
+  background-color: white;
   border-radius: 15px;
   padding: 15px;
   cursor: pointer;
@@ -2368,7 +2375,8 @@ html, body {
   margin: 0 auto;
   position: relative;
   overflow: hidden;
-   box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+  border: 1px solid #E54F70;
 }
 
 .item img {
@@ -2560,13 +2568,14 @@ html, body {
 }
 
 .modal-content {
-  background-color: #fce6e6;
+  background-color: white;
   padding: 30px;
   border-radius: 15px;
   text-align: center;
   width: 90%;
   max-width: 400px;
   position: relative;
+  border: 2px solid #E54F70;
 }
 
 /* Update close button styles */
@@ -3035,5 +3044,28 @@ html, body {
 .dark-mode .item.inventory-item {
   border: 2px solid #4CAF50;
   box-shadow: 0 4px 8px rgba(76, 175, 80, 0.3);
+}
+
+.top-controls {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+/* Additional responsive adjustments */
+@media (max-width: 768px) {
+  .top-controls {
+    gap: 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .top-controls {
+    gap: 5px;
+  }
+  
+  .live-time {
+    font-size: 14px;
+  }
 }
 </style>

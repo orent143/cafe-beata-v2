@@ -749,7 +749,26 @@ async def websocket_endpoint(websocket: WebSocket):
     try:
         while True:
             # Keep the connection alive and wait for any messages
-            await websocket.receive_text()
+            data = await websocket.receive_text()
+            
+            # Process received messages
+            try:
+                message = json.loads(data)
+                
+                # Handle user notifications from admin
+                if message.get('type') == 'user_notification':
+                    # Forward the message to all connected clients
+                    await manager.broadcast({
+                        "type": "user_notification",
+                        "action": message.get('action'),
+                        "notification": message.get('notification'),
+                        "target_user": message.get('target_user')
+                    })
+            except json.JSONDecodeError:
+                print(f"Received invalid JSON message: {data}")
+            except Exception as e:
+                print(f"Error processing WebSocket message: {str(e)}")
+                
     except WebSocketDisconnect:
         manager.disconnect(websocket)
     except Exception as e:

@@ -913,7 +913,7 @@ export default {
   font-family: Arial, sans-serif;
   margin: 0;
   padding: 0;
-  background-color: #f8d1d1;
+  background-color: #ffffff;
   display: flex;
   flex-direction: column;
   min-height: 100vh;
@@ -924,11 +924,11 @@ export default {
   justify-content: space-between;
   align-items: center;
   padding: 15px 20px;
-  background-color: #fce6e6;
+  background-image: linear-gradient(to right, #E54F70, #ed9598);
   z-index: 1000;
   position: sticky;
   top: 0;
-  border-bottom: 2px solid #d88e8e;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   animation: slideIn 0.5s ease-out;
 }
 
@@ -938,7 +938,7 @@ export default {
   font-size: 1.8em;
   font-weight: bold;
   font-family: 'Roboto', sans-serif;
-  color: rgb(180, 102, 102);
+  color: white;
   margin-left: 10px;
   cursor: pointer;
   text-transform: uppercase;
@@ -955,27 +955,27 @@ export default {
   font-size: 1.1em;
   font-weight: bold;
   font-family: 'Roboto', sans-serif;
-  color: #5e5e5e;
+  color: #ffffff;
 }
 
 .nav-links a {
   text-decoration: none;
-  color: #5e5e5e;
+  color: #ffffff;
   transition: color 0.3s ease, transform 0.3s ease;
   cursor: pointer;
 }
 
 .nav-links a:hover {
-  color: #f4a261;
-  text-decoration: underline;
-  transform: scale(1.1);
+  color: rgba(255, 255, 255, 0.8);
+  transform: translateY(-3px);
+  text-decoration: none;
 }
 
 .hero {
   display: flex;
   justify-content: space-between;
   padding: 40px;
-  background: linear-gradient(to right, #f8d1d1, #fce6e6);
+  background: white;
   flex-wrap: wrap;
   animation: fadeIn 1s ease-in-out;
 }
@@ -1039,12 +1039,12 @@ export default {
 
 /* About Us Section */
 .about-us {
-  background-color: #fce6e6;
+  background-color: white;
   padding: 40px;
   text-align: center;
   animation: fadeIn 1s ease-in-out 1s;
   border-radius: 15px;
-  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 .about-us h2 {
@@ -1061,10 +1061,13 @@ export default {
 
 /* Contact Us Section */
 .contact-us {
-  background-color: #fce6e6;
-  color: white;
+  background-color: white;
+  color: #333;
   padding: 50px 20px;
   text-align: center;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 15px;
+  margin: 20px;
 }
 
 .contact-header h2 {
@@ -1383,12 +1386,12 @@ export default {
   .nav-links a {
     font-size: 1em;
     text-align: center;
-    color: rgb(189, 56, 56);
+    color: white;
   }
 
   .nav-links a:hover {
-    color: #f4a261;
-    text-decoration: underline;
+    color: rgba(255, 255, 255, 0.8);
+    text-decoration: none;
   }
 
   .hero-text h1 {
@@ -1587,12 +1590,13 @@ export default {
 
 /* Footer Styles */
 footer {
-  background-color: #fce6e6;
+  background-color: white;
   color: #3b2a2a;
   padding: 40px 0 20px;
   width: 100%;
   margin-top: auto;
   animation: fadeInUp 0.8s ease-out;
+  border-top: 1px solid #eee;
 }
 
 .footer-content {
