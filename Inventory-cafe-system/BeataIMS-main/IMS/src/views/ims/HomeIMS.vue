@@ -188,54 +188,69 @@ export default {
         console.log('Fetching low stock counts from Inventory API');
         const response = await axios.get(`${INVENTORY_API}/low-stock-total`);
         
-        // Use the out_of_stock_count for the main alert count
-        this.outOfStockCount = response.data.total_out_of_stock || 0;
-        
-        // Get the low stock count (items with low quantity but not zero)
-        const lowStockOnly = response.data.total_low_stock || 0;
-        
-        // For display purposes only (showing low stock separately from out of stock)
-        this.lowStockCount = lowStockOnly + this.outOfStockCount;
-        
-        console.log(`Low stock count: ${lowStockOnly}, Out of stock: ${this.outOfStockCount}, Total: ${this.lowStockCount}`);
-        
-        // Also fetch the actual low stock items for display
-        try {
-          const itemsResponse = await axios.get(`${REPORTS_API}/low_stock_report`);
+        // Check if we got a valid response with data
+        if (response && response.data) {
+          // Use the out_of_stock_count for the main alert count
+          this.outOfStockCount = response.data.total_out_of_stock || 0;
           
-          if (itemsResponse.data.items && itemsResponse.data.items.length > 0) {
-            // Take 5 most critical items (out of stock first, then low stock)
-            const sortedItems = [...itemsResponse.data.items].sort((a, b) => {
-              const qtyA = Number(a.Quantity || 0);
-              const qtyB = Number(b.Quantity || 0);
-              
-              // First by status (out of stock first)
-              if (qtyA <= 0 && qtyB > 0) return -1;
-              if (qtyA > 0 && qtyB <= 0) return 1;
-              
-              // Then by quantity
-              return qtyA - qtyB;
-            });
+          // Get the low stock count (items with low quantity but not zero)
+          const lowStockOnly = response.data.total_low_stock || 0;
+          
+          // For display purposes only (showing low stock separately from out of stock)
+          this.lowStockCount = lowStockOnly + this.outOfStockCount;
+          
+          console.log(`Low stock count: ${lowStockOnly}, Out of stock: ${this.outOfStockCount}, Total: ${this.lowStockCount}`);
+          
+          // Also fetch the actual low stock items for display
+          try {
+            const itemsResponse = await axios.get(`${REPORTS_API}/low_stock_report`);
             
-            this.lowStockItems = sortedItems.slice(0, 5).map(item => {
-              const qty = Number(item.Quantity || 0);
-              const threshold = Number(item.Threshold || 10);
+            if (itemsResponse.data && itemsResponse.data.items && itemsResponse.data.items.length > 0) {
+              // Take 5 most critical items (out of stock first, then low stock)
+              const sortedItems = [...itemsResponse.data.items].sort((a, b) => {
+                const qtyA = Number(a.Quantity || 0);
+                const qtyB = Number(b.Quantity || 0);
+                
+                // First by status (out of stock first)
+                if (qtyA <= 0 && qtyB > 0) return -1;
+                if (qtyA > 0 && qtyB <= 0) return 1;
+                
+                // Then by quantity
+                return qtyA - qtyB;
+              });
               
-              return {
-                id: item.ProductID || item.StockID,
-                name: item.ProductName || item.StockName,
-                quantity: qty,
-                threshold: threshold,
-                status: qty <= 0 ? 'Out of Stock' : qty <= threshold ? 'Low Stock' : 'In Stock'
-              };
-            });
+              this.lowStockItems = sortedItems.slice(0, 5).map(item => {
+                const qty = Number(item.Quantity || 0);
+                const threshold = Number(item.Threshold || 10);
+                
+                return {
+                  id: item.ProductID || item.StockID,
+                  name: item.ProductName || item.StockName,
+                  quantity: qty,
+                  threshold: threshold,
+                  status: qty <= 0 ? 'Out of Stock' : qty <= threshold ? 'Low Stock' : 'In Stock'
+                };
+              });
+            }
+          } catch (itemError) {
+            console.error("Error fetching low stock items:", itemError);
+            this.lowStockItems = []; // Ensure we have an empty array on error
           }
-        } catch (error) {
-          console.error("Error fetching low stock items:", error);
+        } else {
+          // If we receive an empty response, set default values
+          console.warn("Received empty response from low-stock-total endpoint");
+          this.outOfStockCount = 0;
+          this.lowStockCount = 0;
         }
       } catch (error) {
         console.error("Error fetching low stock counts:", error);
-        this.toast.error("Failed to fetch low stock information");
+        // Set default values on error to prevent UI issues
+        this.outOfStockCount = 0;
+        this.lowStockCount = 0;
+        this.lowStockItems = [];
+        
+        // Show a less alarming toast message
+        this.toast.warning("Could not retrieve low stock information. Using default values.");
       }
     },
     async fetchActivityLogs() {

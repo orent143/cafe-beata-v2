@@ -43,13 +43,10 @@
         <div class="report-card-header">
           <i class="pi pi-exclamation-triangle report-icon warning-icon"></i>
           <h3>Low Stock Report</h3>
-          <div v-if="outOfStockCount > 0" class="attention-badge">{{ outOfStockCount }}</div>
         </div>
         <div class="report-card-body">
           <p>Items that need immediate attention - low stock or out of stock</p>
-          <div v-if="outOfStockCount > 0" class="alert-banner">
-            <strong>{{ outOfStockCount }} items are OUT OF STOCK</strong>
-          </div>
+
           <div class="stock-status-summary">
             <div class="status-item out-of-stock">
               <span class="status-count">{{ outOfStockCount }}</span>
@@ -292,13 +289,7 @@ export default {
   transform: translateY(-5px);
 }
 
-.low-stock-card {
-  border-left: 5px solid #ff9800;
-}
 
-.low-stock-card .report-icon.warning-icon {
-  color: #ff7043;
-}
 
 .sales-card .report-icon {
   color: #4caf50;
@@ -330,21 +321,7 @@ export default {
   color: #ff9800;
 }
 
-.attention-badge {
-  position: absolute;
-  right: 0;
-  top: 0;
-  background-color: #f44336;
-  color: white;
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 12px;
-  font-weight: bold;
-}
+
 
 .report-card-header h3 {
   font-size: 20px;
@@ -376,6 +353,7 @@ export default {
 .stock-status-summary {
   display: flex;
   justify-content: space-between;
+  border-top: 1px solid #ccc;
 }
 
 .status-item {

@@ -443,33 +443,126 @@ export default {
     },
     
     async fetchCafeOrdersData() {
-      try {
-        // Fetch all completed orders from cafe-beata-main
-        const response = await axios.get(`http://127.0.0.1:8000/orders?status=completed`);
-        
-        if (response.data && response.data.orders) {
-          // Filter orders for selected date
-          this.cafeOrders = response.data.orders.filter(order => {
-            const orderDate = new Date(order.created_at);
-            const selectedDate = new Date(this.selectedDate);
-            
-            return orderDate.getFullYear() === selectedDate.getFullYear() &&
-                   orderDate.getMonth() === selectedDate.getMonth() &&
-                   orderDate.getDate() === selectedDate.getDate();
+      let retryCount = 0;
+      const maxRetries = 3;
+      const baseDelay = 1000; // 1 second
+
+      while (retryCount < maxRetries) {
+        try {
+          // Use the server URL from the configuration
+          const cafeServerUrl = "http://127.0.0.1:8000";
+          
+          // First try to validate if the server is running with a simple ping
+          if (retryCount > 0) {
+            try {
+              await axios.get(`${cafeServerUrl}/`, { timeout: 2000 });
+            } catch (pingError) {
+              console.log(`Cafe server ping failed on retry ${retryCount}:`, pingError.message);
+              this.cafeOrders = [];
+              throw new Error("Cafe server appears to be offline");
+            }
+          }
+          
+          // Now try to fetch the actual data
+          console.log(`Attempting to fetch orders from: ${cafeServerUrl}/orders?status=completed`);
+          const response = await axios.get(`${cafeServerUrl}/orders?status=completed`, {
+            headers: {
+              'Accept': 'application/json',
+              'Content-Type': 'application/json'
+            },
+            timeout: 8000, // 8 second timeout - increased for slower connections
+            withCredentials: false // Explicitly disable sending cookies across domains
           });
           
-          // Sort by time (newest first)
-          this.cafeOrders.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+          if (response.data && response.data.orders) {
+            if (response.data.error) {
+              console.warn(`Server returned an error: ${response.data.error}`);
+              this.toast.warning(`Cafe server issue: ${response.data.error}`);
+            }
+            
+            // Filter orders for selected date
+            this.cafeOrders = response.data.orders.filter(order => {
+              // Make sure created_at exists and is valid
+              if (!order.created_at) return false;
+              
+              try {
+                const orderDate = new Date(order.created_at);
+                const selectedDate = new Date(this.selectedDate);
+                
+                return orderDate.getFullYear() === selectedDate.getFullYear() &&
+                       orderDate.getMonth() === selectedDate.getMonth() &&
+                       orderDate.getDate() === selectedDate.getDate();
+              } catch (e) {
+                console.error("Invalid date format:", order.created_at);
+                return false;
+              }
+            });
+            
+            // Sort by time (newest first)
+            this.cafeOrders.sort((a, b) => {
+              try {
+                return new Date(b.created_at) - new Date(a.created_at);
+              } catch (e) {
+                return 0; // If date parsing fails, maintain original order
+              }
+            });
+            
+            console.log(`Fetched ${this.cafeOrders.length} orders from cafe system for date ${this.selectedDate}`);
+            if (this.cafeOrders.length > 0) {
+              console.log(`Most recent cafe order: ID ${this.cafeOrders[0].id} at ${new Date(this.cafeOrders[0].created_at).toLocaleTimeString()}`);
+            } else {
+              console.log("No orders found for the selected date");
+            }
+            
+            // Successful fetch, break out of retry loop
+            break;
+          } else {
+            console.warn("Response received but no orders data found");
+            this.cafeOrders = [];
+            // Don't retry if we got a response but it has no data
+            break;
+          }
+        } catch (error) {
+          console.error(`Error fetching cafe orders (attempt ${retryCount + 1}/${maxRetries}):`, error);
           
-          console.log(`Fetched ${this.cafeOrders.length} orders from cafe system for date ${this.selectedDate}`);
-          if (this.cafeOrders.length > 0) {
-            console.log(`Most recent cafe order: ID ${this.cafeOrders[0].id} at ${new Date(this.cafeOrders[0].created_at).toLocaleTimeString()}`);
+          // Determine the type of error for a more user-friendly message
+          let errorMessage;
+          if (error.message.includes("Network Error") || error.code === "ERR_NETWORK") {
+            errorMessage = `Cannot connect to Cafe Beata server. Make sure it's running on port 8000.`;
+          } else if (error.response && error.response.status === 403) {
+            errorMessage = "Access denied due to CORS policy. Check server configuration.";
+          } else if (error.response && error.response.status === 500) {
+            if (retryCount === maxRetries - 1) {
+              // Only on last retry, show a more detailed message
+              this.toast.warning("Database connection issue in Cafe Beata server. Using inventory data only.", {
+                timeout: 6000
+              });
+            }
+            errorMessage = "Database connection issue in Cafe Beata system.";
+          } else {
+            errorMessage = `Error loading orders: ${error.message}`;
+          }
+          
+          // If this is the last retry, show the error to the user
+          if (retryCount === maxRetries - 1) {
+            // For UI purposes, we'll just show a warning instead of error since we can still show inventory data
+            this.toast.warning("Could not load Cafe Beata orders. Report will only show inventory sales.", {
+              timeout: 5000
+            });
+            console.error("All retries failed:", errorMessage);
+            this.cafeOrders = [];
+          }
+          
+          // Exponential backoff for retries
+          if (retryCount < maxRetries - 1) {
+            const delay = baseDelay * Math.pow(2, retryCount);
+            console.log(`Retrying in ${delay}ms...`);
+            await new Promise(resolve => setTimeout(resolve, delay));
+            retryCount++;
+          } else {
+            break;
           }
         }
-      } catch (error) {
-        console.error('Error fetching cafe orders:', error);
-        this.toast.error('Error loading cafe orders');
-        this.cafeOrders = [];
       }
     },
     

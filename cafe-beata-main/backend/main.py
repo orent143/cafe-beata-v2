@@ -73,12 +73,19 @@ app = FastAPI()
 # CORS configuration
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Allow all origins in development, configure specific domains in production
+    allow_origins=[
+        "http://localhost:5173",  # Vue dev server for Inventory System
+        "http://127.0.0.1:5173", 
+        "http://localhost:8080",  # Vue dev server for Cafe Beata
+        "http://127.0.0.1:8080",
+        "http://localhost",
+        "http://127.0.0.1",
+    ],
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
+    allow_headers=["Content-Type", "Authorization", "Accept", "Origin", "X-Requested-With"],
+    expose_headers=["Content-Type"],
 )
-
 
 class ResetPasswordRequest(BaseModel):
     email: str
@@ -187,7 +194,7 @@ def get_db_connection():
     db_config = {
         "host": os.getenv("DB_HOST", "127.0.0.1"),
         "user": os.getenv("DB_USER", "root"),
-        "password": os.getenv("DB_PASSWORD", "Warweapons19"),
+        "password": os.getenv("DB_PASSWORD", ""),  # Empty password or remove this line if no password is used
         "database": os.getenv("DB_NAME", "cafe_beata"),
         "port": int(os.getenv("DB_PORT", "3306"))
     }
@@ -196,8 +203,20 @@ def get_db_connection():
         connection = mysql.connector.connect(**db_config)
         if connection.is_connected():
             return connection
+        else:
+            print("Database connection failed: Not connected")
+            return None
     except Error as e:
-        print(f"Error: {e}")
+        print(f"Database connection error: {e}")
+        # Try once more with no password as fallback
+        try:
+            db_config["password"] = ""
+            connection = mysql.connector.connect(**db_config)
+            if connection.is_connected():
+                print("Connected with fallback (empty password)")
+                return connection
+        except Error as fallback_error:
+            print(f"Fallback connection error: {fallback_error}")
         return None
 
 @app.get("/")
@@ -452,28 +471,40 @@ class Order(BaseModel):
 @app.get("/orders")
 async def get_orders(status: Optional[str] = "pending", customer_name: Optional[str] = None):
     connection = get_db_connection()
-    cursor = connection.cursor(dictionary=True)
+    if connection is None:
+        # Return empty results instead of throwing an error
+        return {"orders": [], "error": "Database connection failed"}
+    
+    try:
+        cursor = connection.cursor(dictionary=True)
 
-    if customer_name:
-        cursor.execute("SELECT * FROM orderso WHERE customer_name = %s AND status = %s", (customer_name, status))
-    else:
-        cursor.execute("SELECT * FROM orderso WHERE status = %s", (status,))  # Fetch orders by status
+        if customer_name:
+            cursor.execute("SELECT * FROM orderso WHERE customer_name = %s AND status = %s", (customer_name, status))
+        else:
+            cursor.execute("SELECT * FROM orderso WHERE status = %s", (status,))  # Fetch orders by status
 
-    orders = cursor.fetchall()
+        orders = cursor.fetchall()
 
-    for order in orders:
+        for order in orders:
+            try:
+                if isinstance(order["items"], str):  
+                    order["items"] = json.loads(order["items"])  
+            except json.JSONDecodeError:
+                order["items"] = []  
+
+        cursor.close()
+        connection.close()
+
+        return {"orders": orders}
+    except Exception as e:
+        # Log the error and return an empty result
+        print(f"Error fetching orders: {str(e)}")
         try:
-            if isinstance(order["items"], str):  
-                order["items"] = json.loads(order["items"])  
-        except json.JSONDecodeError:
-            order["items"] = []  
-
-    cursor.close()
-    connection.close()
-
-    return {"orders": orders}
-
-
+            if connection and connection.is_connected():
+                connection.close()
+        except:
+            pass
+        return {"orders": [], "error": f"Error fetching orders: {str(e)}"}
 
 @app.put("/orders/{order_id}")
 async def update_order_status(order_id: str, status_update: OrderStatusUpdate):

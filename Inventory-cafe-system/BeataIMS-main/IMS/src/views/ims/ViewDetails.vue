@@ -291,32 +291,39 @@ export default {
         // Try all possible endpoints until we find the product
         let baseUrl = API_BASE_URL;
         let productResponse = null;
+        let lastError = null;
         
         // Try each possible endpoint
         const endpoints = [
-        `/api/inventory/products/${productId}`,
-        `/api/products/${productId}`,
+          `/api/inventory/products/${productId}`,
+          `/api/products/${productId}`,
           `/api/inventoryproducts/${productId}`,
-        `/api/inventory/${productId}`
-      ];
-      
+          `/api/inventory/${productId}`,
+          `/api/stock/stockin/${productId}`,
+          // Add additional endpoints if needed
+        ];
+        
         for (const endpoint of endpoints) {
-        try {
+          try {
             console.log(`Trying: ${baseUrl}${endpoint}`);
-            const response = await axios.get(`${baseUrl}${endpoint}`, { timeout: 3000 });
-          if (response.data) {
-            productResponse = response;
+            const response = await axios.get(`${baseUrl}${endpoint}`, { timeout: 5000 });
+            if (response.data) {
+              productResponse = response;
               console.log('Found product at:', baseUrl + endpoint);
-            break;
-          }
-        } catch (error) {
+              break;
+            }
+          } catch (error) {
             console.log(`Failed endpoint ${endpoint}:`, error.message);
+            lastError = error;
+            // Continue to next endpoint rather than failing immediately
+          }
         }
-      }
-      
-        // If we still couldn't find it, throw an error
-      if (!productResponse) {
-          throw new Error(`Unable to find product with ID: ${productId}`);
+        
+        // If we still couldn't find it, create a fallback product instead of throwing an error
+        if (!productResponse) {
+          console.log(`Product ID ${productId} not found in any endpoint`);
+          this.createFallbackProduct(productId);
+          return; // Exit the method early
         }
         
         // Extract product data
@@ -337,7 +344,7 @@ export default {
       } catch (error) {
         console.error("API Error:", error);
         this.error = error.message;
-        this.createFallbackProduct();
+        this.createFallbackProduct(this.$route.params.id);
       } finally {
         this.loading = false;
       }
@@ -369,7 +376,8 @@ export default {
       const stockEndpoints = [
         `/api/stock/stockdetails/${productId}`,
         `/api/inventory/stockdetails/${productId}`,
-        `/api/inventory/stock/${productId}`
+        `/api/inventory/stock/${productId}`,
+        `/api/stock/stockin/${productId}/details`
       ];
       
       let stockResponse = null;
@@ -377,7 +385,7 @@ export default {
       for (const endpoint of stockEndpoints) {
         try {
           console.log(`Trying stock details: ${baseUrl}${endpoint}`);
-          const response = await axios.get(`${baseUrl}${endpoint}`, { timeout: 2000 });
+          const response = await axios.get(`${baseUrl}${endpoint}`, { timeout: 5000 });
           if (response.data) {
             stockResponse = response;
             console.log('Found stock details at:', baseUrl + endpoint);
@@ -388,18 +396,51 @@ export default {
         }
       }
       
-      // Assign stock data if we found it
-      if (stockResponse) {
-        this.addedTransactions = stockResponse.data.StockDetails || [];
-        this.deductedTransactions = stockResponse.data.DeductedTransactions || [];
+      // If we have the stock data from the stockin endpoint but it's not in the expected format,
+      // try to adapt it to the expected format
+      if (stockResponse && !stockResponse.data.StockDetails && !stockResponse.data.DeductedTransactions) {
+        console.log('Converting stockin response to expected format');
         
-        // Get supplier name from transactions
-        this.updateSupplierFromTransactions();
-      } else {
-        console.log('No stock details found');
+        // Create compatible structures based on the data we have
+        const stockData = stockResponse.data;
+        if (stockData) {
+          // We might not have transaction details in this endpoint, but we can at least show current data
+          this.addedTransactions = [{
+            id: stockData.ProductID,
+            batch_number: 'Current Stock',
+            quantity: stockData.Quantity,
+            expiration_date: null,
+            created_at: new Date().toISOString(),
+            SupplierName: stockData.CurrentSupplier || 'N/A'
+          }];
+          
+          this.deductedTransactions = [];
+          return;
+        }
+      }
+      
+      // If we still couldn't find it, create a fallback product instead of throwing an error
+      if (!stockResponse) {
+        console.log(`Product ID ${productId} not found in any stock endpoint`);
         this.addedTransactions = [];
         this.deductedTransactions = [];
+        return;
       }
+      
+      // Extract stock data
+      let stockData = null;
+      if (stockResponse.data && stockResponse.data.StockDetails) {
+        stockData = stockResponse.data.StockDetails;
+      } else if (stockResponse.data) {
+        stockData = stockResponse.data;
+      }
+      
+      // Assign stock data
+      this.addedTransactions = stockData || [];
+      this.deductedTransactions = stockResponse.data.DeductedTransactions || [];
+      
+      // Get supplier name from transactions
+      this.updateSupplierFromTransactions();
     },
     
     updateSupplierFromTransactions() {
@@ -436,9 +477,9 @@ export default {
       }
     },
     
-    createFallbackProduct() {
+    createFallbackProduct(productId) {
       this.product = {
-        ProductID: this.$route.params.id,
+        ProductID: productId || this.$route.params.id,
         ProductName: "Product Not Found",
         ProcessType: "N/A",
         Quantity: 0,
@@ -446,6 +487,13 @@ export default {
         Status: "Unknown",
         Image: null
       };
+      
+      // Set a user-friendly error message
+      this.error = `The product with ID ${productId || this.$route.params.id} could not be found. It may have been deleted or does not exist.`;
+      
+      // Clear transaction data
+      this.addedTransactions = [];
+      this.deductedTransactions = [];
     },
     getStockStatusClass(quantity) {
       if (quantity <= 0) {

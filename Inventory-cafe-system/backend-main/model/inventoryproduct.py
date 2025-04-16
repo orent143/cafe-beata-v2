@@ -586,22 +586,22 @@ async def get_total_low_stock(db=Depends(get_db)):
             SELECT COUNT(*) 
             FROM inventoryproduct
             WHERE ProcessType = 'Ready-Made' 
-            AND Quantity > 0 AND Quantity <= Threshold AND Threshold > 0
+            AND Quantity > 0 AND Quantity <= COALESCE(Threshold, 5) AND COALESCE(Threshold, 5) > 0
         """)
         
         # Fetch the count
-        low_stock_count = cursor.fetchone()[0]
+        low_stock_count = cursor.fetchone()[0] or 0
         
         # SQL query to count out of stock products (zero quantity)
         cursor.execute("""
             SELECT COUNT(*) 
             FROM inventoryproduct
             WHERE ProcessType = 'Ready-Made' 
-            AND Quantity <= 0
+            AND (Quantity <= 0 OR Quantity IS NULL)
         """)
         
         # Fetch the count
-        out_of_stock_count = cursor.fetchone()[0]
+        out_of_stock_count = cursor.fetchone()[0] or 0
         
         # Close the cursor
         cursor.close()
@@ -610,14 +610,21 @@ async def get_total_low_stock(db=Depends(get_db)):
         return {
             "total_low_stock": low_stock_count,
             "total_out_of_stock": out_of_stock_count,
-            "total_alert": out_of_stock_count, # This is what the dashboard should use for alerts
+            "total_alert": out_of_stock_count, 
             "total_attention_needed": low_stock_count + out_of_stock_count
         }
 
     except Exception as e:
         # Log and raise an error in case of any issues
         logger.error(f"Error fetching total low stock count: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Internal Server Error: {str(e)}")
+        # Return zeros instead of failing completely
+        return {
+            "total_low_stock": 0,
+            "total_out_of_stock": 0,
+            "total_alert": 0,
+            "total_attention_needed": 0,
+            "error": str(e)
+        }
 
 # Database connection function
 def get_db_connection():

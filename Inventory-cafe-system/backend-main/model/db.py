@@ -19,7 +19,7 @@ logger = logging.getLogger("inventory-system-backend")
 DB_CONFIG = {
     "host": "localhost",
     "user": "root",
-    "password": "Warweapons19",  # Match password from cafe-beata-main
+    "password": "",  # Match password from cafe-beata-main
     "database": "cafe_beata"
 }
 
