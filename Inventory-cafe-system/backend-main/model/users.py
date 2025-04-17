@@ -308,8 +308,7 @@ async def update_user(
     email: str = Form(None),
     role: str = Form(None),
     status: str = Form(None),
-    profile_pic: Optional[UploadFile] = File(None),
-    user_data: UserUpdate = None
+    profile_pic: Optional[UploadFile] = File(None)
 ):
     """Update an existing user with support for both form data and JSON"""
     try:
@@ -372,23 +371,6 @@ async def update_user(
                     update_values.append(profile_pic_path)
                 except Exception as e:
                     logger.error(f"Error saving profile picture: {str(e)}")
-            
-        else:
-            # Process JSON data
-            if not user_data:
-                raise HTTPException(status_code=400, detail="No user data provided")
-                
-            if user_data.username is not None:
-                update_fields.append("username = %s")
-                update_values.append(user_data.username)
-                
-            if user_data.email is not None:
-                update_fields.append("email = %s")
-                update_values.append(user_data.email)
-                
-            if user_data.role is not None:
-                update_fields.append("role = %s")
-                update_values.append(user_data.role)
         
         # If no fields to update, return early
         if not update_fields:

@@ -6,7 +6,7 @@
   <div class="app-container" :class="{ 'sidebar-collapsed': isSidebarCollapsed }">
     <div class="main-container">
       <div class="header-container">
-        <h1 class="header">Create Inventory Product</h1>
+        <h1 class="header">Create Product</h1>
       </div>
       <div class="content-wrapper">
         <div class="product-details">

@@ -342,13 +342,7 @@ export default {
         .then(response => {
           this.users = response.users;
           console.log('Loaded users data:', this.users);
-          
-          // Debug profile picture URLs
-          this.users.forEach(user => {
-            if (user.profile_pic) {
-              console.log(`User ${user.id} (${user.username}) profile pic:`, user.profile_pic);
-            }
-          });
+
           
           this.isLoading = false;
         })
@@ -359,43 +353,16 @@ export default {
     },
 
     handleImageError(event) {
-      console.error('Image failed to load:', event.target.src);
-      console.log('Target element:', event.target);
-      
-      // Try to diagnose the problem
-      const imageSrc = event.target.src;
-      console.log('Image path structure check:', {
-        hasHttp: imageSrc.startsWith('http'),
-        containsUploads: imageSrc.includes('uploads'),
-        containsProfilePics: imageSrc.includes('profile_pics')
-      });
-      
-      // Try to fix common image path issues before falling back to default
-      if (imageSrc.includes('undefined') || imageSrc.includes('null')) {
-        console.log('Invalid image path detected, using default avatar');
-      } else if (!imageSrc.includes('uploads/profile_pics/') && imageSrc.includes('profile_pics/')) {
-        // Try to fix incorrect path structure
-        const fixedPath = imageSrc.replace('profile_pics/', 'uploads/profile_pics/');
-        console.log('Attempting to fix image path:', fixedPath);
-        event.target.src = fixedPath;
-        return; // Return to avoid setting default avatar immediately
-      }
-      
-      // Fall back to default avatar
-      event.target.src = this.defaultAvatar;
-      
-      // Try to reload users if multiple images fail
-      if (!this.imageErrorCounts) {
-        this.imageErrorCounts = 0;
-      }
-      
-      this.imageErrorCounts++;
-      if (this.imageErrorCounts > 3) {
-        console.log('Multiple image loading errors detected, refreshing user data');
-        this.getUsers();
-        this.imageErrorCounts = 0;
-      }
-    },
+  console.warn('Image failed to load:', event.target.src);
+  event.target.src = this.defaultAvatar;
+
+  this.imageErrorCounts++;
+  if (this.imageErrorCounts > 3) {
+    console.log('Multiple image errors. Refreshing user data.');
+    this.getUsers();
+    this.imageErrorCounts = 0;
+  }
+},
 
     toggleStatus(user) {
       user.status = user.status === 'Active' ? 'Inactive' : 'Active';

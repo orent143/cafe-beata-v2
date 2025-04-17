@@ -3,7 +3,7 @@
   <SideBar :isCollapsed="isSidebarCollapsed"/>
   <div class="app-container" :class="{ 'sidebar-collapsed': isSidebarCollapsed }">
     <div class="header-container">
-      <h1 class="sales-header">Sales Report</h1>
+      <h1 class="sales-header">Sales Product</h1>
       <div class="header-actions">
         <div class="filter-container">
           <button class="filter-btn" @click="toggleFilterDropdown">

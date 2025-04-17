@@ -48,21 +48,13 @@
               </div>
             </td>
             <td>
-              <div class="quantity-container">
-                <div class="quantity-value">
-                  {{ product.Quantity !== undefined ? product.Quantity : 0 }}
-                </div>
-                <div v-if="product.Quantity <= 0 || product.Quantity <= 10" 
-                     class="stock-status"
-                     :class="getStockStatusClass(product.Quantity)">
-                  {{ getStockStatus(product.Quantity) }}
-                </div>
+              <div class="quantity-indicator" :class="getQuantityClass(product.Quantity, product.Threshold)">
+                {{ product.Quantity !== undefined ? product.Quantity : 0 }}
               </div>
             </td>
             <td>₱{{ product.UnitPrice || '0.00' }}</td>
             <td>
               <div class="details-container">
-                <span class="details-text">{{ product.Details || 'No details available' }}</span>
                 <button class="btn-details" @click="viewDetails(product)">
                   VIEW DETAILS
                 </button>
@@ -171,10 +163,9 @@ export default {
       this.calculateStockSummary();
     },
 
-    // Updated getQuantityClass to consider threshold
     getQuantityClass(quantity, threshold) {
       if (quantity <= 0) {
-        return 'out-of-stock'; // No stock left
+        return 'out-of-stock';
       } else if (quantity <= threshold) {
         return 'low-stock'; // Low stock based on threshold
       } else {
@@ -717,5 +708,27 @@ export default {
 
 .refresh-btn i {
   font-size: 14px;
+}
+
+.quantity-indicator {
+  padding: 4px 8px;
+  border-radius: 15px;
+  font-size: 14px;
+  display: inline-block;
+}
+
+.out-of-stock {
+  background: #F8D7DA;
+  color: #721c24;
+}
+
+.low-stock {
+  background: #FFF3E0;
+  color: #FF9800;
+}
+
+.in-stock {
+  background: #E8F5E9;
+  color: #4CAF50;
 }
   </style>
