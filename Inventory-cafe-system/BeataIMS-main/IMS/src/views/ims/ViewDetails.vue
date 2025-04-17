@@ -519,7 +519,7 @@ export default {
 
 <style scoped>
 .app-container {
-  margin-left: 230px;
+  margin-left: 220px;
   background: #f8f9fa;
   min-height: 100vh;
   transition: margin-left 0.3s ease;

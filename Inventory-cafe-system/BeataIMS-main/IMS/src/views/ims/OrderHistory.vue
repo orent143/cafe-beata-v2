@@ -188,6 +188,7 @@ export default {
   flex-direction: column;
   margin-left: 230px;
   transition: all 0.3s ease;
+  overflow: auto; /* <-- changed from overflow-y to allow both directions */
 }
 
 .app-container.sidebar-collapsed {
@@ -220,15 +221,13 @@ export default {
 
 .sales-container {
   position: relative;
-  flex-grow: 1;
-  height: auto;
-  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
-
-  background-color: #ffffff;
-  border-radius: 25px;
-  overflow-y: auto;
-  margin-left: 5px;
-  padding: 0;
+    flex-grow: 1;
+    height: 37dvw;
+    background-color: #ffffff;
+    border-radius: 15px;
+    overflow-y: auto;
+    margin-left: 5px;
+    padding: 0;
 }
 
 .sales-table-container {

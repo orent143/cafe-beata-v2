@@ -10,7 +10,6 @@
           v-model="selectedDate" 
           class="date-picker" 
           @change="fetchInventoryReport"
-          :max="currentDate"
         />
         <button class="export-btn" @click="exportSummary">Export CSV</button>
       </div>
@@ -31,27 +30,18 @@
           <table class="stock-table">
             <thead>
               <tr>
+                <th>Product ID</th>
                 <th>Product Name</th>
-                <th>Quantity</th>
+                <th>Category</th>
                 <th>Unit Price</th>
                 <th>Status</th>
               </tr>
             </thead>
             <tbody>
               <tr v-for="product in filteredInventory" :key="product.ProductID">
-                <td>
-                  <div class="product-info">
-                    <img 
-                      v-if="product.Image" 
-                      :src="product.Image" 
-                      alt="Product Image" 
-                      class="product-image"
-                      @error="handleImageError"
-                    />
-                    <span class="product-name">{{ product.ProductName }}</span>
-                  </div>
-                </td>
-                <td>{{ product.Quantity }}</td>
+                <td>{{ product.ProductID }}</td>
+                <td>{{ product.ProductName }}</td>
+                <td>{{ product.CategoryName }}</td>
                 <td>₱{{ parseFloat(product.UnitPrice).toFixed(2) }}</td>
                 <td>
                   <span :class="'status status-' + product.Status.toLowerCase().replace(' ', '-')">
@@ -86,7 +76,7 @@
 import SideBar from "@/components/ims/SideBar.vue";
 import Header from "@/components/Header.vue";
 import axios from "axios";
-import { REPORTS_API, getImageUrl } from "@/api/config.js";
+import { REPORTS_API, CATEGORIES_API, getImageUrl } from "@/api/config.js";
 import { useToast } from "vue-toastification";
 
 export default {
@@ -111,7 +101,8 @@ export default {
       currentDate: new Date().toISOString().split("T")[0],
       loading: false,
       fallbackImage: "https://via.placeholder.com/100",
-      error: null
+      error: null,
+      categories: []
     };
   },
   computed: {
@@ -125,12 +116,6 @@ export default {
         this.loading = true;
         this.error = null;
         
-        if (this.selectedDate > this.currentDate) {
-          this.toast.warning("Future dates are not allowed");
-          this.selectedDate = this.currentDate;
-          return;
-        }
-
         console.log(`Fetching inventory report from: ${REPORTS_API}/inventory_report?date=${this.selectedDate}`);
         const response = await axios.get(`${REPORTS_API}/inventory_report?date=${this.selectedDate}`);
         console.log("Inventory API Response:", response.data);
@@ -144,10 +129,10 @@ export default {
         this.inventoryProducts = (response.data.items || []).map(item => ({
           ProductID: item.ProductID || 0,
           ProductName: item.ProductName || "Unknown Product",
-          Quantity: item.Quantity || 0,
+          CategoryID: item.CategoryID || 0,
+          CategoryName: this.getCategoryName(item.CategoryID),
           UnitPrice: parseFloat(item.UnitPrice || 0).toFixed(2),
-          Status: item.Status || "Unknown",
-          Image: item.Image ? this.getImageUrl(item.Image) : this.fallbackImage
+          Status: item.Status || "Unknown"
         }));
         
         if (this.inventoryProducts.length === 0) {
@@ -185,6 +170,10 @@ export default {
     handleImageError(event) {
       event.target.src = this.fallbackImage;
     },
+    getCategoryName(categoryId) {
+      const category = this.categories.find(cat => cat.id === categoryId);
+      return category ? category.CategoryName : 'Unknown Category';
+    },
     exportSummary() {
       if (!this.inventoryProducts.length) {
         this.toast.warning("No data to export");
@@ -192,10 +181,11 @@ export default {
       }
 
       try {
-        const headers = ["Name", "Quantity", "Unit Price", "Status"];
+        const headers = ["Product ID", "Product Name", "Category", "Unit Price", "Status"];
         const data = this.inventoryProducts.map((product) => [
+          product.ProductID,
           product.ProductName,
-          product.Quantity,
+          product.CategoryName,
           parseFloat(product.UnitPrice).toFixed(2),
           product.Status,
         ]);
@@ -226,8 +216,18 @@ export default {
       
       return imagePath.startsWith("http") ? imagePath : getImageUrl(imagePath);
     },
+    async fetchCategories() {
+      try {
+        const response = await axios.get(`${CATEGORIES_API}`);
+        this.categories = response.data;
+      } catch (error) {
+        console.error('Error fetching categories:', error);
+        this.toast.error('Failed to load categories');
+      }
+    },
   },
   created() {
+    this.fetchCategories();
     this.fetchInventoryReport();
   },
 };

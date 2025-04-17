@@ -5,8 +5,12 @@
     <div class="header-container">
       <div class="title-section">
         <h1 class="products-header">Low Stock Report</h1>
+        <span class="summary-date">{{ formatDate(reportData.date) }}</span>
       </div>
       <div class="header-actions">
+        <div class="stock-alert-badge">
+            {{ getStatusCount('Out of Stock') }} Out of Stock | {{ getStatusCount('Low Stock') }} Low Stock
+          </div>
         <button class="export-btn" @click="exportLowStockReport">
           <i class="pi pi-download"></i> Export CSV
         </button>
@@ -26,15 +30,7 @@
       </div>
       
       <div v-else>
-        <div class="summary-banner">
-          <div class="summary-header">
-            <span class="summary-title"><i class="pi pi-exclamation-triangle" style="margin-right: 8px;"></i>Low Stock Report</span>
-            <span class="summary-date">{{ formatDate(reportData.date) }}</span>
-          </div>
-          <div class="stock-alert-badge">
-            {{ getStatusCount('Out of Stock') }} Out of Stock | {{ getStatusCount('Low Stock') }} Low Stock
-          </div>
-        </div>
+
         
         <div class="table-container">
           <table class="stock-table">
@@ -332,7 +328,7 @@ export default {
   display: flex;
   flex-direction: column;
   flex-grow: 1;
-  margin-left: 230px;
+  margin-left: 220px;
   height: 100%;
   background-color: #f8f9fa;
   padding: 20px 30px;
@@ -349,14 +345,14 @@ export default {
 
 .title-section {
   display: flex;
-  align-items: center;
+  flex-direction: column;
 }
 
 .products-header {
-  color: #212529;
+  color: #333;
+  font-family: 'Arial', sans-serif;
+  font-weight: 900;
   font-size: 32px;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  font-weight: 700;
   margin: 0;
 }
 
@@ -488,7 +484,7 @@ export default {
   border-radius: 15px;
   overflow-y: auto;
   padding: 0;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
   transition: all 0.3s ease;
 }
 
@@ -496,7 +492,6 @@ export default {
   flex-grow: 1;
   overflow-y: auto;
   border-radius: 15px;
-  padding: 0 10px;
 }
 
 .stock-table {
@@ -522,15 +517,9 @@ export default {
 }
 
 .stock-table th {
-  background-color: #ffffff;
-  padding: 18px 10px;
-  color: #495057;
-  font-weight: 600;
-  font-size: 15px;
-  position: sticky;
-  top: 0;
-  z-index: 10;
-  border-bottom: 2px solid #dee2e6;
+  background-color: #f4f4f4;
+    color: #333;
+    font-weight: bold;
 }
 
 .stock-name {

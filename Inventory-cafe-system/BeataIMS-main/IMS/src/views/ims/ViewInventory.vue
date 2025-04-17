@@ -73,14 +73,6 @@
       </table>
     </div>
 
-    <div class="floating-btn-container">
-      <button class="floating-btn" @click="togglePopoutOptions">+</button>
-      <div v-if="showPopoutOptions" class="popout-options">
-        <button class="popout-option" @click="addLowStock">Add Low Stock</button>
-        <button class="popout-option" @click="postInventorySummary">Add Summary</button>
-      </div>
-    </div>
-
     <transaction-log 
       :isVisible="showTransactionLog"
       @close="toggleTransactionLog"
@@ -111,7 +103,6 @@ export default {
       selectedLowStockItems: [],
       isLowStockMode: false,
       currentDate: new Date().toISOString().split('T')[0],
-      inventorySummaries: [],
       selectedProductId: null,
       showTransactionLog: false,
       categories: [],
@@ -160,9 +151,7 @@ export default {
       });
     },
 
-    togglePopoutOptions() {
-      this.showPopoutOptions = !this.showPopoutOptions;
-    },
+
     filterItems() {
       let filtered = this.productItems;
 
@@ -272,22 +261,6 @@ export default {
       console.log("Stock summary updated:", this.stockSummary);
     },
 
-    async postInventorySummary() {
-      try {
-        const response = await axios.post(`${INVENTORY_API}/inventorysummary`);
-
-        let savedReports = JSON.parse(localStorage.getItem("inventorySummaries")) || [];
-        savedReports.push(response.data);
-
-        localStorage.setItem("inventorySummaries", JSON.stringify(savedReports));
-
-        this.toast.success("Inventory summary posted successfully!");
-      } catch (error) {
-        console.error("Error posting inventory summary:", error);
-        this.toast.error("Failed to post inventory summary.");
-      }
-    },
-
     // Add new refresh method
     refreshData() {
       this.toast.info("Refreshing inventory data...");
@@ -350,6 +323,7 @@ export default {
     justify-content: space-between;
     margin-left: 18px;
     width: 95%;
+    
   }
   
   .products-header {
@@ -503,64 +477,7 @@ export default {
     background-color: rgba(0, 0, 0, 0.2);
   }
   
-  .floating-btn-container {
-    position: fixed; 
-    bottom: 20px;
-    right: 20px;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    z-index: 10; 
-  }
-  
-  .floating-btn {
-    width: 35px;
-    height: 35px;
-    background-color: #E54F70;
-    color: #0000009d;
-    border: none;
-    border-radius: 50%;
-    font-size: 19px;
-    font-weight: bold;
-    cursor: pointer;
-    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  
-  .floating-btn:hover {
-    background-color: #ed9598;
-  }
-  
-  .popout-options {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    position: absolute;
-    bottom: 0;
-    right: 40px;
-  }
-  
-  .popout-option {
-    background-color: #FFFFFF;
-    color: rgb(34, 34, 34);
-    padding: 10px;
-    margin: 5px;
-    border: none;
-    border-radius: 20px;
-    cursor: pointer;
-    font-size: 10px;
-    width: 100px;
-  }
-  
-  .popout-option:hover {
-    background-color: #FF32BA;
-  }
-  
-  .popout-option:active {
-    background-color: #004080;
-  }
+
   
   .quantity-container {
     display: flex;

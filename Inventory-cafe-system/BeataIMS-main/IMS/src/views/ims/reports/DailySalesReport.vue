@@ -4,26 +4,21 @@
     <SideBar :isCollapsed="isSidebarCollapsed" />
     <div class="app-container" :class="{ 'sidebar-collapsed': isSidebarCollapsed }">
       <div class="header-container">
+        <div class="title-section">
         <h1 class="report-header">Daily Sales Report</h1>
-        <div class="system-date">Today's Date: {{ formatFullDate(currentDate) }}</div>
+        <span class="date-display">{{ formattedDate }}</span>
+        </div>
         <div class="header-actions">
-          <div class="date-selector">
-            <input 
-              type="date" 
-              v-model="selectedDate" 
-              :max="currentDate"
-              @change="handleDateChange"
-              class="date-input"
-            />
-            <span class="date-display">{{ formattedDate }}</span>
-            <span v-if="isToday(selectedDate)" class="today-badge">Today</span>
-          </div>
+
+          <div class="header-btn">
           <button class="refresh-btn header-refresh" @click="refreshData">
             <i class="pi pi-refresh"></i> Refresh
           </button>
           <button class="export-btn" @click="exportToCsv">
             <i class="pi pi-download"></i> Export CSV
           </button>
+
+        </div>
         </div>
       </div>
 
@@ -33,11 +28,16 @@
       </div>
 
       <div v-else class="report-content">
-        <!-- Past date indicator -->
-        <div v-if="!isToday(selectedDate)" class="past-date-banner">
-          <i class="pi pi-calendar"></i>
-          <span>You are viewing historical data for {{ formattedDate }}. <button class="reset-btn" @click="refreshData">Switch to today</button></span>
-        </div>
+        <div class="date-selector">
+            <input 
+              type="date" 
+              v-model="selectedDate" 
+              :max="currentDate"
+              @change="handleDateChange"
+              class="date-input"
+            />
+          </div>
+
       
         <!-- Summary Cards -->
         <div class="summary-cards">
@@ -996,13 +996,18 @@ export default {
   justify-content: space-between;
   margin-bottom: 20px;
 }
-
+.title-section {
+  display: flex;
+  flex-direction: column;
+}
 .report-header {
   color: #333;
-  font-size: 30px;
   font-family: 'Arial', sans-serif;
   font-weight: 900;
+  font-size: 32px;
+  margin: 0;
 }
+
 
 .system-date {
   font-size: 14px;
@@ -1012,6 +1017,7 @@ export default {
 
 .header-actions {
   display: flex;
+  flex-direction: column;
   gap: 15px;
   align-items: center;
 }
@@ -1025,9 +1031,8 @@ export default {
 }
 
 .date-display {
-  margin-left: 10px;
-  font-size: 16px;
-  color: #666;
+  font-size: 14px;
+  color: #6c757d;
 }
 
 .today-badge {
@@ -1067,7 +1072,9 @@ export default {
   flex-direction: column;
   gap: 30px;
 }
-
+.date-selector {
+  text-align: right;
+}
 .summary-cards {
   display: flex;
   justify-content: space-between;
@@ -1330,7 +1337,7 @@ export default {
 }
 
 .export-btn {
-  background-color: #4caf50;
+  background-color: #E54F70;;
   color: #fff;
   padding: 8px 16px;
   border: none;
@@ -1344,7 +1351,7 @@ export default {
 }
 
 .export-btn:hover {
-  background-color: #45a049;
+  background-color:rgb(112, 36, 53);
 }
 
 .export-btn i {
@@ -1357,7 +1364,6 @@ export default {
 }
 
 .refresh-btn {
-  background-color: #4caf50;
   color: #fff;
   padding: 8px 16px;
   border: none;
@@ -1368,10 +1374,6 @@ export default {
   gap: 5px;
   font-weight: 500;
   transition: background-color 0.2s;
-}
-
-.refresh-btn:hover {
-  background-color: #45a049;
 }
 
 .refresh-btn i {
@@ -1392,7 +1394,7 @@ export default {
 }
 
 .header-refresh:hover {
-  background-color: #c13a5a;
+  background-color:rgb(112, 36, 53);
 }
 
 /* Modal Styles */

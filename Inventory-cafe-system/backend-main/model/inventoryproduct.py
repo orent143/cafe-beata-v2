@@ -449,7 +449,14 @@ async def post_inventory_summary(db=Depends(get_db)):
             product_id, product_name, quantity, unit_price, category_id, image = product
             quantity = quantity if quantity is not None else 0
             unit_price = unit_price if unit_price is not None else 0.0
-            status = determine_status(quantity)
+            
+            # Need to get the process_type for each product
+            cursor.execute("SELECT ProcessType, Threshold FROM inventoryproduct WHERE id = %s", (product_id,))
+            proc_info = cursor.fetchone()
+            process_type = proc_info[0] if proc_info else "Ready-Made"  # Default to Ready-Made if not found
+            threshold = proc_info[1] if proc_info else None
+            
+            status = determine_status(quantity, process_type, threshold)
 
             cursor.execute(
                 """
@@ -475,18 +482,24 @@ async def post_inventory_summary(db=Depends(get_db)):
             logger.warning(f"Failed to log activity: {log_error}")
 
         # Format the response
-        result = [
-            {
+        result = []
+        for product in products:
+            # We need to get the process_type here as well
+            product_id = product[0]
+            cursor.execute("SELECT ProcessType, Threshold FROM inventoryproduct WHERE id = %s", (product_id,))
+            proc_info = cursor.fetchone()
+            process_type = proc_info[0] if proc_info else "Ready-Made"
+            threshold = proc_info[1] if proc_info else None
+            
+            result.append({
                 "id": product[0],
                 "ProductName": product[1],
                 "Quantity": product[2] if product[2] is not None else 0,
                 "UnitPrice": product[3] if product[3] is not None else 0.0,
                 "CategoryID": product[4],
-                "Status": determine_status(product[2] if product[2] is not None else 0),
+                "Status": determine_status(product[2] if product[2] is not None else 0, process_type, threshold),
                 "Image": f"/uploads/products/{product[5]}" if product[5] else None
-            }
-            for product in products
-        ]
+            })
         
         cursor.close()
         return result
