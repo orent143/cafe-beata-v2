@@ -1,10 +1,20 @@
 <template>
-  <Header :isSidebarCollapsed="isSidebarCollapsed" @toggle-sidebar="handleSidebarToggle" />
+  <Header 
+    :isSidebarCollapsed="isSidebarCollapsed" 
+    @toggle-sidebar="handleSidebarToggle"
+    v-model:searchQuery="searchTerm"
+    @update:searchQuery="updateSearchTerm"
+  />
 
 <SideBar :isCollapsed="isSidebarCollapsed" />
 <div class="app-container" :class="{ 'sidebar-collapsed': isSidebarCollapsed }">
     <div class="header-container">
+      <div class="header-title">
       <h1 class="products-header">Categories</h1>
+      <p class="sub-description">
+        Organize your products into categories. Edit or delete existing categories, or add new ones to improve product management.
+      </p>
+    </div>
       <div class="header-actions">
         <button @click="toggleAddForm" class="add-product-btn">Add</button>
       </div>
@@ -106,6 +116,9 @@ export default {
     handleSidebarToggle(collapsed) {
       this.isSidebarCollapsed = collapsed;
     },
+    updateSearchTerm(query) {
+      this.searchTerm = query;
+    },
     toggleEditForm() {
       this.editingCategory = null;
     },
@@ -200,6 +213,12 @@ export default {
   margin-left: 18px;
   width: 95%;
 }
+
+.header-title {
+  display: flex;
+  flex-direction: column;
+  width: 95%;
+}
 .category-container {
   flex-grow: 1;
   background-color: #EFEFEF;
@@ -234,7 +253,12 @@ export default {
   font-family: 'Arial', sans-serif;
   font-weight: 900;
 }
-
+.sub-description {
+  font-size: 14px;
+  color: #666;
+  margin-top: -10px;
+  margin-bottom: 15px;
+}
 .header-actions {
   display: flex;
   align-items: center;

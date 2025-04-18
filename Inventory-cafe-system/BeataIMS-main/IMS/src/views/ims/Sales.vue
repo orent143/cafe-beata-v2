@@ -1,9 +1,17 @@
 <template>
-  <Header :isSidebarCollapsed="isSidebarCollapsed" @toggle-sidebar="handleSidebarToggle"/>
+  <Header 
+    :isSidebarCollapsed="isSidebarCollapsed" 
+    @toggle-sidebar="handleSidebarToggle"
+    v-model:searchQuery="searchTerm"
+    @update:searchQuery="filterSalesData"
+  />
   <SideBar :isCollapsed="isSidebarCollapsed"/>
   <div class="app-container" :class="{ 'sidebar-collapsed': isSidebarCollapsed }">
     <div class="header-container">
+      <div class="header-title">
       <h1 class="sales-header">Sales Product</h1>
+      <p class="sub-description">Track daily product sales, review quantities sold, and monitor remittances for better performance insights.</p>
+    </div>
       <div class="header-actions">
         <div class="filter-container">
           <button class="filter-btn" @click="toggleFilterDropdown">
@@ -80,6 +88,7 @@ export default {
       showFilterDropdown: false,
       selectedDate: '', // Date filter
       toast: useToast(),
+      searchTerm: '',
     };
   },
   computed: {
@@ -121,7 +130,36 @@ export default {
     },
     toggleFilterDropdown() {
       this.showFilterDropdown = !this.showFilterDropdown;
-    }
+    },
+    filterSalesData() {
+      // If no search term, just return the original data
+      if (!this.searchTerm) {
+        return;
+      }
+      
+      // Create a filtered copy of the sales data
+      const searchLower = this.searchTerm.toLowerCase();
+      const filteredData = this.salesData.filter(sale => 
+        sale.name.toLowerCase().includes(searchLower)
+      );
+      
+      // Update the table display with filtered data
+      // We're not actually changing this.salesData to preserve the original data
+      this.$nextTick(() => {
+        const tableElement = document.querySelector('.sales-table tbody');
+        if (tableElement) {
+          // Hide rows that don't match the search
+          const rows = tableElement.querySelectorAll('tr');
+          rows.forEach(row => {
+            const nameCell = row.querySelector('td:first-child');
+            if (nameCell) {
+              const name = nameCell.textContent.toLowerCase();
+              row.style.display = name.includes(searchLower) ? '' : 'none';
+            }
+          });
+        }
+      });
+    },
   },
   mounted() {
     this.fetchSalesData(); // Initial fetch on page load
@@ -155,14 +193,23 @@ export default {
   margin-left: 18px;
   width: 95%;
 }
-
+.header-title {
+  display: flex;
+  flex-direction: column;
+  width: 95%;
+}
 .sales-header {
   color: #333;
   font-size: 30px;
   font-family: 'Arial', sans-serif;
   font-weight: 900;
 }
-
+.sub-description {
+  font-size: 14px;
+  color: #666;
+  margin-top: -10px;
+  margin-bottom: 15px;
+}
 .header-actions {
   display: flex;
   align-items: center;

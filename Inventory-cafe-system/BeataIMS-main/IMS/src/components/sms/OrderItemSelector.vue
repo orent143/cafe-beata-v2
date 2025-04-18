@@ -56,6 +56,10 @@ export default {
     menuItems: {
       type: Array,
       required: true
+    },
+    searchQuery: {
+      type: String,
+      default: ''
     }
   },
   setup() {
@@ -75,10 +79,25 @@ export default {
     this.fetchCategories();
   },
   computed: {
-    // Filtered menu items based on selected category
+    // Filtered menu items based on selected category and search query
     filteredMenuItems() {
-      if (!this.selectedCategory) return this.menuItems;
-      return this.menuItems.filter(item => item.category === this.selectedCategory);
+      let filtered = this.menuItems;
+      
+      // Filter by category if one is selected
+      if (this.selectedCategory) {
+        filtered = filtered.filter(item => item.category === this.selectedCategory);
+      }
+      
+      // Apply search filter if there's a search query
+      if (this.searchQuery) {
+        const searchLower = this.searchQuery.toLowerCase();
+        filtered = filtered.filter(item => 
+          item.name.toLowerCase().includes(searchLower) || 
+          (item.category && item.category.toLowerCase().includes(searchLower))
+        );
+      }
+      
+      return filtered;
     }
   },
   methods: {

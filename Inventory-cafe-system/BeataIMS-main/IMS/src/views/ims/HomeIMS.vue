@@ -5,7 +5,10 @@
 
   <div class="app-container" :class="{ 'sidebar-collapsed': isSidebarCollapsed }">
     <div class="header-container">
+    <div class="header-title">
       <h1 class="products-header">Dashboard</h1>
+      <p class="dashboard-description">Get a quick overview of your sales, stock, and recent activities all in one place.</p>
+    </div>
       <div class="header-actions">
         <div class="date-display">
           <i class="pi pi-calendar"></i>
@@ -86,39 +89,40 @@
       </div>
 
       <div class="recent-activity">
-  <h2>Recent Orders</h2>
-  <div class="table-container">
-    <table class="orders-table">
-      <thead>
-        <tr>
-          <th>Order ID</th>
-          <th>Customer</th>
-          <th>Total</th>
-          <th>Date</th>
-          <th>Status</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-for="order in recentOrders" :key="order.id">
-          <td class="order-id">{{ order.id }}</td>
-          <td>{{ order.customerName }}</td>
-          <td>₱{{ order.total }}</td>
-          <td>{{ formatDate(order.date) }}</td>
-          <td>
-            <span :class="['payment-badge', order.status.toLowerCase()]">
-              {{ order.status }}
-            </span>
-          </td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
-</div>
-</div>
+        <h2>Recent Orders</h2>
+        <div class="table-container">
+          <table class="orders-table">
+            <thead>
+              <tr>
+                <th>Order ID</th>
+                <th>Customer</th>
+                <th>Total</th>
+                <th>Date</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="order in recentOrders" :key="order.id">
+                <td class="order-id">{{ order.id }}</td>
+                <td>{{ order.customerName }}</td>
+                <td>₱{{ order.total }}</td>
+                <td>{{ formatDate(order.date) }}</td>
+                <td>
+                  <span :class="['payment-badge', order.status.toLowerCase()]">
+                    {{ order.status }}
+                  </span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
 
     </div>
   </div>
 </template>
+
 
 <script>
 import SideBar from '@/components/ims/SideBar.vue';
@@ -375,7 +379,17 @@ export default {
   font-family: 'Arial', sans-serif;
   font-weight: 900;
 }
-
+.header-title {
+  display: flex;
+  flex-direction: column;
+  width: 95%;
+}
+.dashboard-description {
+  font-size: 14px;
+  color: #666;
+  margin-top: -10px;
+  margin-bottom: 15px;
+}
 .date-display {
   display: flex;
   align-items: center;

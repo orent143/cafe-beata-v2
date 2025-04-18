@@ -1,10 +1,20 @@
 <template>
-  <Header :isSidebarCollapsed="isSidebarCollapsed" @toggle-sidebar="handleSidebarToggle" />
+  <Header 
+    :isSidebarCollapsed="isSidebarCollapsed" 
+    @toggle-sidebar="handleSidebarToggle"
+    v-model:searchQuery="searchTerm"
+    @update:searchQuery="filterSuppliers"
+  />
 
 <SideBar :isCollapsed="isSidebarCollapsed" />
 <div class="app-container" :class="{ 'sidebar-collapsed': isSidebarCollapsed }">
     <div class="header-container">
+      <div class="header-title">
       <h1 class="products-header">Suppliers List</h1>
+      <p class="sub-description">
+        Manage supplier information including contact details and email. Use the action buttons to edit or remove entries.
+      </p>
+    </div>
       <div class="header-actions">
         <button @click="toggleAddForm" class="add-product-btn">Add</button>
       </div>
@@ -205,14 +215,23 @@ export default {
   margin-left: 18px;
   width: 95%;
 }
-
+.header-title {
+  display: flex;
+  flex-direction: column;
+  width: 95%;
+}
 .products-header {
   color: #333;
   font-size: 30px;
   font-family: 'Arial', sans-serif;
   font-weight: 900;
 }
-
+.sub-description {
+  font-size: 14px;
+  color: #666;
+  margin-top: -10px;
+  margin-bottom: 15px;
+}
 .header-actions {
   display: flex;
   align-items: center;

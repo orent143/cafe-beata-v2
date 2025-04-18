@@ -1,17 +1,26 @@
 <template>
-  <Header :isSidebarCollapsed="isSidebarCollapsed" @toggle-sidebar="handleSidebarToggle" />
+  <Header 
+    :isSidebarCollapsed="isSidebarCollapsed" 
+    @toggle-sidebar="handleSidebarToggle"
+    v-model:searchQuery="searchTerm"
+    @update:searchQuery="handleSearch"
+  />
   <SideBar :isCollapsed="isSidebarCollapsed" />
   
   <div class="app-container" :class="{ 'sidebar-collapsed': isSidebarCollapsed }">
     <div class="header-container">
       <h1 class="header">Create Order</h1>
+      <p class="sub-description">
+        Select items, enter customer details, and finalize the order for processing and tracking.
+      </p>
     </div>
 
     <div class="content-wrapper">
       <div class="main-content">
         <OrderItemSelector 
           :items="order.items"
-          :menuItems="menuItems"
+          :menuItems="filteredMenuItems"
+          :searchQuery="searchTerm"
           @update:items="updateOrderItems"
           @update:menuItems="menuItems = $event"
           @increaseQuantity="increaseItemQuantity"
@@ -106,6 +115,7 @@ export default {
       showConfirmModal: false,
       loading: false,
       errorMessage: '',
+      searchTerm: '',
     };
   },
   computed: {
@@ -117,11 +127,28 @@ export default {
     },
     isValidOrder() {
       return this.order.items.length > 0 && !!this.order.customerName;
+    },
+    filteredMenuItems() {
+      if (!this.searchTerm) {
+        return this.menuItems;
+      }
+      
+      const searchLower = this.searchTerm.toLowerCase();
+      return this.menuItems.filter(item => 
+        item.name.toLowerCase().includes(searchLower) || 
+        (item.description && item.description.toLowerCase().includes(searchLower)) ||
+        (item.category && item.category.toLowerCase().includes(searchLower))
+      );
     }
   },
   methods: {
     handleSidebarToggle(collapsed) {
       this.isSidebarCollapsed = collapsed;
+    },
+    
+    handleSearch(query) {
+      this.searchTerm = query;
+      // Search is handled by the computed filteredMenuItems
     },
 
     updateOrderItems(updatedItems) {
@@ -197,6 +224,7 @@ export default {
         items: [],
         paymentMethod: 'Cash'
       };
+      this.searchTerm = '';
       this.toast.info('Form reset successfully');  // ✅ Toast after form reset
     }
   }
@@ -221,12 +249,18 @@ export default {
 
 .header-container {
   display: flex;
-  align-items: center;
+  flex-direction: column;  
   justify-content: space-between;
   margin-left: 18px;
   width: calc(100% - 40px);
 }
 
+.sub-description {
+  font-size: 14px;
+  color: #666;
+  margin-top: -10px;
+  margin-bottom: 15px;
+}
 .content-wrapper {
   display: grid;
   grid-template-columns: 1fr 400px;

@@ -7,6 +7,7 @@
     <div class="main-container">
       <div class="header-container">
         <h1 class="header">Create Product</h1>
+        <p class="sub-description">Fill in the product details below to add a new item to your inventory.</p>
       </div>
       <div class="content-wrapper">
         <div class="product-details">
@@ -267,7 +268,12 @@ export default {
   font-family: 'Arial', sans-serif;
   font-weight: 900;
 }
-
+.sub-description {
+  font-size: 14px;
+  color: #666;
+  margin-top: -10px;
+  margin-bottom: 20px;
+}
 .product-details {
   background: #fff;
   padding: 30px;

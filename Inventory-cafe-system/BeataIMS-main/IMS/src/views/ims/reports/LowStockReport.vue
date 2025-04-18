@@ -1,7 +1,12 @@
 <template>
-  <Header />
+  <Header 
+    :isSidebarCollapsed="isSidebarCollapsed" 
+    @toggle-sidebar="handleSidebarToggle"
+    v-model:searchQuery="searchQuery"
+    @update:searchQuery="filterInventoryProducts"
+  />
   <SideBar />
-  <div class="app-container">
+  <div class="app-container" :class="{ 'sidebar-collapsed': isSidebarCollapsed }">
     <div class="header-container">
       <div class="title-section">
         <h1 class="products-header">Low Stock Report</h1>
@@ -45,15 +50,16 @@
               </tr>
             </thead>
             <tbody>
-              <tr v-for="item in lowStockItems" :key="item.ProductID || item.StockID || item.ReportID">
+              <tr v-for="item in displayedLowStockItems" :key="item.ProductID || item.StockID || item.ReportID">
                 <td>
                   <div class="stock-info">
                     <img 
-                      :src="getImageUrl(item.Image)" 
-                      :alt="item.StockName || item.ProductName"
-                      @error="handleImageError"
-                      class="stock-image"
-                    />
+  :src="getImageUrl(item.Image)" 
+  :alt="item.StockName || item.ProductName"
+  @error="handleImageError"
+  class="stock-image"
+  loading="lazy"  
+/>
                     <span class="stock-name">{{ item.StockName || item.ProductName }}</span>
                   </div>
                 </td>
@@ -87,12 +93,12 @@
           <div class="totals-item">
             <i class="pi pi-exclamation-circle" style="margin-right: 8px;"></i>
             <span>Total Low Stock Items: </span>
-            <span>{{ lowStockItems.length }}</span>
+            <span>{{ displayedLowStockItems.length }} {{ searchQuery ? 'filtered' : 'total' }}</span>
           </div>
           <div class="totals-item">
             <i class="pi pi-money-bill" style="margin-right: 8px;"></i>
             <span>Total Value: </span>
-            <span>₱{{ parseFloat(reportData.total_value).toFixed(2) }}</span>
+            <span>₱{{ parseFloat(calculateTotalValue(displayedLowStockItems)).toFixed(2) }}</span>
           </div>
         </div>
       </div>
@@ -119,23 +125,50 @@ export default {
   },
   data() {
     return {
+      isSidebarCollapsed: false,
       reportData: {
         date: new Date().toISOString(),
         total_items: 0,
         total_value: 0,
       },
       lowStockItems: [],
+      filteredLowStockItems: [],
       outOfStockItems: [],
-      allProductItems: [], // Store all inventory products
-      filteredItems: [], // Store filtered Ready-Made products
+      allProductItems: [], //
+      filteredItems: [], //
       selectedDate: new Date().toISOString().split("T")[0], 
       currentDate: new Date().toISOString().split("T")[0], 
-      fallbackImage: "https://via.placeholder.com/100", // Default Image
+      fallbackImage: "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgZmlsbD0iI2VlZWVlZSIvPjx0ZXh0IHg9IjUwIiB5PSI1MCIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjEyIiBmaWxsPSIjYWFhYWFhIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBhbGlnbm1lbnQtYmFzZWxpbmU9Im1pZGRsZSI+Tm8gSW1hZ2U8L3RleHQ+PC9zdmc+", // Base64 encoded SVG placeholder
       loading: false,
-      error: null
+      error: null,
+      searchQuery: '',
     };
   },
+  computed: {
+    // Display filtered low stock items when search is active
+    displayedLowStockItems() {
+      return this.filteredLowStockItems.length > 0 ? this.filteredLowStockItems : this.lowStockItems;
+    }
+  },
   methods: {
+    handleSidebarToggle(collapsed) {
+      this.isSidebarCollapsed = collapsed;
+    },
+    
+    filterInventoryProducts() {
+      if (!this.searchQuery) {
+        this.filteredLowStockItems = [];
+        return;
+      }
+      
+      const searchLower = this.searchQuery.toLowerCase();
+      this.filteredLowStockItems = this.lowStockItems.filter(item => {
+        const nameMatch = (item.StockName || item.ProductName || '').toLowerCase().includes(searchLower);
+        const statusMatch = this.getStatus(item.Quantity, item.Threshold).toLowerCase().includes(searchLower);
+        return nameMatch || statusMatch;
+      });
+    },
+
     async fetchInventoryProducts() {
       try {
         this.loading = true;
@@ -246,6 +279,7 @@ export default {
     
     handleImageError(event) {
       event.target.src = this.fallbackImage;
+      event.target.onerror = null; // Prevent infinite loop if the fallback also fails
     },
     
     getStatus(quantity, threshold = 10) {
@@ -332,6 +366,12 @@ export default {
   height: 100%;
   background-color: #f8f9fa;
   padding: 20px 30px;
+  transition: all 0.3s ease;
+}
+
+.app-container.sidebar-collapsed {
+  margin-left: 70px;
+  padding-left: 20px;
 }
 
 .header-container {

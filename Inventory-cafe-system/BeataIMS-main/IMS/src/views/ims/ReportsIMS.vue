@@ -5,6 +5,9 @@
   <div class="app-container" :class="{ 'sidebar-collapsed': isSidebarCollapsed }">
     <div class="header-container">
       <h1 class="products-header">Inventory Reports</h1>
+      <p class="sub-description">
+        Explore detailed reports for your inventory, including product summaries, daily sales, and stock levels.
+      </p>
     </div>
 
     <div v-if="loading" class="loading-container">
@@ -226,8 +229,7 @@ export default {
 
 .header-container {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
+  flex-direction: column;
   margin-left: 18px;
   width: 95%;
 }
@@ -237,6 +239,14 @@ export default {
   font-size: 30px;
   font-family: 'Arial', sans-serif;
   font-weight: 900;
+  margin-bottom: 10px; /* Adjusted margin */
+}
+
+.sub-description {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 20px; /* Existing margin */
+  margin-top: 5px; /* Added margin for spacing */
 }
 
 .loading-container {

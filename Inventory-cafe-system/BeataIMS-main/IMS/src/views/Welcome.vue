@@ -21,7 +21,7 @@
         <p>Streamline your operations with our comprehensive management system</p>
         <div class="cta-buttons">
           <button @click="redirectToLogin('homeims')" class="primary-btn">
-  <i class="fas fa-boxes"></i> Inventory Management
+  <i class="fas fa-boxes"></i> Sales and Inventory 
 </button>
         </div>
       </div>

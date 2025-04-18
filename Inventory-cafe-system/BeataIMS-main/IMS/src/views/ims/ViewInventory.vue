@@ -1,9 +1,19 @@
 <template>
-  <Header :isSidebarCollapsed="isSidebarCollapsed" @toggle-sidebar="handleSidebarToggle" />
+  <Header 
+    :isSidebarCollapsed="isSidebarCollapsed" 
+    @toggle-sidebar="handleSidebarToggle"
+    v-model:searchQuery="searchTerm"
+    @update:searchQuery="handleSearchUpdate"
+  />
   <SideBar :isCollapsed="isSidebarCollapsed" />
   <div class="app-container" :class="{ 'sidebar-collapsed': isSidebarCollapsed }">
     <div class="header-container">
+      <div class="header-title">
       <h1 class="products-header">Inventory List</h1>
+      <p class="sub-description">
+        Monitor current stock levels, pricing, and product details. Use filters to narrow down inventory by process type.
+      </p>
+    </div>
       <div class="header-actions">
         <div class="filter-container">
           <div class="filter-label">Filtered by</div>
@@ -111,6 +121,10 @@ export default {
   methods: {
     handleSidebarToggle(collapsed) {
       this.isSidebarCollapsed = collapsed;
+    },
+    handleSearchUpdate(query) {
+      this.searchTerm = query;
+      this.filterItems();
     },
     toggleFilterDropdown() {
       this.showFilterDropdown = !this.showFilterDropdown;
@@ -316,14 +330,23 @@ export default {
     width: 95%;
     
   }
-  
+  .header-title {
+  display: flex;
+  flex-direction: column;
+  width: 95%;
+}
   .products-header {
     color: #333;
     font-size: 30px;
     font-family: 'Arial', sans-serif;
     font-weight: 900;
   }
-  
+  .sub-description {
+  font-size: 14px;
+  color: #666;
+  margin-top: -10px;
+  margin-bottom: 15px;
+}
   .header-actions {
     display: flex;
     align-items: center;

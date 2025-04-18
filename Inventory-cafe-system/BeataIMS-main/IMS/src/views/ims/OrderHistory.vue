@@ -1,10 +1,20 @@
 <template>
-  <Header :isSidebarCollapsed="isSidebarCollapsed" @toggle-sidebar="handleSidebarToggle" />
+  <Header 
+    :isSidebarCollapsed="isSidebarCollapsed" 
+    @toggle-sidebar="handleSidebarToggle"
+    v-model:searchQuery="searchQuery"
+    @update:searchQuery="filterOrders"
+  />
   <SideBar :isCollapsed="isSidebarCollapsed" />
 
   <div class="app-container" :class="{ 'sidebar-collapsed': isSidebarCollapsed }">
     <div class="header-container">
+      <div class="header-title">
       <h1 class="sales-header">Order History</h1>
+      <p class="sub-description">
+        Review past orders including customer info, payment method, and order totals. Use filters to narrow down results.
+      </p>
+    </div>
       <div class="header-actions">
         <div class="filter-container">
           <button class="filter-btn" @click="toggleFilterDropdown">
@@ -125,7 +135,9 @@ export default {
     handleSidebarToggle(collapsed) {
       this.isSidebarCollapsed = collapsed;
     },
-
+    filterOrders() {
+      // When search query changes, the computed filteredOrders will be recalculated automatically
+    },
     async fetchOrders() {
       this.loading = true;
       try {
@@ -203,14 +215,23 @@ export default {
   margin-left: 18px;
   width: 95%;
 }
-
+.header-title {
+  display: flex;
+  flex-direction: column;
+  width: 95%;
+}
 .sales-header {
   color: #333;
   font-size: 30px;
   font-family: 'Arial', sans-serif;
   font-weight: 900;
 }
-
+.sub-description {
+  font-size: 14px;
+  color: #666;
+  margin-top: -10px;
+  margin-bottom: 15px;
+}
 .header-actions {
   display: flex;
   align-items: center;

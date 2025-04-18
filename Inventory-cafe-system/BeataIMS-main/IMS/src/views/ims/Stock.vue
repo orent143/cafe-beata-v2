@@ -6,6 +6,9 @@
     <div class="main-container">
       <div class="header-container">
         <h1 class="header">Add Stock</h1>
+        <p class="sub-description">
+         Enter stock details including quantity, supplier, and optional batch or expiration info to update inventory records.
+        </p>
       </div>
 
       <div class="content-wrapper">
@@ -457,6 +460,13 @@ export default {
   font-size: 30px;
   font-family: 'Arial', sans-serif;
   font-weight: 900;
+}
+
+.sub-description {
+  font-size: 14px;
+  color: #666;
+  margin-top: -10px;
+  margin-bottom: 15px;
 }
 .content-wrapper {
   display: grid;
