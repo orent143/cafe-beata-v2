@@ -622,7 +622,10 @@ export default {
   background: #F8D7DA;
   color: #721c24;
 }
-
+.status-available {
+  background-color: rgba(2, 136, 209, 0.1);
+  color: #0288D1;
+}
 .modal-overlay {
   position: fixed;
   top: 0;

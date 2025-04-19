@@ -187,18 +187,18 @@ export default {
       }
     },
 
-    // Method to get the text status
-    getStockStatus(quantity) {
-      quantity = Number(quantity);
-      
-      if (quantity <= 0) {
-        return 'Out of Stock';
-      } else if (quantity <= 10) {
-        return 'Low Stock';
-      } else {
-        return 'In Stock';
-      }
-    },
+    getStockStatus(quantity, threshold) {
+  quantity = Number(quantity);
+  threshold = Number(threshold);
+
+  if (quantity <= 0) {
+    return 'Out of Stock';
+  } else if (quantity <= threshold) {
+    return 'Low Stock';
+  } else {
+    return 'In Stock';
+  }
+},
 
     // Get CSS class for stock status
     getStockStatusClass(quantity) {
@@ -228,7 +228,7 @@ export default {
             ProductID: formattedId,
             // Make sure we preserve the original ID for routing
             id: item.id,
-            Status: this.getQuantityClass(item.Quantity, item.Threshold)
+            Status: this.getStockStatus(item.Quantity, item.Threshold)
           };
         });
 

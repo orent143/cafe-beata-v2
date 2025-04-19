@@ -95,7 +95,6 @@ async def get_all_inventory_products(request: Request, db=Depends(get_db)):
         cursor = db.cursor()
         base_url = str(request.base_url)
 
-        # Add ORDER BY id to ensure products are sorted by ProductID
         cursor.execute("SELECT id, ProductName, Quantity, UnitPrice, `CategoryID (FK)`, ProcessType, Threshold, Image FROM inventoryproduct ORDER BY id")
         products = cursor.fetchall()
         cursor.close()

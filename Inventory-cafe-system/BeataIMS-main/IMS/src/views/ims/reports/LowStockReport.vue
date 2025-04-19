@@ -185,10 +185,10 @@ export default {
           const threshold = Number(item.Threshold || 10);
           
           let status = '';
-          // Determine status based on quantity
+          // Determine status based on quantity and individual threshold
           if (qty <= 0) {
             status = 'Out of Stock';
-          } else if (qty <= 10) {
+          } else if (qty <= threshold) {
             status = 'Low Stock';
           } else {
             status = 'In Stock';
@@ -214,9 +214,9 @@ export default {
           item.ProcessType === "Ready-Made"
         );
         
-        // Filter to include low stock and out of stock items
+        // Filter to include products that are below their individual threshold or out of stock
         this.lowStockItems = this.filteredItems.filter(item => 
-          item.Quantity <= 10 || item.Status === 'Out of Stock'
+          item.Quantity <= item.Threshold || item.Quantity <= 0
         );
         
         // Sort by quantity (ascending) so out of stock appears first, then low stock
@@ -285,17 +285,19 @@ export default {
     getStatus(quantity, threshold = 10) {
       // Ensure quantity is treated as a number
       quantity = Number(quantity);
+      threshold = Number(threshold);
       
       if (quantity <= 0) return "Out of Stock";
-      if (quantity <= 10) return "Low Stock";
+      if (quantity <= threshold) return "Low Stock";
       return "In Stock";
     },
     
     getStatusIcon(quantity, threshold = 10) {
       quantity = Number(quantity);
+      threshold = Number(threshold);
       
       if (quantity <= 0) return "pi pi-times-circle";
-      if (quantity <= 10) return "pi pi-exclamation-triangle";
+      if (quantity <= threshold) return "pi pi-exclamation-triangle";
       return "pi pi-check-circle";
     },
     
@@ -632,7 +634,7 @@ export default {
   border: 1px solid #ffe0b2;
 }
 
-.status-out-of-stock {
+.status-out-of.stock {
   background-color: #ffebee; 
   color: #c62828; 
   border: 1px solid #ffcdd2;
