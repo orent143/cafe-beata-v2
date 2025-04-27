@@ -3,9 +3,9 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Apr 16, 2025 at 01:12 PM
+-- Generation Time: Apr 27, 2025 at 03:22 AM
 -- Server version: 10.4.32-MariaDB
--- PHP Version: 8.2.12
+-- PHP Version: 8.0.30
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -123,7 +123,30 @@ INSERT INTO `activity_logs` (`id`, `icon`, `title`, `time`, `status`) VALUES
 (81, 'pi pi-trash', 'Product deleted: Hersheys', '2025-04-01 15:33:17', 'Deleted'),
 (82, 'pi pi-trash', 'Product deleted: Nature Spring', '2025-04-01 15:33:19', 'Deleted'),
 (83, 'pi pi-trash', 'Product deleted: hen', '2025-04-01 15:42:10', 'Deleted'),
-(84, 'pi pi-trash', 'Product deleted: karkar', '2025-04-16 15:50:34', 'Deleted');
+(84, 'pi pi-trash', 'Product deleted: karkar', '2025-04-16 15:50:34', 'Deleted'),
+(85, 'pi pi-chart-line', 'Inventory summary generated', '2025-04-24 12:06:12', 'Success'),
+(86, 'pi pi-trash', 'Product deleted: ytt', '2025-04-26 18:01:39', 'Deleted'),
+(87, 'pi pi-trash', 'Product deleted: heyey', '2025-04-26 18:01:46', 'Deleted'),
+(88, 'pi pi-trash', 'Product deleted: J', '2025-04-26 18:01:49', 'Deleted'),
+(89, 'pi pi-trash', 'Product deleted: Lorskie1', '2025-04-26 18:01:55', 'Deleted'),
+(90, 'pi pi-trash', 'Product deleted: ; kjb', '2025-04-26 18:02:00', 'Deleted'),
+(91, 'pi pi-trash', 'Product deleted: Get name', '2025-04-26 18:02:04', 'Deleted'),
+(92, 'pi pi-trash', 'Product deleted: lemuel', '2025-04-26 18:02:07', 'Deleted'),
+(93, 'pi pi-trash', 'Product deleted: Chicken', '2025-04-26 18:02:10', 'Deleted'),
+(94, 'pi pi-trash', 'Product deleted: Mineral wat', '2025-04-26 18:02:13', 'Deleted'),
+(95, 'pi pi-trash', 'Product deleted: henn', '2025-04-26 18:02:29', 'Deleted'),
+(96, 'pi pi-trash', 'Product deleted: lord', '2025-04-26 18:03:02', 'Deleted'),
+(97, 'pi pi-trash', 'Product deleted: gogogo', '2025-04-26 18:03:08', 'Deleted'),
+(98, 'pi pi-trash', 'Product deleted: geeyt', '2025-04-26 18:03:12', 'Deleted'),
+(99, 'pi pi-trash', 'Product deleted: Lor', '2025-04-26 18:03:15', 'Deleted'),
+(100, 'pi pi-trash', 'Product deleted: lors', '2025-04-26 18:03:21', 'Deleted'),
+(101, 'pi pi-trash', 'Product deleted: Mineral Water', '2025-04-26 18:14:59', 'Deleted'),
+(102, 'pi pi-trash', 'Product deleted: nuini', '2025-04-26 18:16:09', 'Deleted'),
+(103, 'pi pi-trash', 'Product deleted: ln jhv', '2025-04-26 18:17:24', 'Deleted'),
+(104, 'pi pi-trash', 'Product deleted: VUHVH', '2025-04-26 18:23:47', 'Deleted'),
+(105, 'pi pi-trash', 'Product deleted: NMKBIK', '2025-04-26 18:23:49', 'Deleted'),
+(106, 'pi pi-truck', 'New supplier added: John Doe ', '2025-04-26 18:28:37', 'Success'),
+(107, 'pi pi-trash', 'Supplier deleted: John Doe', '2025-04-26 18:28:41', 'Deleted');
 
 -- --------------------------------------------------------
 
@@ -183,6 +206,30 @@ INSERT INTO `categorieso` (`id`, `name`, `type`, `icon`, `created_at`) VALUES
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `category`
+--
+
+CREATE TABLE `category` (
+  `id` int(11) NOT NULL,
+  `CategoryName` varchar(100) NOT NULL,
+  `CategoryType` varchar(50) NOT NULL,
+  `Icon` varchar(50) DEFAULT NULL,
+  `CreatedAt` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `category`
+--
+
+INSERT INTO `category` (`id`, `CategoryName`, `CategoryType`, `Icon`, `CreatedAt`) VALUES
+(1, 'Ready Made', 'Product', 'coffee', '2025-04-24 16:44:39'),
+(2, 'Ready Made', 'Product', 'coffee', '2025-04-26 03:49:44'),
+(3, 'Ready Made', 'Product', 'coffee', '2025-04-26 05:35:19'),
+(4, 'Ready Made', 'Product', 'coffee', '2025-04-26 05:37:31');
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `inventoryproduct`
 --
 
@@ -206,7 +253,6 @@ CREATE TABLE `inventoryproduct` (
 INSERT INTO `inventoryproduct` (`id`, `ProductName`, `UnitPrice`, `CategoryID (FK)`, `Status`, `ReportDate`, `Image`, `ProcessType`, `Quantity`, `Threshold`) VALUES
 ('1', 'Cafe Americano', 80.00, 1, 'Available', '2025-03-27 20:33:47', '1_Cafe_Americano.jpeg', 'To Be Made', 0, NULL),
 ('10', 'Peppermint Latte', 90.00, 1, 'Available', '2025-03-27 20:40:26', '10_Peppermint_Latte.jpg', 'To Be Made', 0, NULL),
-('100', 'henn', 233.00, 7, 'Out of Stock', '2025-04-01 15:42:29', '100_henn.jpg', 'Ready-Made', 1428349, 98876),
 ('11', 'Vanilla Latte', 90.00, 1, 'Available', '2025-03-27 20:41:03', '11_Vanilla_Latte.jpg', 'To Be Made', 0, NULL),
 ('12', 'Matcha Cafe Latte', 90.00, 1, 'Available', '2025-03-27 20:41:31', '12_Matcha_Cafe_Latte.jpg', 'To Be Made', 0, NULL),
 ('13', 'Hot Tea', 60.00, 1, 'Available', '2025-03-27 20:42:06', '13_Hot_Tea.jpg', 'To Be Made', 0, NULL),
@@ -221,7 +267,6 @@ INSERT INTO `inventoryproduct` (`id`, `ProductName`, `UnitPrice`, `CategoryID (F
 ('21', 'Angel Affogato', 75.00, 2, 'Available', '2025-03-27 21:01:57', '21_Angel_Affogato.jpg', 'To Be Made', 0, NULL),
 ('22', 'Iced Spanish Latte', 115.00, 2, 'Available', '2025-03-27 21:02:51', '22_Iced_Spanish_Latte.jpg', 'To Be Made', 0, NULL),
 ('23', 'Iced Hazelnut Latte', 115.00, 2, 'Available', '2025-03-27 21:03:18', '23_Iced_Hazelnut_Latte.jpg', 'To Be Made', 0, NULL),
-('232424', 'ytt', 2323.00, 9, 'Available', '2025-03-30 16:54:39', '232424_ytt.png', 'To Be Made', 0, NULL),
 ('24', 'Iced Salted Caramel Macchiato', 115.00, 2, 'Available', '2025-03-27 21:04:34', '24_Iced_Salted_Caramel_Macchiato.jpg', 'To Be Made', 0, NULL),
 ('25', 'Iced Vanilla Latte', 115.00, 2, 'Available', '2025-03-27 21:05:12', '25_Iced_Vanilla_Latte.webp', 'To Be Made', 0, NULL),
 ('26', 'Iced Peppermint Latte', 115.00, 2, 'Available', '2025-03-27 21:05:36', '26_Iced_Peppermint_Latte.webp', 'To Be Made', 0, NULL),
@@ -232,7 +277,6 @@ INSERT INTO `inventoryproduct` (`id`, `ProductName`, `UnitPrice`, `CategoryID (F
 ('30', 'Carrot Juice', 60.00, 3, 'Available', '2025-03-27 21:36:56', '30_Carrot_Juice.webp', 'To Be Made', 0, NULL),
 ('31', 'Mango Juice', 55.00, 3, 'Available', '2025-03-27 21:37:26', '31_Mango_Juice.jpg', 'To Be Made', 0, NULL),
 ('32', 'Yakult Lemonade', 55.00, 3, 'Available', '2025-03-27 21:38:20', '32_Yakult_Lemonade.jpeg', 'To Be Made', 0, NULL),
-('3214', 'lord', 1233.00, 7, 'Available', '2025-04-01 15:50:42', NULL, 'To Be Made', 0, NULL),
 ('33', 'Yakult Honey Lemonade', 75.00, 3, 'Available', '2025-03-27 21:39:01', '33_Yakult_Honey_Lemonade.jpg', 'To Be Made', 0, NULL),
 ('34', 'Yakult Apple Lemonade', 75.00, 2, 'Available', '2025-03-27 21:40:38', '34_Yakult_Apple_Lemonade.jpg', 'To Be Made', 0, NULL),
 ('35', 'Yakult Orange Lemonade', 75.00, 3, 'Available', '2025-03-27 21:41:31', '35_Yakult_Orange_Lemonade.png', 'To Be Made', 0, NULL),
@@ -245,11 +289,8 @@ INSERT INTO `inventoryproduct` (`id`, `ProductName`, `UnitPrice`, `CategoryID (F
 ('41', 'Strawberry Orange Blue Lemonade', 75.00, 3, 'Available', '2025-03-27 21:48:25', NULL, 'To Be Made', 0, NULL),
 ('42', 'Strawberry Apple Lemonade', 75.00, 3, 'Available', '2025-03-27 21:49:10', '42_Strawberry_Apple_Lemonade.webp', 'To Be Made', 0, NULL),
 ('43', 'Orange Juice', 55.00, 3, 'Available', '2025-03-27 21:50:25', '43_Orange_Juice.jpg', 'To Be Made', 0, NULL),
-('4321', 'J', 25.00, 9, 'Out of Stock', '2025-03-31 20:04:17', '4321_J.PNG', 'Ready-Made', 50, 5454),
-('434345', 'heyey', 2233.00, 2, 'Out of Stock', '2025-03-31 01:29:24', '434345_heyey.png', 'Ready-Made', 0, 2323),
 ('44', 'Apple Carrot Juice', 75.00, 3, 'Available', '2025-03-27 21:50:47', '44_Apple_Carrot_Juice.webp', 'To Be Made', 0, NULL),
 ('45', 'Fresh Lemon Juice', 60.00, 3, 'Available', '2025-03-27 21:51:25', '45_Fresh_Lemon_Juice.jpg', 'To Be Made', 0, NULL),
-('454543', 'gogogo', 234.00, 4, 'Out of Stock', '2025-04-07 22:30:01', '454543_gogogo.png', 'Ready-Made', 1485, 3434),
 ('46', 'Mogu-Mogu Yakult', 55.00, 3, 'Available', '2025-03-27 21:52:09', NULL, 'To Be Made', 0, NULL),
 ('47', 'Mogu-Mogu Yakult w/ Lemon', 75.00, 3, 'Available', '2025-03-27 21:52:36', NULL, 'To Be Made', 0, NULL),
 ('48', 'Mogu-Mogu Yakult w/ Honey', 85.00, 3, 'Available', '2025-03-27 21:53:08', NULL, 'To Be Made', 0, NULL),
@@ -261,10 +302,8 @@ INSERT INTO `inventoryproduct` (`id`, `ProductName`, `UnitPrice`, `CategoryID (F
 ('53', 'Wintermelon Milktea', 60.00, 4, 'Available', '2025-03-27 22:08:06', '53_Wintermelon_Milktea.jpg', 'To Be Made', 0, NULL),
 ('54', 'Okinawa Milktea', 60.00, 4, 'Available', '2025-03-27 22:09:11', '54_Okinawa_Milktea.webp', 'To Be Made', 0, NULL),
 ('5431', 'Chicharon', 50000.00, 7, 'Available', '2025-04-04 14:09:36', NULL, 'To Be Made', 0, NULL),
-('5435345', 'geeyt', 99999999.99, 1, 'Available', '2025-04-04 15:57:14', '5435345_geeyt.jpg', 'To Be Made', 0, NULL),
 ('55', 'Mango Milktea', 60.00, 4, 'Available', '2025-03-27 22:09:45', '55_Mango_Milktea.jpg', 'To Be Made', 0, NULL),
 ('56', 'Oreo Milktea', 60.00, 4, 'Available', '2025-03-27 22:11:55', '56_Oreo_Milktea.jpg', 'To Be Made', 0, NULL),
-('56456456', 'Lor', 23232.00, 6, 'Available', '2025-03-30 16:55:30', '56456456_Lor.png', 'To Be Made', 0, NULL),
 ('58', 'Caramel Milktea', 60.00, 4, 'Available', '2025-03-27 22:13:47', '58_Caramel_Milktea.jpg', 'To Be Made', 0, NULL),
 ('59', 'Chocolate Milktea', 60.00, 4, 'Available', '2025-03-27 22:14:29', '59_Chocolate_Milktea.jpg', 'To Be Made', 0, NULL),
 ('6', 'Cafe Latte', 85.00, 1, 'Available', '2025-03-27 20:37:38', '6_Cafe_Latte.jpg', 'To Be Made', 0, NULL),
@@ -274,7 +313,6 @@ INSERT INTO `inventoryproduct` (`id`, `ProductName`, `UnitPrice`, `CategoryID (F
 ('63', 'Red Velvet Milktea', 60.00, 4, 'Available', '2025-03-27 22:16:36', '63_Red_Velvet_Milktea.jpg', 'To Be Made', 0, NULL),
 ('64', 'Ube Milktea', 60.00, 4, 'Available', '2025-03-27 22:18:10', '64_Ube_Milktea.jpg', 'To Be Made', 0, NULL),
 ('65', 'Pandan Milktea', 60.00, 4, 'Available', '2025-03-27 22:18:32', '65_Pandan_Milktea.jpg', 'To Be Made', 0, NULL),
-('655', 'Lorskie1', 500.00, 2, 'Out of Stock', '2025-04-01 23:25:06', '655_Lorskie1.jpg', 'Ready-Made', 0, 434),
 ('66', 'Strawberry Milktea', 60.00, 4, 'Available', '2025-03-27 22:19:07', '66_Strawberry_Milktea.jpg', 'To Be Made', 0, NULL),
 ('67', 'Melon Milktea', 60.00, 4, 'Available', '2025-03-27 22:19:39', '67_Melon_Milktea.jpg', 'To Be Made', 0, NULL),
 ('68', 'Ube Taro Milktea', 60.00, 4, 'Available', '2025-03-27 22:20:09', '68_Ube_Taro_Milktea.jpg', 'To Be Made', 0, NULL),
@@ -288,9 +326,7 @@ INSERT INTO `inventoryproduct` (`id`, `ProductName`, `UnitPrice`, `CategoryID (F
 ('75', 'Strawberry Frappe', 90.00, 6, 'Available', '2025-03-27 22:36:56', '75_Strawberry_Frappe.webp', 'To Be Made', 0, NULL),
 ('76', 'Pandan Frappe', 90.00, 6, 'Available', '2025-03-27 22:37:18', '76_Pandan_Frappe.jpg', 'To Be Made', 0, NULL),
 ('77', 'Avocado Frappe', 90.00, 6, 'Available', '2025-03-27 22:37:46', '77_Avocado_Frappe.webp', 'To Be Made', 0, NULL),
-('7777', 'lors', 5000.00, 2, 'Out of Stock', '2025-04-03 22:31:56', '7777_lors.jpg', 'Ready-Made', 4999767, 24534),
 ('78', 'Melon Frappe', 90.00, 6, 'Available', '2025-03-27 22:38:11', '78_Melon_Frappe.webp', 'To Be Made', 0, NULL),
-('7867567', 'Get name', 7902.00, 3, 'Available', '2025-03-30 17:20:21', '7867567_Get_name.png', 'To Be Made', 0, NULL),
 ('79', 'Cookies & Coffee Frappe', 135.00, 6, 'Available', '2025-03-27 22:38:36', '79_Cookies_&_Coffee_Frappe.jpg', 'To Be Made', 0, NULL),
 ('8', 'Hazelnut Latte', 90.00, 1, 'Available', '2025-03-27 20:38:45', '8_Hazelnut_Latte.jpg', 'To Be Made', 0, NULL),
 ('80', 'Hot Chocolate', 75.00, 5, 'Available', '2025-03-27 22:40:51', '80_Hot_Chocolate.jpg', 'To Be Made', 0, NULL),
@@ -298,10 +334,7 @@ INSERT INTO `inventoryproduct` (`id`, `ProductName`, `UnitPrice`, `CategoryID (F
 ('82', 'Carbonara', 70.00, 7, 'Available', '2025-03-27 22:47:12', '82_Carbonara.jpg', 'To Be Made', 0, NULL),
 ('83', 'Baked Mac', 70.00, 7, 'Available', '2025-03-27 22:48:39', '83_Baked_Mac.jpg', 'To Be Made', 0, NULL),
 ('84', 'Tuna Pasta', 70.00, 7, 'Available', '2025-03-27 22:49:02', '84_Tuna_Pasta.jpg', 'To Be Made', 0, NULL),
-('8777', 'lemuel', 2323.00, 2, 'Out of Stock', '2025-04-01 21:50:11', '8777_lemuel.png', 'Ready-Made', 2295, 5435643),
-('9', 'Spanish Latte', 90.00, 1, 'Available', '2025-03-27 20:39:10', '9_Spanish_Latte.jpeg', 'To Be Made', 0, NULL),
-('97', 'Chicken', 250.00, 7, 'Out of Stock', '2025-04-01 01:05:13', '97_Chicken.jpg', 'Ready-Made', 0, 4534),
-('99', 'Mineral wat', 255.00, 9, 'Out of Stock', '2025-03-31 19:50:36', '99_Mineral_wat.jpg', 'Ready-Made', 80, 543536);
+('9', 'Spanish Latte', 90.00, 1, 'Available', '2025-03-27 20:39:10', '9_Spanish_Latte.jpeg', 'To Be Made', 0, NULL);
 
 -- --------------------------------------------------------
 
@@ -413,7 +446,106 @@ INSERT INTO `inventory_reports` (`ReportID`, `ReportDate`, `ProductID`, `Product
 (85, '2025-03-30 15:23:05', '84', 'Tuna Pasta', 0, 70.00, 7, 'Available', '84_Tuna_Pasta.jpg'),
 (86, '2025-03-30 15:23:05', '85', 'Mineral Water', 22, 10.00, 9, 'In Stock', '85_Mineral_Water.jpg'),
 (87, '2025-03-30 15:23:05', '86', 'Milkis', 8, 60.00, 9, 'Low Stock', '86_Milkis.jpg'),
-(88, '2025-03-30 15:23:05', '9', 'Spanish Latte', 0, 90.00, 1, 'Available', '9_Spanish_Latte.jpeg');
+(88, '2025-03-30 15:23:05', '9', 'Spanish Latte', 0, 90.00, 1, 'Available', '9_Spanish_Latte.jpeg'),
+(89, '2025-04-24 12:06:12', '1', 'Cafe Americano', 0, 80.00, 1, 'Available', '1_Cafe_Americano.jpeg'),
+(90, '2025-04-24 12:06:12', '10', 'Peppermint Latte', 0, 90.00, 1, 'Available', '10_Peppermint_Latte.jpg'),
+(91, '2025-04-24 12:06:12', '100', 'henn', 1428349, 233.00, 7, 'In Stock', '100_henn.jpg'),
+(92, '2025-04-24 12:06:12', '11', 'Vanilla Latte', 0, 90.00, 1, 'Available', '11_Vanilla_Latte.jpg'),
+(93, '2025-04-24 12:06:12', '12', 'Matcha Cafe Latte', 0, 90.00, 1, 'Available', '12_Matcha_Cafe_Latte.jpg'),
+(94, '2025-04-24 12:06:12', '13', 'Hot Tea', 0, 60.00, 1, 'Available', '13_Hot_Tea.jpg'),
+(95, '2025-04-24 12:06:12', '14', 'Iced Cafe Latte', 0, 80.00, 2, 'Available', '14_Iced_Cafe_Latte.jpeg'),
+(96, '2025-04-24 12:06:12', '15', 'Iced Caramel Macchiato', 0, 115.00, 2, 'Available', '15_Caramel_Macchiato.jpg'),
+(97, '2025-04-24 12:06:12', '16', 'Iced Cafe Mocha', 0, 115.00, 2, 'Available', '16_Iced_Cafe_Mocha.jpg'),
+(98, '2025-04-24 12:06:12', '17', 'Iced Cafe Americano', 0, 75.00, 2, 'Available', '17_Iced_Cafe_Americano.webp'),
+(99, '2025-04-24 12:06:12', '18', 'Iced Cafe Frizzy', 0, 80.00, 2, 'Available', '18_Iced_Cafe_Frizzy.jpg'),
+(100, '2025-04-24 12:06:12', '19', 'Iced Cappuccino', 0, 80.00, 2, 'Available', '19_Iced_Cappuccino.webp'),
+(101, '2025-04-24 12:06:12', '2', 'Coffee Cappuccino', 0, 750.00, 1, 'Available', '2_Coffee_Cappuccino.jpg'),
+(102, '2025-04-24 12:06:12', '20', 'Iced White Choco Mocha ', 0, 115.00, 2, 'Available', '20_Iced_White_Choco_Mocha_.jpg'),
+(103, '2025-04-24 12:06:12', '21', 'Angel Affogato', 0, 75.00, 2, 'Available', '21_Angel_Affogato.jpg'),
+(104, '2025-04-24 12:06:12', '22', 'Iced Spanish Latte', 0, 115.00, 2, 'Available', '22_Iced_Spanish_Latte.jpg'),
+(105, '2025-04-24 12:06:12', '23', 'Iced Hazelnut Latte', 0, 115.00, 2, 'Available', '23_Iced_Hazelnut_Latte.jpg'),
+(106, '2025-04-24 12:06:12', '232424', 'ytt', 0, 2323.00, 9, 'Available', '232424_ytt.png'),
+(107, '2025-04-24 12:06:12', '24', 'Iced Salted Caramel Macchiato', 0, 115.00, 2, 'Available', '24_Iced_Salted_Caramel_Macchiato.jpg'),
+(108, '2025-04-24 12:06:12', '25', 'Iced Vanilla Latte', 0, 115.00, 2, 'Available', '25_Iced_Vanilla_Latte.webp'),
+(109, '2025-04-24 12:06:12', '26', 'Iced Peppermint Latte', 0, 115.00, 2, 'Available', '26_Iced_Peppermint_Latte.webp'),
+(110, '2025-04-24 12:06:12', '27', 'Iced Matcha Latte', 0, 115.00, 2, 'Available', '27_Iced_Matcha_Latte.jpg'),
+(111, '2025-04-24 12:06:12', '28', 'Iced Americano w/ Lemon', 0, 90.00, 2, 'Available', '28_Iced_Americano_w__Lemon.jpg'),
+(112, '2025-04-24 12:06:12', '29', 'Apple Juice', 0, 55.00, 3, 'Available', '29_Apple_Juice.webp'),
+(113, '2025-04-24 12:06:12', '3', 'Caramel Macchiato', 0, 90.00, 1, 'Available', '3_Caramel_Macchiato.jpg'),
+(114, '2025-04-24 12:06:12', '30', 'Carrot Juice', 0, 60.00, 3, 'Available', '30_Carrot_Juice.webp'),
+(115, '2025-04-24 12:06:12', '31', 'Mango Juice', 0, 55.00, 3, 'Available', '31_Mango_Juice.jpg'),
+(116, '2025-04-24 12:06:12', '32', 'Yakult Lemonade', 0, 55.00, 3, 'Available', '32_Yakult_Lemonade.jpeg'),
+(117, '2025-04-24 12:06:12', '3214', 'lord', 0, 1233.00, 7, 'Available', NULL),
+(118, '2025-04-24 12:06:12', '33', 'Yakult Honey Lemonade', 0, 75.00, 3, 'Available', '33_Yakult_Honey_Lemonade.jpg'),
+(119, '2025-04-24 12:06:12', '34', 'Yakult Apple Lemonade', 0, 75.00, 2, 'Available', '34_Yakult_Apple_Lemonade.jpg'),
+(120, '2025-04-24 12:06:12', '35', 'Yakult Orange Lemonade', 0, 75.00, 3, 'Available', '35_Yakult_Orange_Lemonade.png'),
+(121, '2025-04-24 12:06:12', '36', 'Yakult Sprite Lemonade', 0, 75.00, 3, 'Available', '36_Yakult_Sprite_Lemonade.jpg'),
+(122, '2025-04-24 12:06:12', '37', 'Yakult Mango Lemonade', 0, 75.00, 3, 'Available', '37_Yakult_Mango_Lemonade.jpg'),
+(123, '2025-04-24 12:06:12', '38', 'Yakult Caramel Lemonade', 0, 75.00, 3, 'Available', NULL),
+(124, '2025-04-24 12:06:12', '39', 'Yakult Strawberry Lemonade', 0, 75.00, 3, 'Available', '39_Yakult_Strawberry_Lemonade.jpg'),
+(125, '2025-04-24 12:06:12', '4', 'Salted Caramel Macchiato', 0, 90.00, 1, 'Available', '4_Salted_Caramel_Macchiato.jpg'),
+(126, '2025-04-24 12:06:12', '40', 'Strawberry Mango Blue Lemonade', 0, 75.00, 3, 'Available', NULL),
+(127, '2025-04-24 12:06:12', '41', 'Strawberry Orange Blue Lemonade', 0, 75.00, 3, 'Available', NULL),
+(128, '2025-04-24 12:06:12', '42', 'Strawberry Apple Lemonade', 0, 75.00, 3, 'Available', '42_Strawberry_Apple_Lemonade.webp'),
+(129, '2025-04-24 12:06:12', '43', 'Orange Juice', 0, 55.00, 3, 'Available', '43_Orange_Juice.jpg'),
+(130, '2025-04-24 12:06:12', '4321', 'J', 50, 25.00, 9, 'Low Stock', '4321_J.PNG'),
+(131, '2025-04-24 12:06:12', '434345', 'heyey', 0, 2233.00, 2, 'Out of Stock', '434345_heyey.png'),
+(132, '2025-04-24 12:06:12', '44', 'Apple Carrot Juice', 0, 75.00, 3, 'Available', '44_Apple_Carrot_Juice.webp'),
+(133, '2025-04-24 12:06:12', '45', 'Fresh Lemon Juice', 0, 60.00, 3, 'Available', '45_Fresh_Lemon_Juice.jpg'),
+(134, '2025-04-24 12:06:12', '454543', 'gogogo', 1485, 234.00, 4, 'Low Stock', '454543_gogogo.png'),
+(135, '2025-04-24 12:06:12', '46', 'Mogu-Mogu Yakult', 0, 55.00, 3, 'Available', NULL),
+(136, '2025-04-24 12:06:12', '47', 'Mogu-Mogu Yakult w/ Lemon', 0, 75.00, 3, 'Available', NULL),
+(137, '2025-04-24 12:06:12', '48', 'Mogu-Mogu Yakult w/ Honey', 0, 85.00, 3, 'Available', NULL),
+(138, '2025-04-24 12:06:12', '49', 'Mogu-Mogu w/ Honey', 0, 85.00, 3, 'Available', NULL),
+(139, '2025-04-24 12:06:12', '5', 'Cafe Mocha', 0, 90.00, 1, 'Available', '5_Cafe_Mocha.jpg'),
+(140, '2025-04-24 12:06:12', '50', 'Mango Matcha Latte', 0, 75.00, 3, 'Available', '50_Mango_Matcha_Latte.jpg'),
+(141, '2025-04-24 12:06:12', '51', 'Mango Strawberry Latte', 0, 75.00, 3, 'Available', NULL),
+(142, '2025-04-24 12:06:12', '52', 'Avocado Milktea', 0, 60.00, 4, 'Available', '52_Avocado_Milktea.jpg'),
+(143, '2025-04-24 12:06:12', '53', 'Wintermelon Milktea', 0, 60.00, 4, 'Available', '53_Wintermelon_Milktea.jpg'),
+(144, '2025-04-24 12:06:12', '54', 'Okinawa Milktea', 0, 60.00, 4, 'Available', '54_Okinawa_Milktea.webp'),
+(145, '2025-04-24 12:06:12', '5431', 'Chicharon', 0, 50000.00, 7, 'Available', NULL),
+(146, '2025-04-24 12:06:12', '5435345', 'geeyt', 0, 99999999.99, 1, 'Available', '5435345_geeyt.jpg'),
+(147, '2025-04-24 12:06:12', '55', 'Mango Milktea', 0, 60.00, 4, 'Available', '55_Mango_Milktea.jpg'),
+(148, '2025-04-24 12:06:12', '56', 'Oreo Milktea', 0, 60.00, 4, 'Available', '56_Oreo_Milktea.jpg'),
+(149, '2025-04-24 12:06:12', '56456456', 'Lor', 0, 23232.00, 6, 'Available', '56456456_Lor.png'),
+(150, '2025-04-24 12:06:12', '58', 'Caramel Milktea', 0, 60.00, 4, 'Available', '58_Caramel_Milktea.jpg'),
+(151, '2025-04-24 12:06:12', '59', 'Chocolate Milktea', 0, 60.00, 4, 'Available', '59_Chocolate_Milktea.jpg'),
+(152, '2025-04-24 12:06:12', '6', 'Cafe Latte', 0, 85.00, 1, 'Available', '6_Cafe_Latte.jpg'),
+(153, '2025-04-24 12:06:12', '60', 'Mocha Milktea', 0, 60.00, 4, 'Available', '60_Mocha_Milktea.jpg'),
+(154, '2025-04-24 12:06:12', '61', 'Matcha Milktea', 0, 60.00, 4, 'Available', '61_Matcha_Milktea.jpg'),
+(155, '2025-04-24 12:06:12', '62', 'Taro Milktea', 0, 60.00, 4, 'Available', '62_Taro_Milktea.jpeg'),
+(156, '2025-04-24 12:06:12', '63', 'Red Velvet Milktea', 0, 60.00, 4, 'Available', '63_Red_Velvet_Milktea.jpg'),
+(157, '2025-04-24 12:06:12', '64', 'Ube Milktea', 0, 60.00, 4, 'Available', '64_Ube_Milktea.jpg'),
+(158, '2025-04-24 12:06:12', '65', 'Pandan Milktea', 0, 60.00, 4, 'Available', '65_Pandan_Milktea.jpg'),
+(159, '2025-04-24 12:06:12', '655', 'Lorskie1', 0, 500.00, 2, 'Out of Stock', '655_Lorskie1.jpg'),
+(160, '2025-04-24 12:06:12', '66', 'Strawberry Milktea', 0, 60.00, 4, 'Available', '66_Strawberry_Milktea.jpg'),
+(161, '2025-04-24 12:06:12', '67', 'Melon Milktea', 0, 60.00, 4, 'Available', '67_Melon_Milktea.jpg'),
+(162, '2025-04-24 12:06:12', '68', 'Ube Taro Milktea', 0, 60.00, 4, 'Available', '68_Ube_Taro_Milktea.jpg'),
+(163, '2025-04-24 12:06:12', '69', 'Cookies & Cream', 0, 90.00, 6, 'Available', '69_Cookies_&_Cream.jpg'),
+(164, '2025-04-24 12:06:12', '7', 'Cafe Latte Macchiato', 0, 85.00, 1, 'Available', '7_Cafe_Latte_Macchiato.jpg'),
+(165, '2025-04-24 12:06:12', '70', 'Ube Frappe', 0, 90.00, 6, 'Available', '70_Ube_Frappe.jpg'),
+(166, '2025-04-24 12:06:12', '71', 'Mocha Frappe', 0, 135.00, 6, 'Available', '71_Mocha_Frappe.webp'),
+(167, '2025-04-24 12:06:12', '72', 'Matcha Frappe', 0, 90.00, 6, 'Available', '72_Matcha_Frappe.webp'),
+(168, '2025-04-24 12:06:12', '73', 'Mango Frappe', 3090, 90.00, 6, 'Available', '73_Mango_Frappe.jpg'),
+(169, '2025-04-24 12:06:12', '74', 'Chocolate Frappe', 0, 90.00, 6, 'Available', '74_Chocolate_Frappe.jpg'),
+(170, '2025-04-24 12:06:12', '744', '; kjb', 11, 21.00, 1, 'In Stock', NULL),
+(171, '2025-04-24 12:06:12', '75', 'Strawberry Frappe', 0, 90.00, 6, 'Available', '75_Strawberry_Frappe.webp'),
+(172, '2025-04-24 12:06:12', '76', 'Pandan Frappe', 0, 90.00, 6, 'Available', '76_Pandan_Frappe.jpg'),
+(173, '2025-04-24 12:06:12', '77', 'Avocado Frappe', 0, 90.00, 6, 'Available', '77_Avocado_Frappe.webp'),
+(174, '2025-04-24 12:06:12', '7777', 'lors', 4999767, 5000.00, 2, 'In Stock', '7777_lors.jpg'),
+(175, '2025-04-24 12:06:12', '78', 'Melon Frappe', 0, 90.00, 6, 'Available', '78_Melon_Frappe.webp'),
+(176, '2025-04-24 12:06:12', '7867567', 'Get name', 0, 7902.00, 3, 'Available', '7867567_Get_name.png'),
+(177, '2025-04-24 12:06:12', '79', 'Cookies & Coffee Frappe', 0, 135.00, 6, 'Available', '79_Cookies_&_Coffee_Frappe.jpg'),
+(178, '2025-04-24 12:06:12', '8', 'Hazelnut Latte', 0, 90.00, 1, 'Available', '8_Hazelnut_Latte.jpg'),
+(179, '2025-04-24 12:06:12', '80', 'Hot Chocolate', 0, 75.00, 5, 'Available', '80_Hot_Chocolate.jpg'),
+(180, '2025-04-24 12:06:12', '81', 'Cold Chocolate', 0, 85.00, 5, 'Available', '81_Cold_Chocolate.jpg'),
+(181, '2025-04-24 12:06:12', '82', 'Carbonara', 0, 70.00, 7, 'Available', '82_Carbonara.jpg'),
+(182, '2025-04-24 12:06:12', '83', 'Baked Mac', 0, 70.00, 7, 'Available', '83_Baked_Mac.jpg'),
+(183, '2025-04-24 12:06:12', '84', 'Tuna Pasta', 0, 70.00, 7, 'Available', '84_Tuna_Pasta.jpg'),
+(184, '2025-04-24 12:06:12', '8777', 'lemuel', 2295, 2323.00, 2, 'Low Stock', '8777_lemuel.png'),
+(185, '2025-04-24 12:06:12', '9', 'Spanish Latte', 0, 90.00, 1, 'Available', '9_Spanish_Latte.jpeg'),
+(186, '2025-04-24 12:06:12', '97', 'Chicken', 0, 250.00, 7, 'Out of Stock', '97_Chicken.jpg'),
+(187, '2025-04-24 12:06:12', '99', 'Mineral wat', 80, 255.00, 9, 'Low Stock', '99_Mineral_wat.jpg');
 
 -- --------------------------------------------------------
 
@@ -435,29 +567,8 @@ CREATE TABLE `inventory_transactions` (
 --
 
 INSERT INTO `inventory_transactions` (`id`, `ProductID`, `product_name`, `transaction_type`, `quantity`, `created_at`) VALUES
-(50, '99', 'Mineral wat', 'Add', 100, '2025-03-31 11:51:05'),
-(51, '99', 'Mineral wat', 'Deduct', 6, '2025-03-31 11:54:19'),
-(52, '4321', 'J', 'Add', 20, '2025-03-31 12:04:40'),
-(53, '4321', 'J', 'Add', 20, '2025-03-31 12:06:32'),
-(54, '4321', 'J', 'Add', 10, '2025-03-31 12:11:55'),
-(55, '4321', 'J', 'Add', 10, '2025-03-31 13:09:41'),
-(56, '4321', 'J', 'Add', 20, '2025-03-31 13:55:01'),
-(57, '4321', 'J', 'Deduct', 5, '2025-03-31 13:55:24'),
-(58, '4321', 'J', 'Add', 20, '2025-03-31 16:09:17'),
-(59, '97', 'Chicken', 'Add', 20, '2025-03-31 17:06:11'),
-(60, '4321', 'J', 'Add', 20, '2025-04-01 04:11:32'),
-(61, '4321', 'J', 'Add', 20, '2025-04-01 07:11:50'),
 (62, '73', 'Mango Frappe', 'Add', 1545, '2025-04-01 07:39:27'),
-(63, '73', 'Mango Frappe', 'Add', 1545, '2025-04-01 07:40:04'),
-(64, '4321', 'J', 'Add', 15, '2025-04-01 07:40:44'),
-(65, '100', 'henn', 'Add', 1424, '2025-04-01 07:42:54'),
-(66, '100', 'henn', 'Add', 1424, '2025-04-01 07:50:19'),
-(67, '8777', 'lemuel', 'Add', 2500, '2025-04-01 13:50:56'),
-(68, '100', 'henn', 'Add', 1424100, '2025-04-01 15:13:36'),
-(69, '100', 'henn', 'Add', 1424, '2025-04-01 15:13:36'),
-(70, '434345', 'heyey', 'Add', 10, '2025-04-01 15:46:55'),
-(71, '7777', 'lors', 'Add', 5000035, '2025-04-03 14:32:14'),
-(74, '454543', 'gogogo', 'Add', 1545, '2025-04-07 14:30:47');
+(63, '73', 'Mango Frappe', 'Add', 1545, '2025-04-01 07:40:04');
 
 -- --------------------------------------------------------
 
@@ -1699,7 +1810,27 @@ INSERT INTO `product_transactions` (`id`, `product_id`, `product_name`, `transac
 (28, '6677', 'Hersheys', 'Delete', 'Ready-Made', 250.00, 4, '2025-04-01 07:33:17'),
 (29, '777', 'Nature Spring', 'Delete', 'Ready-Made', 20.00, 9, '2025-04-01 07:33:19'),
 (30, '073', 'hen', 'Delete', 'Ready-Made', 232.00, 2, '2025-04-01 07:42:10'),
-(31, '525325', 'karkar', 'Delete', 'Ready-Made', 99999999.99, 1, '2025-04-16 07:50:34');
+(31, '525325', 'karkar', 'Delete', 'Ready-Made', 99999999.99, 1, '2025-04-16 07:50:34'),
+(32, '232424', 'ytt', 'Delete', 'To Be Made', 2323.00, 9, '2025-04-26 05:01:39'),
+(33, '434345', 'heyey', 'Delete', 'Ready-Made', 2233.00, 2, '2025-04-26 05:01:46'),
+(34, '4321', 'J', 'Delete', 'Ready-Made', 25.00, 9, '2025-04-26 05:01:49'),
+(35, '655', 'Lorskie1', 'Delete', 'Ready-Made', 500.00, 2, '2025-04-26 05:01:55'),
+(36, '744', '; kjb', 'Delete', 'Ready-Made', 21.00, 1, '2025-04-26 05:02:00'),
+(37, '7867567', 'Get name', 'Delete', 'To Be Made', 7902.00, 3, '2025-04-26 05:02:04'),
+(38, '8777', 'lemuel', 'Delete', 'Ready-Made', 2323.00, 2, '2025-04-26 05:02:07'),
+(39, '97', 'Chicken', 'Delete', 'Ready-Made', 250.00, 7, '2025-04-26 05:02:10'),
+(40, '99', 'Mineral wat', 'Delete', 'Ready-Made', 255.00, 9, '2025-04-26 05:02:13'),
+(41, '100', 'henn', 'Delete', 'Ready-Made', 233.00, 7, '2025-04-26 05:02:29'),
+(42, '3214', 'lord', 'Delete', 'To Be Made', 1233.00, 7, '2025-04-26 05:03:02'),
+(43, '454543', 'gogogo', 'Delete', 'Ready-Made', 234.00, 4, '2025-04-26 05:03:08'),
+(44, '5435345', 'geeyt', 'Delete', 'To Be Made', 99999999.99, 1, '2025-04-26 05:03:12'),
+(45, '56456456', 'Lor', 'Delete', 'To Be Made', 23232.00, 6, '2025-04-26 05:03:15'),
+(46, '7777', 'lors', 'Delete', 'Ready-Made', 5000.00, 2, '2025-04-26 05:03:21'),
+(47, '500', 'Mineral Water', 'Delete', 'Ready-Made', 20.00, 9, '2025-04-26 05:14:59'),
+(48, '110', 'nuini', 'Delete', 'Ready-Made', 55.00, 1, '2025-04-26 05:16:09'),
+(49, '110', 'ln jhv', 'Delete', 'Ready-Made', 656.00, 1, '2025-04-26 05:17:24'),
+(50, '1211', 'VUHVH', 'Delete', 'Ready-Made', 5.00, 2, '2025-04-26 05:23:47'),
+(51, '121', 'NMKBIK', 'Delete', 'Ready-Made', 11.00, 5, '2025-04-26 05:23:49');
 
 -- --------------------------------------------------------
 
@@ -1734,7 +1865,8 @@ INSERT INTO `reports` (`ReportID`, `ReportType`, `ReportName`, `ReportDate`) VAL
 (13, 'Daily', 'Inventory Summary', '2025-04-16 00:00:00'),
 (14, 'Daily', 'Inventory Summary', '2025-04-01 00:00:00'),
 (15, 'Daily', 'Inventory Summary', '2025-04-09 00:00:00'),
-(16, 'Daily', 'Inventory Summary', '2025-04-16 00:00:00');
+(16, 'Daily', 'Inventory Summary', '2025-04-16 00:00:00'),
+(17, 'Daily', 'Inventory Summary', '2025-04-24 12:06:12');
 
 -- --------------------------------------------------------
 
@@ -1817,8 +1949,6 @@ INSERT INTO `sales` (`id`, `product_id`, `product_name`, `Image`, `quantity_sold
 (65, '79', 'Cookies & Coffee Frappe', '79_Cookies_&_Coffee_Frappe.jpg', 1, 135.00, 135.00, '2025-03-30 16:22:02', '2025-03-30 16:22:02'),
 (66, '71', 'Mocha Frappe', '71_Mocha_Frappe.webp', 1, 135.00, 135.00, '2025-03-30 16:22:02', '2025-03-30 16:22:02'),
 (67, '78', 'Melon Frappe', '78_Melon_Frappe.webp', 1, 90.00, 90.00, '2025-03-30 16:22:02', '2025-03-30 16:22:02'),
-(73, '99', 'Mineral wat', '99_Mineral_wat.jpg', 6, 255.00, 1530.00, '2025-03-31 11:54:19', '2025-03-31 11:54:19'),
-(74, '4321', 'J', '4321_J.PNG', 5, 25.00, 125.00, '2025-03-31 13:55:24', '2025-03-31 13:55:24'),
 (75, '77', 'Avocado Frappe', '77_Avocado_Frappe.webp', 1, 90.00, 90.00, '2025-03-31 14:19:28', '2025-03-31 14:19:28'),
 (76, '74', 'Chocolate Frappe', '74_Chocolate_Frappe.jpg', 1, 90.00, 90.00, '2025-03-31 14:19:28', '2025-03-31 14:19:28'),
 (77, '79', 'Cookies & Coffee Frappe', '79_Cookies_&_Coffee_Frappe.jpg', 1, 135.00, 135.00, '2025-03-31 14:19:28', '2025-03-31 14:19:28'),
@@ -1829,6 +1959,41 @@ INSERT INTO `sales` (`id`, `product_id`, `product_name`, `Image`, `quantity_sold
 (82, '77', 'Avocado Frappe', '77_Avocado_Frappe.webp', 1, 90.00, 90.00, '2025-03-31 15:44:03', '2025-03-31 15:44:03'),
 (173, '74', 'Chocolate Frappe', '74_Chocolate_Frappe.jpg', 1, 90.00, 90.00, '2025-04-16 06:30:05', '2025-04-16 06:30:05'),
 (174, '79', 'Cookies & Coffee Frappe', '79_Cookies_&_Coffee_Frappe.jpg', 1, 135.00, 135.00, '2025-04-16 06:30:05', '2025-04-16 06:30:05');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `stockin`
+--
+
+CREATE TABLE `stockin` (
+  `id` int(11) NOT NULL,
+  `ProductID` int(11) NOT NULL,
+  `Quantity` int(11) NOT NULL,
+  `UnitCost` decimal(10,2) NOT NULL,
+  `TotalCost` decimal(10,2) NOT NULL,
+  `ExpiryDate` date DEFAULT NULL,
+  `InvoiceNumber` varchar(50) DEFAULT NULL,
+  `StockImage` varchar(255) DEFAULT NULL,
+  `Notes` text DEFAULT NULL,
+  `DateStocked` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `stock_adjustments`
+--
+
+CREATE TABLE `stock_adjustments` (
+  `id` int(11) NOT NULL,
+  `product_id` int(11) NOT NULL,
+  `previous_quantity` int(11) NOT NULL,
+  `new_quantity` int(11) NOT NULL,
+  `action` varchar(20) NOT NULL,
+  `reason` text DEFAULT NULL,
+  `adjustment_date` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -5939,27 +6104,26 @@ CREATE TABLE `stock_details` (
 --
 
 INSERT INTO `stock_details` (`id`, `ProductID`, `batch_number`, `quantity`, `expiration_date`, `SupplierID`, `created_at`, `transaction_type`) VALUES
-(34, '99', '55', 94, '2025-03-31', 6, '2025-03-31 11:51:05', 'IN'),
-(35, '4321', '555', 15, '2025-03-31', 7, '2025-03-31 12:04:40', 'IN'),
-(36, '4321', '555', 20, '2025-03-31', 7, '2025-03-31 12:06:32', 'IN'),
-(37, '4321', '555', 10, '2025-03-31', 7, '2025-03-31 12:11:55', 'IN'),
-(38, '4321', '555', 10, '2025-03-31', 7, '2025-03-31 13:09:41', 'IN'),
-(39, '4321', '555', 20, '2025-03-31', 7, '2025-03-31 13:55:01', 'IN'),
-(40, '4321', '555', 20, '2025-03-31', 7, '2025-03-31 16:09:17', 'IN'),
-(41, '97', '5453', 20, '2025-04-01', 7, '2025-03-31 17:06:11', 'IN'),
-(42, '4321', '555', 20, '2025-04-01', 6, '2025-04-01 04:11:32', 'IN'),
-(43, '4321', '555', 20, '2025-04-01', 7, '2025-04-01 07:11:50', 'IN'),
 (44, '73', '23', 1545, '2025-04-01', 7, '2025-04-01 07:39:27', 'IN'),
-(45, '73', '23', 1545, '2025-04-01', 7, '2025-04-01 07:40:04', 'IN'),
-(46, '4321', '555', 15, '2025-04-01', 7, '2025-04-01 07:40:44', 'IN'),
-(47, '100', '3223', 1424, '2025-04-01', 6, '2025-04-01 07:42:54', 'IN'),
-(48, '100', '3223', 1424, '2025-04-01', 6, '2025-04-01 07:50:19', 'IN'),
-(49, '8777', '54535', 2500, '2025-04-01', 7, '2025-04-01 13:50:56', 'IN'),
-(50, '100', '3223', 1424100, '2025-04-01', 6, '2025-04-01 15:13:36', 'IN'),
-(51, '100', '3223', 1424, '2025-04-01', 6, '2025-04-01 15:13:36', 'IN'),
-(52, '434345', '233', 10, '2025-04-01', 6, '2025-04-01 15:46:55', 'IN'),
-(53, '7777', '2323', 5000035, '2025-04-03', 7, '2025-04-03 14:32:14', 'IN'),
-(55, '454543', '312', 1545, '2025-04-07', 3, '2025-04-07 14:30:47', 'IN');
+(45, '73', '23', 1545, '2025-04-01', 7, '2025-04-01 07:40:04', 'IN');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `stock_reports`
+--
+
+CREATE TABLE `stock_reports` (
+  `ReportID` int(11) NOT NULL,
+  `StockID` int(11) DEFAULT NULL,
+  `StockName` varchar(255) DEFAULT NULL,
+  `Quantity` int(11) DEFAULT NULL,
+  `CostPrice` decimal(10,2) DEFAULT NULL,
+  `SupplierID` int(11) DEFAULT NULL,
+  `Status` varchar(50) DEFAULT NULL,
+  `ReportDate` timestamp NOT NULL DEFAULT current_timestamp(),
+  `Image` varchar(255) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -6523,6 +6687,12 @@ ALTER TABLE `categorieso`
   ADD UNIQUE KEY `name` (`name`);
 
 --
+-- Indexes for table `category`
+--
+ALTER TABLE `category`
+  ADD PRIMARY KEY (`id`);
+
+--
 -- Indexes for table `inventoryproduct`
 --
 ALTER TABLE `inventoryproduct`
@@ -6610,6 +6780,20 @@ ALTER TABLE `sales`
   ADD KEY `product_id` (`product_id`);
 
 --
+-- Indexes for table `stockin`
+--
+ALTER TABLE `stockin`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_product_id` (`ProductID`);
+
+--
+-- Indexes for table `stock_adjustments`
+--
+ALTER TABLE `stock_adjustments`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_product_id` (`product_id`);
+
+--
 -- Indexes for table `stock_alerts`
 --
 ALTER TABLE `stock_alerts`
@@ -6622,6 +6806,12 @@ ALTER TABLE `stock_alerts`
 ALTER TABLE `stock_details`
   ADD PRIMARY KEY (`id`),
   ADD KEY `stock_details_ibfk_1` (`ProductID`);
+
+--
+-- Indexes for table `stock_reports`
+--
+ALTER TABLE `stock_reports`
+  ADD PRIMARY KEY (`ReportID`);
 
 --
 -- Indexes for table `stock_transactions`
@@ -6658,7 +6848,7 @@ ALTER TABLE `userso`
 -- AUTO_INCREMENT for table `activity_logs`
 --
 ALTER TABLE `activity_logs`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=85;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=108;
 
 --
 -- AUTO_INCREMENT for table `categories`
@@ -6673,16 +6863,22 @@ ALTER TABLE `categorieso`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=24;
 
 --
+-- AUTO_INCREMENT for table `category`
+--
+ALTER TABLE `category`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+
+--
 -- AUTO_INCREMENT for table `inventory_reports`
 --
 ALTER TABLE `inventory_reports`
-  MODIFY `ReportID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=89;
+  MODIFY `ReportID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=188;
 
 --
 -- AUTO_INCREMENT for table `inventory_transactions`
 --
 ALTER TABLE `inventory_transactions`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=75;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=77;
 
 --
 -- AUTO_INCREMENT for table `itemso`
@@ -6730,19 +6926,31 @@ ALTER TABLE `order_items`
 -- AUTO_INCREMENT for table `product_transactions`
 --
 ALTER TABLE `product_transactions`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=32;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=52;
 
 --
 -- AUTO_INCREMENT for table `reports`
 --
 ALTER TABLE `reports`
-  MODIFY `ReportID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
+  MODIFY `ReportID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=18;
 
 --
 -- AUTO_INCREMENT for table `sales`
 --
 ALTER TABLE `sales`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=175;
+
+--
+-- AUTO_INCREMENT for table `stockin`
+--
+ALTER TABLE `stockin`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `stock_adjustments`
+--
+ALTER TABLE `stock_adjustments`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `stock_alerts`
@@ -6754,7 +6962,13 @@ ALTER TABLE `stock_alerts`
 -- AUTO_INCREMENT for table `stock_details`
 --
 ALTER TABLE `stock_details`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=56;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=58;
+
+--
+-- AUTO_INCREMENT for table `stock_reports`
+--
+ALTER TABLE `stock_reports`
+  MODIFY `ReportID` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `stock_transactions`
@@ -6766,7 +6980,7 @@ ALTER TABLE `stock_transactions`
 -- AUTO_INCREMENT for table `suppliers`
 --
 ALTER TABLE `suppliers`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
 
 --
 -- AUTO_INCREMENT for table `users`
