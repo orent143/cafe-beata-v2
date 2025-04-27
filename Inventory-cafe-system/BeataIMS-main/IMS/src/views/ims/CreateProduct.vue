@@ -205,7 +205,7 @@ export default {
         this.toast.success(response.data.message || "Product created successfully!");
         this.resetForm();
       } catch (error) {
-        this.toast.error(error.response?.data?.detail || "Failed to create product.");
+        this.toast.error("Failed to create product.");
       }
     },
     resetForm() {
@@ -305,11 +305,11 @@ export default {
 
 .form-input {
   width: 100%;
-  padding: 12px;
+  padding: 10px;
   border: 2px solid #ddd;
   border-radius: 6px;
-  background-color: #f9f9f9;
-  font-size: 1rem;
+  background-color: #ffffff;
+  font-size: .875rem;
   color: #333;
   transition: all 0.3s ease;
   box-sizing: border-box;
@@ -418,12 +418,12 @@ button:focus {
   background-color: #E54F70;
 }
 .product-details select {
-  font-size: 1rem;
+  font-size: .875rem;
   color: #333;
-  padding: 12px;
+  padding: 10px;
   width: 100%;
   border-radius: 6px;
-  background-color: #f9f9f9;
+  background-color: #ffffff;
   border: 2px solid #ddd;
   transition: all 0.3s ease;
 }

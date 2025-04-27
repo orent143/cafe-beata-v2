@@ -382,7 +382,7 @@ export default {
 .header-title {
   display: flex;
   flex-direction: column;
-  width: 95%;
+  width: 80%;
 }
 .dashboard-description {
   font-size: 14px;
@@ -390,6 +390,16 @@ export default {
   margin-top: -10px;
   margin-bottom: 15px;
 }
+.header-actions {
+  display: flex;
+  align-items: center;
+  border: 1px solid #0000001c; /* Added border color */
+  background-color: #ffffff;
+  padding: 10px 20px;
+  max-width: 100%;
+  border-radius: 6px;
+}
+
 .date-display {
   display: flex;
   align-items: center;

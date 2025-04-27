@@ -39,7 +39,14 @@
     </div>
 
     <div class="inventory-container">
-      <table class="stock-table">
+      
+      <div v-if="!productItems.length" class="no-data-container">
+    <i class="pi pi-inbox no-data-icon"></i>
+    <h3>No Inventory Available</h3>
+    <p>There are currently no items in the inventory.</p>
+  </div>
+
+      <table v-else class="stock-table">
         <thead>
           <tr>
             <th>Product ID</th>
@@ -237,17 +244,13 @@ export default {
         this.calculateStockSummary();
       } catch (error) {
         console.error('Error fetching product items:', error);
-        this.toast.error('Error loading inventory items. Please try again.');
       }
     },
     
-    // Calculate the stock summary stats
     calculateStockSummary() {
-      // Reset counters
       let outOfStock = 0;
       let lowStock = 0;
       
-      // Count items by stock status
       this.filteredItems.forEach(item => {
         if (item.Quantity <= 0) {
           outOfStock++;
@@ -256,7 +259,6 @@ export default {
         }
       });
       
-      // Update the summary object
       this.stockSummary = {
         total: this.filteredItems.length,
         outOfStock: outOfStock,
@@ -266,7 +268,6 @@ export default {
       console.log("Stock summary updated:", this.stockSummary);
     },
 
-    // Add new refresh method
     refreshData() {
       this.toast.info("Refreshing inventory data...");
       this.fetchProductItems();
@@ -753,5 +754,32 @@ export default {
 .in-stock {
   background: #E8F5E9;
   color: #4CAF50;
+}
+.no-data-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+  text-align: center;
+  height: 100%;
+  color: #666;
+}
+
+.no-data-icon {
+  font-size: 48px;
+  color: #ddd;
+  margin-bottom: 16px;
+}
+
+.no-data-container h3 {
+  font-size: 20px;
+  color: #333;
+  margin-bottom: 8px;
+}
+
+.no-data-container p {
+  font-size: 14px;
+  color: #666;
 }
   </style>

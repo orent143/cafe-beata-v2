@@ -1,11 +1,16 @@
 <template>
   <div class="login-page">
     <div class="login-container">
-      <h1>Cafe Beata</h1>
+      <div class="header-title">
+      <h1>Welcome back</h1>
+      <p class="sub-description">
+        Enter your credentials below to login to your account
+      </p>
+      </div>
       <form @submit.prevent="handleLogin">
         <div class="input-group">
           <label for="username">Username</label>
-          <input type="text" id="username" v-model="username" required />
+          <input type="text" id="username" v-model="username" placeholder="sampleuser123" required />
         </div>
         <div class="input-group">
           <label for="password">Password</label>
@@ -102,82 +107,84 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
-  text-align: center;
   padding: 0 5%;
 }
-
+.header-title {
+  display: flex;
+  flex-direction: column;
+  width: 95%;
+  text-align: center; /* Add this line */
+  margin-bottom: 1rem; /* Add this line */
+}
+.sub-description {
+  font-size: 14px;
+  color: #666;
+  margin-top: 5px;
+  margin-bottom: 15px;
+}
 .login-container {
   background: rgba(255, 255, 255, 0.979);
-  padding: 2rem;
+  padding: 1.5rem;
   border-radius: 12px;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.795);
   text-align: center;
-  max-width: 400px;
-  width: 100%;
+  max-width: 24rem;
+  width: 80%;
   animation: fadeIn 1s ease-in-out;
+  border: 1px solid #00000075; /* Added border color */
+
 }
 
 .login-container h1 {
-  margin-bottom: 2rem;
-  color: #E54F70;
-
-    text-shadow: 
-      1px 1px 0#fbf1f3, 
-      -1px 1px 0 #fbf1f3,
-      1px -1px 0 #fbf1f3,
-      -1px -1px 0 #fbf1f3,
-      0px 1px 0 #fbf1f3,
-      0px -1px 0 #fbf1f3,
-      1px 0px 0 #fbf1f3,
-      -1px 0px 0 #fbf1f3;
-    line-height: 1.2; /* Adjust line-height for better spacing */
-  font-family: 'Inknut Antiqua', serif;
-    font-size: 50px;
+    font-size: 30px;
+    margin-bottom: 0.5rem;
+    font-weight: 650;
 }
 
 .input-group {
   margin-bottom: 1.5rem;
   text-align: left;
+  width: 100%;
 }
 
 .input-group label {
+  width: 90%;
   display: block;
   margin-bottom: 0.5rem;
   color: var(--primary-color);
-  font-family: 'Poppins', sans-serif;
-  font-weight: bolder;
+  font-weight: 500;
+  font-size: .875rem;
 }
 
 .input-group input {
-  width: 95%;
-  padding: 0.75rem;
-  border: 1px solid #ffffff;
-  background-color: #D9D9D9;
+  width: 90%;
+  padding: 0.55rem;
+  border: 1px solid #0000001e; /* Added border color */
+  background-color: transparent;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, .05);
   border-radius: 8px;
-  font-size: 1rem;
+  font-size: .875rem;
   transition: border-color 0.3s;
 }
 
-.input-group input:focus {
-  border-color: var(--primary-color);
-  outline: none;
-  box-shadow: 0 0 5px rgba(255, 50, 186, 0.5);
-}
+
 
 .login-btn {
-  padding: 1rem 2rem;
-  border: none;
+  width: 90%;
+  padding: 0.55rem;
+  border: 1px solid #0000001e; /* Added border color */
+  background-color:#E54F70;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, .05);
   border-radius: 8px;
-  background-color:#E54F70 ;
-  color: #ffffff;
-  font-size: 1.1rem;
+  color: white; 
+  font-size: 1rem;
+  transition: border-color 0.3s;
   cursor: pointer;
-  transition: transform 0.3s, box-shadow 0.3s;
-  font-family: 'Poppins', sans-serif;
 }
 
 .login-btn:hover {
   transform: translateY(-2px);
+  background-color: #802e3f;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
@@ -185,7 +192,6 @@ export default {
   margin-top: 1rem;
   color: var(--primary-color);
   cursor: pointer;
-  font-family: 'Poppins', sans-serif;
   text-decoration: underline;
 }
 

@@ -1,8 +1,9 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from typing import List, Optional
 from pydantic import BaseModel
 from model.db import get_db, db_connection
 import logging
+from datetime import datetime
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -29,6 +30,55 @@ class OrderHistoryDetail(BaseModel):
     items: List[dict]
 
 
+@OrderSummaryRouter.get("/orders/history/date", response_model=List[OrderSummary])
+async def get_order_history(order_date: Optional[str] = Query(None, description="Format: YYYY-MM-DD")):
+    with db_connection() as db:
+        cursor = None
+        try:
+            cursor = db.cursor()
+            if order_date:
+                try:
+                    # Validate date format
+                    parsed_date = datetime.strptime(order_date, "%Y-%m-%d")
+                except ValueError:
+                    raise HTTPException(status_code=400, detail="Invalid date format. Use YYYY-MM-DD")
+
+                cursor.execute("""
+                    SELECT history_id, customer_name, total_items, 
+                           total_amount, payment_method, created_at
+                    FROM order_history
+                    WHERE DATE(created_at) = %s
+                    ORDER BY created_at DESC
+                """, (order_date,))
+            else:
+                cursor.execute("""
+                    SELECT history_id, customer_name, total_items, 
+                           total_amount, payment_method, created_at
+                    FROM order_history
+                    ORDER BY created_at DESC
+                """)
+
+            history_orders = cursor.fetchall()
+
+            return [
+                {
+                    "history_id": row[0],
+                    "customer_name": row[1],
+                    "total_items": row[2],
+                    "total_amount": float(row[3]),
+                    "payment_method": row[4],
+                    "created_at": row[5].strftime("%Y-%m-%d %H:%M:%S") if row[5] else None
+                }
+                for row in history_orders
+            ]
+        except Exception as e:
+            logger.error(f"Error getting order history: {str(e)}")
+            raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+        finally:
+            if cursor:
+                cursor.close()
+                
+                
 # ✅ Get order history summary with `OrderDate`
 @OrderSummaryRouter.get("/orders/history", response_model=List[OrderSummary])
 async def get_order_history():

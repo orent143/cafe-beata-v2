@@ -15,20 +15,28 @@
         Review past orders including customer info, payment method, and order totals. Use filters to narrow down results.
       </p>
     </div>
-      <div class="header-actions">
-        <div class="filter-container">
-          <button class="filter-btn" @click="toggleFilterDropdown">
-            <i class="fas fa-filter"></i>
-          </button>
-          <div v-if="showFilterDropdown" class="dropdown">
-            <select v-model="selectedStatus" class="filter-select">
-              <option value="">All Orders</option>
-              <option value="Cash">Cash</option>
-              <option value="Tally">Tally</option>
-            </select>
-          </div>
-        </div>
-      </div>
+    <div class="header-actions">
+  <div class="filter-container">
+    <div class="filter-label">Filter by</div>
+    <button class="filter-btn" @click="toggleFilterDropdown">
+      <span>{{ selectedStatus || 'Payment Method' }}</span>
+      <i class="fas fa-angle-down"></i>
+    </button>
+    <div v-if="showFilterDropdown" class="filter-dropdown">
+      <select v-model="selectedStatus" class="filter-select">
+        <option value="">All Orders</option>
+        <option value="Cash">Cash</option>
+        <option value="Tally">Tally</option>
+      </select>
+      <input 
+        type="date"
+        v-model="selectedDate"
+        class="date-select"
+        @change="filterByDate"
+      />
+    </div>
+  </div>
+</div>
     </div>
 
     <div class="sales-container">
@@ -102,7 +110,8 @@ export default {
       selectedStatus: '',
       showFilterDropdown: false,
       searchQuery: '',
-      loading: false
+      loading: false,
+      selectedDate: '',
     };
   },
   computed: {
@@ -138,28 +147,41 @@ export default {
     filterOrders() {
       // When search query changes, the computed filteredOrders will be recalculated automatically
     },
-    async fetchOrders() {
-      this.loading = true;
-      try {
-        const response = await axios.get(`${ORDER_SUMMARY_API}/orders/history`);
-        this.orders = response.data.map(order => ({
-          history_id: order.history_id,
-          customer_name: order.customer_name,
-          total_items: order.total_items,
-          total_amount: order.total_amount,
-          payment_method: order.payment_method,
-          created_at: order.created_at || 'N/A'  // Handle null dates gracefully
-        }));
-        if (this.orders.length === 0) {
-          this.toast.info("No orders found in history");
-        }
-      } catch (error) {
-        console.error('Error fetching orders:', error);
-        this.toast.error('Failed to load order history. Please try again.');
-      } finally {
-        this.loading = false;
+    async fetchOrders(date = '') {
+    this.loading = true;
+    try {
+      const url = date
+        ? `${ORDER_SUMMARY_API}/orders/history/date?order_date=${date}`
+        : `${ORDER_SUMMARY_API}/orders/history`;
+
+      const response = await axios.get(url);
+      this.orders = response.data.map(order => ({
+        history_id: order.history_id,
+        customer_name: order.customer_name,
+        total_items: order.total_items,
+        total_amount: order.total_amount,
+        payment_method: order.payment_method,
+        created_at: order.created_at || 'N/A'
+      }));
+
+      if (this.orders.length === 0) {
+        this.toast.info("No orders found for the selected date");
       }
-    },
+    } catch (error) {
+      console.error('Error fetching orders:', error);
+      this.toast.error('Failed to load order history. Please try again.');
+    } finally {
+      this.loading = false;
+    }
+  },
+
+  filterByDate() {
+    if (this.selectedDate) {
+      this.fetchOrders(this.selectedDate);
+    } else {
+      this.fetchOrders(); // fallback if date is cleared
+    }
+  },
 
     formatPrice(value) {
       return Number(value).toFixed(2);
@@ -289,39 +311,92 @@ export default {
   color: #1565C0;
 }
 
-.filter-btn {
-  padding: 8px;
-  background-color: transparent;
-  border: none;
-  cursor: pointer;
-  font-size: 19px;
-  color: #333;
-  transition: color 0.3s;
-}
-
 .filter-container {
   position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
-.dropdown {
+.filter-label {
+  font-size: 14px;
+  color: #666;
+  font-weight: 500;
+}
+
+.filter-btn {
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 14px;
+  color: #333;
+  transition: all 0.3s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: white;
+  min-width: 150px;
+  justify-content: space-between;
+}
+
+.filter-btn:hover {
+  border-color: #E54F70;
+  color: #E54F70;
+}
+
+.filter-dropdown {
   position: absolute;
-  top: 35px;
+  top: 100%;
   left: 0;
   background-color: white;
-  border: 1px solid #ccc;
+  border: 1px solid #ddd;
   border-radius: 5px;
-  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
   padding: 10px;
-  z-index: 10;
-  width: 8dvw;
+  z-index: 1000;
+  margin-top: 5px;
+  min-width: 200px;
 }
 
 .filter-select {
-  padding: 8px;
-  font-size: 14px;
-  border-radius: 5px;
   width: 100%;
-  margin-bottom: 10px;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+  color: #333;
+  margin-bottom: 8px;
+  outline: none;
+  transition: all 0.3s;
+}
+
+.date-select {
+  margin-top: 8px;
+  cursor: pointer;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+  color: #333;
+  margin-bottom: 8px;
+  outline: none;
+  transition: all 0.3s;
+}
+
+.filter-select:hover,
+.date-select:hover {
+  border-color: #E54F70;
+}
+
+.filter-select:focus,
+.date-select:focus {
+  border-color: #E54F70;
+  box-shadow: 0 0 0 2px rgba(229, 79, 112, 0.1);
+}
+
+.dropdown {
+  display: none; /* Remove old dropdown styles */
 }
 
 .totals-container {
