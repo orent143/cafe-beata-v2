@@ -623,7 +623,7 @@ export default {
   font-weight: 500;
 }
 
-.activity-status.success {
+.activity-status.added {
   background-color: #E8F5E9;
   color: #43a047;
 }

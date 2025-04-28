@@ -1298,29 +1298,27 @@ export default {
   flex-grow: 1;
   margin-left: 230px;
   height: 100vh;
-  background-color: #f5f7fa;
 }
 
 .forecasting-container {
   padding: 20px;
   display: flex;
   flex-direction: column;
-  gap: 20px;
   overflow-y: auto;
-  height: calc(100vh - 40px);
+  height: 200%;
 }
 
 .header-section {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 10px;
 }
 
 .section-title {
-  font-size: 28px;
   color: #333;
-  font-weight: 700;
+  font-size: 30px;
+  font-family: 'Arial', sans-serif;
+  font-weight: 900;
 }
 
 .time-controls {
@@ -1435,6 +1433,8 @@ export default {
 
 .forecast-products {
   margin-bottom: 20px;
+  height: 100%;
+  overflow-y: auto;
 }
 
 .forecast-header {
@@ -1451,7 +1451,6 @@ export default {
 
 .search-container {
   position: relative;
-  width: 250px;
 }
 
 .search-container i {
@@ -1459,22 +1458,23 @@ export default {
   left: 10px;
   top: 50%;
   transform: translateY(-50%);
-  color: #999;
 }
 
 .search-input {
-  width: 100%;
-  padding: 8px 10px 8px 35px;
-  border: 1px solid #ddd;
-  border-radius: 20px;
-  font-size: 14px;
-  outline: none;
-  transition: border-color 0.2s;
-}
-
-.search-input:focus {
-  border-color: #E54F70;
-}
+  padding: 8px 30px 8px 30px; 
+    border: 1px solid #94949491;
+    border-radius: 10px; 
+    width: 130px; 
+    font-size: 14px; 
+    font-weight: bold; 
+    color: #333; 
+    background-color: #F5F5F5; 
+  }
+  
+  .search-bar input:focus {
+    border-color: #007BF6; 
+    outline: none;
+  }
 
 .table-container {
   overflow-x: auto;
@@ -1483,6 +1483,8 @@ export default {
 .forecast-table {
   width: 100%;
   border-collapse: collapse;
+
+  overflow-x: auto;
 }
 
 .forecast-table th,

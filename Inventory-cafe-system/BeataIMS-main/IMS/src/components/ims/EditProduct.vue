@@ -12,7 +12,7 @@
 
       <form @submit.prevent="confirmAndSubmit" class="form-container">
         <div class="form-group">
-          <label for="name">Item Name</label>
+          <label for="name">Product Name</label>
           <input 
             id="name" 
             v-model="product.ProductName" 

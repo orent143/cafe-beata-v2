@@ -149,7 +149,7 @@ export default {
       const numericId = parseInt(String(product.id).replace(/^0+/, ''), 10);
       
       // Format the ID for display (with leading zeros)
-      const displayId = String(numericId).padStart(4, '0');
+      const displayId = String(numericId).padStart(4);
       
       console.log('Navigating to product details:', {
         originalId: product.id,
@@ -228,7 +228,7 @@ export default {
 
         this.productItems = response.data.map(item => {
           // Create a properly formatted product ID for display
-          const formattedId = item.id ? String(item.id).padStart(4, '0') : 'N/A';
+          const formattedId = item.id ? String(item.id).padStart(4) : 'N/A';
           
           return {
             ...item,

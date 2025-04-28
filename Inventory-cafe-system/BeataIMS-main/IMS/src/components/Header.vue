@@ -219,6 +219,7 @@ export default {
 .header-left {
   display: flex;
   align-items: center;
+  gap: 10px;
 }
 
 .sidebar-toggle {

@@ -237,6 +237,30 @@ async def create_inventory_product(
         # Commit the transaction
         db.commit()
         
+        try:
+            cursor.execute(
+                """
+                INSERT INTO product_transactions 
+                (product_id, product_name, transaction_type, process_type, unit_price, category_id)
+                VALUES (%s, %s, %s, %s, %s, %s)
+                """, 
+                (ProductID, ProductName, "Add", ProcessType, UnitPrice, CategoryID)
+            )
+            db.commit()
+        except Exception as log_error:
+            logger.warning(f"Failed to log product transaction: {log_error}")
+            
+        try:
+            log_activity_safe(
+                cursor=cursor,
+                db=db,  
+                icon="pi pi-truck",
+                title=f"New product added: {ProductName}",
+                status="Added"
+            )
+        except Exception as log_error:
+            logger.warning(f"Failed to log activity: {log_error}")
+        
         # Close the cursor
         cursor.close()
 
@@ -332,6 +356,22 @@ async def update_inventory_product(
 
         cursor.execute(update_query, tuple(update_values))
         db.commit()
+        
+        try:
+            cursor.execute(
+                """
+                INSERT INTO product_transactions 
+                (product_id, product_name, transaction_type, process_type, unit_price, category_id)
+                VALUES (%s, %s, %s, %s, %s, %s)
+                """, 
+                (product_id, ProductName or product[0], "Edit", product[4], 
+                 UnitPrice if UnitPrice is not None else product[1],
+                 CategoryID if CategoryID is not None else product[2]
+            )
+            )
+            db.commit()
+        except Exception as log_error:
+            logger.warning(f"Failed to log product transaction: {log_error}")
 
         # Update log in a safer way
         try:

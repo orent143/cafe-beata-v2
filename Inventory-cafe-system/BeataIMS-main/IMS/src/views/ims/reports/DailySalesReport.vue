@@ -71,7 +71,7 @@
               <div class="view-details">
                 <i class="pi pi-eye"></i> View Orders
               </div>
-              <h3><i class="pi pi-home"></i> Cafe Beata System</h3>
+              <h3><i class="pi pi-home"></i> Preordering System</h3>
             </div>
             <div class="system-metrics">
               <div class="metric">

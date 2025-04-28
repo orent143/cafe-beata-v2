@@ -32,7 +32,7 @@ async def create_supplier(
         cursor.execute("SELECT LAST_INSERT_ID()")
         new_supplier_id = cursor.fetchone()[0]
 
-        log_activity(db, "pi pi-truck", f"New supplier added: {suppliername} ", "Success")
+        log_activity(db, "pi pi-truck", f"New supplier added: {suppliername} ", "Added")
 
         return {"id": new_supplier_id, "suppliername": suppliername, "contactinfo": contactinfo, "email": email}
 

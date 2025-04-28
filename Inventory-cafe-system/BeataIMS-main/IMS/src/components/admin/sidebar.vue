@@ -44,11 +44,7 @@
       </ul>
   
       <!-- Logout at the bottom with margin -->
-      <div class="sidebar-footer">
-        <router-link to="/" class="sidebar-link" @click="logout">
-          <i class="pi pi-sign-out"></i> Logout
-        </router-link>
-      </div>
+      
     </div>
   </template>
   

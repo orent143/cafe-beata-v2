@@ -6,15 +6,7 @@
       <div class="user-management-container">
         <div class="header-section">
           <h2 class="section-title">User Management</h2>
-          <div class="search-container">
-            <i class="pi pi-search search-icon"></i>
-            <input 
-              v-model="searchQuery" 
-              type="text" 
-              placeholder="Search users..." 
-              class="search-input"
-            />
-          </div>
+         
         </div>
 
         <!-- User List Table -->
@@ -658,17 +650,13 @@ export default {
 .app-container {
   display: flex;
   flex-direction: column;
-  flex-grow: 1;
   margin-left: 230px;
-  height: 100%;
-  padding: 20px;
+  transition: all 0.3s ease;
 }
 
 .dashboard-container {
   flex-grow: 1;
-  background-color: #f8f9fa;
   border-radius: 15px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
   overflow: hidden;
   padding: 20px;
 }
@@ -677,22 +665,20 @@ export default {
   height: 100%;
   display: flex;
   flex-direction: column;
-  gap: 20px;
 }
 
 .header-section {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding-bottom: 15px;
   border-bottom: 1px solid #e9ecef;
 }
 
 .section-title {
   color: #333;
-  font-size: 24px;
-  margin: 0;
-  font-weight: 600;
+  font-size: 30px;
+  font-family: 'Arial', sans-serif;
+  font-weight: 900;
 }
 
 .search-container {
@@ -773,7 +759,7 @@ export default {
 
 .add-user-form input,
 .add-user-form select {
-  width: 100%;
+  width: 90%;
   padding: 10px;
   border-radius: 6px;
   border: 1px solid #ced4da;
@@ -803,7 +789,7 @@ export default {
 
 .file-label {
   display: block;
-  width: 100%;
+  width: 90%;
   padding: 10px;
   background: #f8f9fa;
   border: 1px solid #ced4da;

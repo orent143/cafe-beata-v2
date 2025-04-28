@@ -316,7 +316,18 @@ export default {
   align-items: center;
   gap: 10px;
 }
-
+.date-picker {
+  padding: 8px 12px;
+  border: 2px solid #E54F70;
+  border-radius: 5px;
+  font-size: 16px;
+  cursor: pointer;
+}
+.date-picker:focus {
+  outline: none;
+  border-color: #E54F70;
+  box-shadow: 0 0 5px rgba(229, 79, 112, 0.5);
+}
 .filter-container {
   position: relative;
 }
@@ -391,20 +402,23 @@ export default {
 .totals-container {
   display: flex;
   justify-content: space-between;
-  padding: 15px;
-  background-color: #f4f4f4;
+  padding: 18px 25px;
+  background-color: #f8f9fa;
   margin-top: auto; 
   border-bottom-right-radius: 15px;
   border-bottom-left-radius: 15px;
   position: sticky;
   bottom: 0;
+  box-shadow: 0 -3px 10px rgba(0, 0, 0, 0.05);
+  border-top: 1px solid #e9ecef;
 }
 
 .totals-item {
   width: 30%;
-  font-weight: bold;
+  font-weight: 600;
+  color: #343a40;
+  font-size: 15px;
 }
-
 .export-btn {
   background-color: #E54F70;
   color: white;

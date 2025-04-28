@@ -112,7 +112,7 @@ export default {
 .header-title {
   display: flex;
   flex-direction: column;
-  width: 95%;
+  width: 100%;
   text-align: center; /* Add this line */
   margin-bottom: 1rem; /* Add this line */
 }
@@ -139,6 +139,7 @@ export default {
     font-size: 30px;
     margin-bottom: 0.5rem;
     font-weight: 650;
+    color: #7e2a3c;
 }
 
 .input-group {

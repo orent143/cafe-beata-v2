@@ -317,22 +317,23 @@ export default {
 
 .totals-container {
   display: flex;
-  justify-content: space-between; /* Space between items */
-  margin-top: auto;
-  padding: 15px;
-  background-color: #f4f4f4;
-  border-bottom: 10px;
-  font-size: 16px;
+  justify-content: space-between;
+  padding: 18px 25px;
+  background-color: #f8f9fa;
+  margin-top: auto; 
+  border-bottom-right-radius: 15px;
+  border-bottom-left-radius: 15px;
   position: sticky;
   bottom: 0;
+  box-shadow: 0 -3px 10px rgba(0, 0, 0, 0.05);
+  border-top: 1px solid #e9ecef;
 }
 
 .totals-item {
-  display: flex;
-  justify-content: flex-start; /* Align items to the left */
-  align-items: center; /* Center vertically */
-  width: 45%; /* Adjust width as needed */
-  margin-right: 15px; /* Add margin between items */
+  width: 30%;
+  font-weight: 600;
+  color: #343a40;
+  font-size: 15px;
 }
 
 .totals-item span {
