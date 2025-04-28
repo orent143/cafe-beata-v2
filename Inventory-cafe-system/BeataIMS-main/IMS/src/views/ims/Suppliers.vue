@@ -274,7 +274,7 @@ export default {
 .supplier-table th {
   background-color: #f4f4f4;
   padding: 13px;
-  color: #333;
+  color: #343a40;
   font-weight: bold;
 }
 

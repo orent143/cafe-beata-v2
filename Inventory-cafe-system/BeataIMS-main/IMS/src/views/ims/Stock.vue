@@ -142,7 +142,7 @@
             <p><strong>Stock ID:</strong> {{ stockData.StockID || 'N/A' }}</p>
             <p>
               <strong>Product Name:</strong> 
-              <span>{{ stockData.StockName || 'N/A' }}</span>
+              <span>{{ stockData.ProductName || 'N/A' }}</span>
               <span v-if="stockData.ProductType" class="process-type">
                 ({{ stockData.ProductType }})
               </span>
@@ -233,6 +233,7 @@ export default {
           // Update the stockData with information from the response
           this.stockData.ProductName = this.stockDetails.ProductName;
           this.stockData.CurrentQuantity = this.stockDetails.Quantity;
+          this.stockData.UnitPrice = this.stockDetails.UnitPrice;
           this.stockData.Status = this.stockDetails.Status;
           this.stockData.CurrentSupplier = this.stockDetails.CurrentSupplier;
           this.stockData.Image = this.stockDetails.Image;

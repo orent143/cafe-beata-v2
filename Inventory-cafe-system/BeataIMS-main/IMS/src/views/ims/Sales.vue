@@ -244,6 +244,7 @@ export default {
 
 .sales-table th {
   background-color: #f4f4f4;
+  color: #343a40;
 }
 
 .search-container {

@@ -240,7 +240,6 @@ export default {
 .header-title {
   display: flex;
   flex-direction: column;
-  width: 95%;
 }
 .sales-header {
   color: #333;
@@ -293,6 +292,7 @@ export default {
 
 .sales-table th {
   background-color: #f4f4f4;
+  color: #343a40;
 }
 .payment-badge {
   padding: 4px 8px;

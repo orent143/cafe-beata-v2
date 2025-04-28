@@ -556,7 +556,7 @@ export default {
 .recent-activity h2 {
   margin: 0 0 20px 0;
   font-size: 18px;
-  color: #333;
+  color: #343a40;
 }
 
 .activity-list {
@@ -637,7 +637,10 @@ export default {
   background: #FFF3E0;
   color: #FF9800;
 }
-
+.activity-status.success {
+  background-color: rgba(2, 136, 209, 0.1);
+  color: #0288D1;
+}
 .stock-counts {
   display: flex;
   justify-content: space-between;

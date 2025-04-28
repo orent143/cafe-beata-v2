@@ -34,11 +34,11 @@
                   <td>
                     <div class="avatar-container">
                       <img 
-                        :src="user.profile_pic || defaultAvatar" 
-                        :alt="user.username" 
-                        class="profile-pic"
-                        @error="handleImageError"
-                      />
+  :src="user.profile_pic || defaultAvatar" 
+  :alt="user.username" 
+  class="profile-pic"
+  @error="handleImageError"
+/>
                     </div>
                   </td>
                   <td>
@@ -1269,6 +1269,129 @@ export default {
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
+}
+
+/* Edit User Modal Styles */
+.edit-modal {
+  width: 450px;
+  background-color: #ffffff;
+  border-radius: 10px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  padding: 20px;
+  position: relative;
+}
+
+.edit-modal h3 {
+  font-size: 20px;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 15px;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 10px;
+}
+
+.edit-modal .modal-close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: none;
+  border: none;
+  font-size: 18px;
+  color: #777;
+  cursor: pointer;
+}
+
+.edit-form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.edit-form .form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.edit-form .form-group label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #555;
+  margin-bottom: 5px;
+}
+
+.edit-form .form-group input,
+.edit-form .form-group select {
+  padding: 10px;
+  border: 1px solid #ced4da;
+  border-radius: 6px;
+  font-size: 14px;
+  transition: border-color 0.2s;
+}
+
+.edit-form .form-group input:focus,
+.edit-form .form-group select:focus {
+  outline: none;
+  border-color: #E54F70;
+  box-shadow: 0 0 0 2px rgba(229, 79, 112, 0.25);
+}
+
+.edit-form .file-upload-container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.edit-form .file-select-btn {
+  background-color: #E54F70;
+  color: white;
+  padding: 8px 16px;
+  border-radius: 4px;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.edit-form .file-select-btn:hover {
+  background-color: #d84666;
+}
+
+.edit-form .selected-file-name {
+  font-size: 12px;
+  color: #666;
+}
+
+.edit-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.edit-actions .btn-cancel {
+  background: #f1f1f1;
+  color: #333;
+  border: none;
+  border-radius: 4px;
+  padding: 8px 16px;
+  cursor: pointer;
+}
+
+.edit-actions .btn-save {
+  background: #28a745;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 8px 16px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+}
+
+.edit-actions .btn-save:hover {
+  background: #218838;
 }
 </style>
   

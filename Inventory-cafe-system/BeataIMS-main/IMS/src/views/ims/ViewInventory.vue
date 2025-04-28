@@ -388,7 +388,7 @@ export default {
   
   .stock-table th {
     background-color: #f4f4f4;
-    color: #333;
+    color: #343a40;
     font-weight: bold;
   }
   

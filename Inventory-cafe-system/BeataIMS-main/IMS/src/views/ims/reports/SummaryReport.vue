@@ -112,46 +112,47 @@ export default {
   },
   methods: {
     async fetchInventoryReport() {
-      try {
-        this.loading = true;
-        this.error = null;
-        
-        console.log(`Fetching inventory report from: ${REPORTS_API}/inventory_report?date=${this.selectedDate}`);
-        const response = await axios.get(`${REPORTS_API}/inventory_report?date=${this.selectedDate}`);
-        console.log("Inventory API Response:", response.data);
-        
-        this.reportData = {
-          date: response.data.date || new Date().toISOString(),
-          total_items: response.data.total_items || 0,
-          total_value: parseFloat(response.data.total_value || 0),
-        };
+    try {
+      this.loading = true;
+      this.error = null;
 
-        this.inventoryProducts = (response.data.items || []).map(item => ({
-          ProductID: item.ProductID || 0,
-          ProductName: item.ProductName || "Unknown Product",
-          CategoryID: item.CategoryID || 0,
-          CategoryName: this.getCategoryName(item.CategoryID),
-          UnitPrice: parseFloat(item.UnitPrice || 0).toFixed(2),
-          Status: item.Status || "Unknown"
-        }));
-        
-        if (this.inventoryProducts.length === 0) {
-          this.toast.info("No inventory data found for the selected date");
-        }
-      } catch (error) {
-        console.error("Error fetching inventory report:", error);
-        this.error = error.message || "Failed to load report";
-        this.toast.error(`Error fetching inventory report: ${this.error}`);
-        this.inventoryProducts = [];
-        this.reportData = {
-          date: new Date().toISOString(),
-          total_items: 0,
-          total_value: 0,
-        };
-      } finally {
-        this.loading = false;
+      console.log(`Fetching inventory report from: ${REPORTS_API}/inventory_report?date=${this.selectedDate}`);
+      const response = await axios.get(`${REPORTS_API}/inventory_report?date=${this.selectedDate}`);
+      console.log("Inventory API Response:", response.data);
+
+      this.reportData = {
+        date: response.data.date || new Date().toISOString(),
+        total_items: response.data.total_items || 0,
+        total_value: parseFloat(response.data.total_value || 0),
+      };
+
+      this.inventoryProducts = (response.data.items || []).map(item => ({
+        ProductID: item.ProductID || 0,
+        ProductName: item.ProductName || "Unknown Product",
+        CategoryID: item.CategoryID || 0,
+        CategoryName: item.CategoryName || "Unknown Category",
+        UnitPrice: parseFloat(item.UnitPrice || 0).toFixed(2),
+        Status: item.Status || "Unknown"
+      }));
+
+      if (this.inventoryProducts.length === 0) {
+        this.toast.info("No inventory data found for the selected date");
       }
-    },
+    } catch (error) {
+      console.error("Error fetching inventory report:", error);
+      this.error = error.message || "Failed to load report";
+      this.toast.error(`Error fetching inventory report: ${this.error}`);
+      this.inventoryProducts = [];
+      this.reportData = {
+        date: new Date().toISOString(),
+        total_items: 0,
+        total_value: 0,
+      };
+    } finally {
+      this.loading = false;
+    }
+  },
+ 
     formatDate(dateString) {
       if (!dateString) return "N/A";
       try {
@@ -373,7 +374,7 @@ export default {
 .stock-table th {
   background-color: #f4f4f4;
   padding: 13px;
-  color: #333;
+  color: #343a40;
   font-weight: bold;
 }
 .stock-table td {
@@ -472,7 +473,10 @@ export default {
   background: #FFF3E0; 
   color: #FF9800;
 }
-
+.status-available {
+  background-color: rgba(2, 136, 209, 0.1);
+  color: #0288D1;
+}
 .status-out-of-stock {
   background: #F8D7DA; 
   color: #721c24; 

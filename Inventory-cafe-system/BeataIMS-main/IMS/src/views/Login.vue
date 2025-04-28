@@ -158,7 +158,7 @@ export default {
 }
 
 .input-group input {
-  width: 90%;
+  width: 95%;
   padding: 0.55rem;
   border: 1px solid #0000001e; /* Added border color */
   background-color: transparent;

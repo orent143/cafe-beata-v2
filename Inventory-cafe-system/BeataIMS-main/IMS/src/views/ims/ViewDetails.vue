@@ -57,7 +57,7 @@
 
         <div class="transactions-section">
           <div class="transactions-header">
-            <h3>Stock & Deducted Transactions</h3>
+            <h3>Added & Deducted Transactions</h3>
             <div class="transactions-filter-controls">
               <div class="transaction-filters">
                 <button 

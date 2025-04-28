@@ -420,18 +420,11 @@ export default {
 
 .export-btn {
   background-color: #E54F70;
-  color: white;
-  padding: 10px 20px;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  font-weight: 600;
-  font-size: 15px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  transition: all 0.2s ease;
-  box-shadow: 0 2px 5px rgba(229, 79, 112, 0.3);
+    color: white;
+    padding: 8px 15px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
 }
 
 .export-btn:hover {
@@ -560,7 +553,7 @@ export default {
 
 .stock-table th {
   background-color: #f4f4f4;
-    color: #333;
+  color: #343a40;
     font-weight: bold;
 }
 

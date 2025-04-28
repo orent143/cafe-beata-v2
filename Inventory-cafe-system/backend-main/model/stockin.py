@@ -143,7 +143,7 @@ async def get_stock_details(product_id: str, db=Depends(get_db)):
         
         # Fetch product details from the inventoryproduct table using a simpler query first
         cursor.execute("""
-            SELECT id, ProductName, Quantity, ProcessType, Image, Threshold
+            SELECT id, ProductName, Quantity, ProcessType, Image, Threshold, UnitPrice
             FROM inventoryproduct 
             WHERE id = %s
         """, (product_id,))
@@ -173,7 +173,8 @@ async def get_stock_details(product_id: str, db=Depends(get_db)):
         remaining_quantity = product[2] if product[2] is not None else 0
         process_type = product[3] or "Standard"
         image = product[4]
-        threshold = product[5] if product[5] is not None else 5  # Default to 5 if threshold is None
+        threshold = product[5] if product[5] is not None else 5  
+        unit_price = product[6] if product[6] is not None else 0.00
 
         base_url = "http://127.0.0.1:8001/uploads/products/"
 
@@ -264,6 +265,7 @@ async def get_stock_details(product_id: str, db=Depends(get_db)):
         result = {
             "ProductID": product_id_value,
             "ProductName": product_name,
+            "UnitPrice": unit_price,
             "Quantity": remaining_quantity,
             "ProcessType": process_type,
             "Image": f"{base_url}{image}" if image else None,

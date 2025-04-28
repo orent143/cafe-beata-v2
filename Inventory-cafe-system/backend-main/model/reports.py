@@ -63,57 +63,61 @@ def ensure_report_tables_exist(db_conn):
         return False
 
 def generate_inventory_report(db_conn, report_date: Optional[str] = None) -> Dict:
-    """Fetch all inventory data for a given report date or the latest available report."""
+    """Fetch all inventory data for a given report date or latest, with category names."""
     logger.info(f"Generating inventory report for: {report_date}")
-    
+
     try:
-        # Ensure tables exist
         ensure_report_tables_exist(db_conn)
-        
         cursor = db_conn.cursor()
-        
-        # Try to query the report table first
+
+        # Attempt to fetch from reports table with category name join
         try:
             if report_date:
                 cursor.execute("""
-                    SELECT ReportID, ProductID, ProductName, Quantity, UnitPrice, CategoryID, Status, ReportDate, Image
-                    FROM inventory_reports
-                    WHERE DATE(ReportDate) = %s
-                    ORDER BY ReportDate DESC
+                    SELECT 
+                        ir.ReportID, ir.ProductID, ir.ProductName, ir.Quantity, ir.UnitPrice, 
+                        ir.CategoryID, c.CategoryName, ir.Status, ir.ReportDate, ir.Image
+                    FROM inventory_reports ir
+                    LEFT JOIN categories c ON ir.CategoryID = c.id
+                    WHERE DATE(ir.ReportDate) = %s
+                    ORDER BY ir.ReportDate DESC
                 """, (report_date,))
             else:
                 cursor.execute("""
-                    SELECT ReportID, ProductID, ProductName, Quantity, UnitPrice, CategoryID, Status, ReportDate, Image
-                    FROM inventory_reports
-                    ORDER BY ReportDate DESC
+                    SELECT 
+                        ir.ReportID, ir.ProductID, ir.ProductName, ir.Quantity, ir.UnitPrice, 
+                        ir.CategoryID, c.CategoryName, ir.Status, ir.ReportDate, ir.Image
+                    FROM inventory_reports ir
+                    LEFT JOIN categories c ON ir.CategoryID = c.id
+                    ORDER BY ir.ReportDate DESC
                 """)
-                
             products = cursor.fetchall()
-        except mysql.connector.Error:
-            # If table doesn't exist or query fails, fallback to empty list
+        except mysql.connector.Error as e:
+            logger.error(f"Error querying inventory_reports: {str(e)}")
             products = []
 
-        # If no data in reports table, generate from inventory
+        # Fallback to inventoryproduct table if no report data
         if not products:
             try:
                 cursor.execute("""
                     SELECT 
-                        id, id, ProductName, Quantity, Price, CategoryID, 
+                        p.id, p.id, p.ProductName, p.Quantity, p.Price, p.CategoryID, 
+                        c.CategoryName,
                         CASE 
-                            WHEN Quantity = 0 THEN 'Out of Stock'
-                            WHEN Quantity <= 10 THEN 'Low Stock'
+                            WHEN p.Quantity = 0 THEN 'Out of Stock'
+                            WHEN p.Quantity <= 10 THEN 'Low Stock'
                             ELSE 'In Stock'
                         END as Status, 
-                        NOW(), ProductImage
-                    FROM inventoryproduct
-                    ORDER BY id
+                        NOW(), p.ProductImage
+                    FROM inventoryproduct p
+                    LEFT JOIN categories c ON p.CategoryID = c.id
+                    ORDER BY p.id
                 """)
                 products = cursor.fetchall()
             except mysql.connector.Error as e:
                 logger.error(f"Error querying inventoryproduct: {str(e)}")
                 products = []
-            
-        # If still no products, return empty response with no error
+
         if not products:
             return {
                 "date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
@@ -122,60 +126,49 @@ def generate_inventory_report(db_conn, report_date: Optional[str] = None) -> Dic
                 "items": []
             }
 
-        # Calculate total value safely
         total_value = 0
+        items = []
         for product in products:
             try:
                 qty = float(product[3]) if product[3] is not None else 0
                 price = float(product[4]) if product[4] is not None else 0
                 total_value += qty * price
-            except (ValueError, TypeError):
-                pass
 
-        latest_report_date = products[0][7] if products else datetime.now()
-        if isinstance(latest_report_date, datetime):
-            latest_report_date = latest_report_date.strftime("%Y-%m-%d %H:%M:%S")
-        else:
-            latest_report_date = str(latest_report_date)
-
-        cursor.close()
-        
-        # Format response items safely
-        items = []
-        for product in products:
-            try:
                 item = {
-                    "ReportID": product[0] if product[0] is not None else 0,
-                    "ProductID": product[1] if product[1] is not None else 0,
-                    "ProductName": product[2] if product[2] is not None else "Unknown Product",
-                    "Quantity": product[3] if product[3] is not None else 0,
-                    "UnitPrice": float(product[4]) if product[4] is not None else 0,
-                    "CategoryID": product[5] if product[5] is not None else 0,
-                    "Status": product[6] if product[6] is not None else "Unknown",
-                    "ReportDate": (product[7].strftime("%Y-%m-%d %H:%M:%S") 
-                                if isinstance(product[7], datetime) 
-                                else str(product[7]) if product[7] is not None else ""),
-                    "Image": f"/uploads/products/{product[8]}" if product[8] else None,
+                    "ReportID": product[0] or 0,
+                    "ProductID": product[1] or 0,
+                    "ProductName": product[2] or "Unknown Product",
+                    "Quantity": product[3] or 0,
+                    "UnitPrice": float(product[4]) or 0,
+                    "CategoryID": product[5] or 0,
+                    "CategoryName": product[6] or "Unknown Category",
+                    "Status": product[7] or "Unknown",
+                    "ReportDate": (product[8].strftime("%Y-%m-%d %H:%M:%S") 
+                                   if isinstance(product[8], datetime) 
+                                   else str(product[8]) or ""),
+                    "Image": f"/uploads/products/{product[9]}" if product[9] else None,
                 }
                 items.append(item)
             except Exception as e:
-                logger.error(f"Error formatting product item: {str(e)}")
-        
+                logger.error(f"Error processing product: {str(e)}")
+
+        report_date_str = products[0][8].strftime("%Y-%m-%d %H:%M:%S") if isinstance(products[0][8], datetime) else str(products[0][8])
         return {
-            "date": latest_report_date,  
+            "date": report_date_str,
             "total_items": len(items),
             "total_value": total_value,
             "items": items
         }
+
     except Exception as e:
-        logger.error(f"Error generating inventory report: {str(e)}")
-        # Return empty data rather than raising an error
+        logger.error(f"Error generating inventory report: {traceback.format_exc()}")
         return {
             "date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             "total_items": 0,
             "total_value": 0,
             "items": []
         }
+
 
 @ReportRouter.get("/inventory_report", response_model=Dict)
 async def get_inventory_report(
