@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Apr 27, 2025 at 03:22 AM
+-- Generation Time: Apr 28, 2025 at 11:59 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.0.30
 
@@ -146,7 +146,24 @@ INSERT INTO `activity_logs` (`id`, `icon`, `title`, `time`, `status`) VALUES
 (104, 'pi pi-trash', 'Product deleted: VUHVH', '2025-04-26 18:23:47', 'Deleted'),
 (105, 'pi pi-trash', 'Product deleted: NMKBIK', '2025-04-26 18:23:49', 'Deleted'),
 (106, 'pi pi-truck', 'New supplier added: John Doe ', '2025-04-26 18:28:37', 'Success'),
-(107, 'pi pi-trash', 'Supplier deleted: John Doe', '2025-04-26 18:28:41', 'Deleted');
+(107, 'pi pi-trash', 'Supplier deleted: John Doe', '2025-04-26 18:28:41', 'Deleted'),
+(108, 'pi pi-trash', 'Product deleted: Bundaberg', '2025-04-28 18:21:30', 'Deleted'),
+(109, 'pi pi-pencil', 'Product updated: Bundaberg', '2025-04-28 18:23:44', 'Updated'),
+(110, 'pi pi-truck', 'Product created: \';miouh', '2025-04-28 18:35:21', 'Created'),
+(111, 'pi pi-truck', 'New product added: ;n uhb', '2025-04-28 18:36:54', 'Added'),
+(112, 'pi pi-trash', 'Product deleted: ;n uhb', '2025-04-28 18:37:25', 'Deleted'),
+(113, 'pi pi-trash', 'Product deleted: \';miouh', '2025-04-28 18:37:37', 'Deleted'),
+(114, 'pi pi-truck', 'New product added: jbuyguy', '2025-04-28 18:40:50', 'Added'),
+(115, 'pi pi-truck', 'New product added: miun', '2025-04-28 18:42:59', 'Added'),
+(116, 'pi pi-pencil', 'Product updated: miun', '2025-04-28 18:45:25', 'Updated'),
+(117, 'pi pi-trash', 'Product deleted: miun', '2025-04-28 18:45:49', 'Deleted'),
+(118, 'pi pi-trash', 'Product deleted: jbuyguy', '2025-04-28 18:45:51', 'Deleted'),
+(119, 'pi pi-truck', 'New product added: Cafe Latte', '2025-04-28 21:18:34', 'Added'),
+(120, 'pi pi-truck', 'New product added: Croissant', '2025-04-28 21:21:26', 'Added'),
+(121, 'pi pi-truck', 'New supplier added: Paul ', '2025-04-28 21:31:56', 'Added'),
+(122, 'pi pi-trash', 'Supplier deleted: lor', '2025-04-28 21:33:30', 'Deleted'),
+(123, 'pi pi-chart-line', 'Inventory summary generated', '2025-04-28 21:34:19', 'Success'),
+(124, 'pi pi-trash', 'Product deleted: Chicharon', '2025-04-28 21:54:19', 'Deleted');
 
 -- --------------------------------------------------------
 
@@ -172,7 +189,8 @@ INSERT INTO `categories` (`id`, `CategoryName`, `ImagePath`) VALUES
 (5, 'CHOCOLATE Drinks', 'uploads/categories/CHOCOLATE_Drinks_how-to-make-hot-chocolate-7.jpg'),
 (6, 'BLENDED Frappes', 'uploads/categories/BLENDED_Frappes_Frappe-e1600323632770.jpg'),
 (7, 'PASTA Dishes', 'uploads/categories/PASTA_Dishes_67700_RichPastaforthePoorKitchen_ddmfs_4x3_2284-220302ec8328442096df370dede357d7.jpg'),
-(9, 'BOTTLED & CANNED Drinks', 'uploads/categories/BOTTLED_&_CANNED_Drinks_png-clipart-assorted-brand-soda-bottles-and-cans-art-fizzy-drinks-fanta-juice-coca-cola-drink-plastic-bottle-cola.png');
+(9, 'BOTTLED & CANNED Drinks', 'uploads/categories/BOTTLED_&_CANNED_Drinks_png-clipart-assorted-brand-soda-bottles-and-cans-art-fizzy-drinks-fanta-juice-coca-cola-drink-plastic-bottle-cola.png'),
+(10, 'Breads & Pastries', 'uploads/categories/Breads_&_Pastries_Assorted-Croissant-2-gourmet-bread-and-cie-1920.jpg');
 
 -- --------------------------------------------------------
 
@@ -225,7 +243,33 @@ INSERT INTO `category` (`id`, `CategoryName`, `CategoryType`, `Icon`, `CreatedAt
 (1, 'Ready Made', 'Product', 'coffee', '2025-04-24 16:44:39'),
 (2, 'Ready Made', 'Product', 'coffee', '2025-04-26 03:49:44'),
 (3, 'Ready Made', 'Product', 'coffee', '2025-04-26 05:35:19'),
-(4, 'Ready Made', 'Product', 'coffee', '2025-04-26 05:37:31');
+(4, 'Ready Made', 'Product', 'coffee', '2025-04-26 05:37:31'),
+(5, 'Ready Made', 'Product', 'coffee', '2025-04-27 10:11:49'),
+(6, 'Ready Made', 'Product', 'coffee', '2025-04-27 11:07:57'),
+(7, 'Ready Made', 'Product', 'coffee', '2025-04-27 11:45:24'),
+(8, 'Ready Made', 'Product', 'coffee', '2025-04-27 19:54:11'),
+(9, 'Ready Made', 'Product', 'coffee', '2025-04-27 21:05:43'),
+(10, 'Ready Made', 'Product', 'coffee', '2025-04-28 05:17:44'),
+(11, 'Ready Made', 'Product', 'coffee', '2025-04-28 05:20:53'),
+(12, 'Ready Made', 'Product', 'coffee', '2025-04-28 05:20:55'),
+(13, 'Ready Made', 'Product', 'coffee', '2025-04-28 05:22:10'),
+(14, 'Ready Made', 'Product', 'coffee', '2025-04-28 05:22:26'),
+(15, 'Ready Made', 'Product', 'coffee', '2025-04-28 05:23:19'),
+(16, 'Ready Made', 'Product', 'coffee', '2025-04-28 05:27:40'),
+(17, 'Ready Made', 'Product', 'coffee', '2025-04-28 05:30:35'),
+(18, 'Ready Made', 'Product', 'coffee', '2025-04-28 05:34:45'),
+(19, 'Ready Made', 'Product', 'coffee', '2025-04-28 05:36:22'),
+(20, 'Ready Made', 'Product', 'coffee', '2025-04-28 05:36:35'),
+(21, 'Ready Made', 'Product', 'coffee', '2025-04-28 05:40:35'),
+(22, 'Ready Made', 'Product', 'coffee', '2025-04-28 05:42:43'),
+(23, 'Ready Made', 'Product', 'coffee', '2025-04-28 05:45:06'),
+(24, 'Ready Made', 'Product', 'coffee', '2025-04-28 05:45:12'),
+(25, 'Ready Made', 'Product', 'coffee', '2025-04-28 05:47:15'),
+(26, 'Ready Made', 'Product', 'coffee', '2025-04-28 07:21:50'),
+(27, 'Ready Made', 'Product', 'coffee', '2025-04-28 07:34:45'),
+(28, 'Ready Made', 'Product', 'coffee', '2025-04-28 07:57:21'),
+(29, 'Ready Made', 'Product', 'coffee', '2025-04-28 08:41:39'),
+(30, 'Ready Made', 'Product', 'coffee', '2025-04-28 08:52:54');
 
 -- --------------------------------------------------------
 
@@ -255,6 +299,9 @@ INSERT INTO `inventoryproduct` (`id`, `ProductName`, `UnitPrice`, `CategoryID (F
 ('10', 'Peppermint Latte', 90.00, 1, 'Available', '2025-03-27 20:40:26', '10_Peppermint_Latte.jpg', 'To Be Made', 0, NULL),
 ('11', 'Vanilla Latte', 90.00, 1, 'Available', '2025-03-27 20:41:03', '11_Vanilla_Latte.jpg', 'To Be Made', 0, NULL),
 ('12', 'Matcha Cafe Latte', 90.00, 1, 'Available', '2025-03-27 20:41:31', '12_Matcha_Cafe_Latte.jpg', 'To Be Made', 0, NULL),
+('123', 'Mineral Water', 20.00, 9, 'Out of Stock', '2025-04-28 09:00:50', '123_Mineral_Water.jpg', 'Ready-Made', 11, 10),
+('1234', 'Cafe Latte', 60.00, 1, 'Available', '2025-04-28 21:18:34', '1234_Cafe_Latte.png', 'To Be Made', 0, NULL),
+('1235', 'Croissant', 70.00, 10, 'Out of Stock', '2025-04-28 21:21:26', '1235_Croissant.jpg', 'Ready-Made', 10, 10),
 ('13', 'Hot Tea', 60.00, 1, 'Available', '2025-03-27 20:42:06', '13_Hot_Tea.jpg', 'To Be Made', 0, NULL),
 ('14', 'Iced Cafe Latte', 80.00, 2, 'Available', '2025-03-27 20:55:46', '14_Iced_Cafe_Latte.jpeg', 'To Be Made', 0, NULL),
 ('15', 'Iced Caramel Macchiato', 115.00, 2, 'Available', '2025-03-27 20:56:16', '15_Caramel_Macchiato.jpg', 'To Be Made', 0, NULL),
@@ -265,6 +312,7 @@ INSERT INTO `inventoryproduct` (`id`, `ProductName`, `UnitPrice`, `CategoryID (F
 ('2', 'Coffee Cappuccino', 750.00, 1, 'Available', '2025-03-27 20:34:32', '2_Coffee_Cappuccino.jpg', 'To Be Made', 0, NULL),
 ('20', 'Iced White Choco Mocha ', 115.00, 2, 'Available', '2025-03-27 21:00:51', '20_Iced_White_Choco_Mocha_.jpg', 'To Be Made', 0, NULL),
 ('21', 'Angel Affogato', 75.00, 2, 'Available', '2025-03-27 21:01:57', '21_Angel_Affogato.jpg', 'To Be Made', 0, NULL),
+('213', 'Croissant', 70.00, 10, 'Out of Stock', '2025-04-28 18:27:03', '213_Croissant.jpg', 'Ready-Made', 0, 10),
 ('22', 'Iced Spanish Latte', 115.00, 2, 'Available', '2025-03-27 21:02:51', '22_Iced_Spanish_Latte.jpg', 'To Be Made', 0, NULL),
 ('23', 'Iced Hazelnut Latte', 115.00, 2, 'Available', '2025-03-27 21:03:18', '23_Iced_Hazelnut_Latte.jpg', 'To Be Made', 0, NULL),
 ('24', 'Iced Salted Caramel Macchiato', 115.00, 2, 'Available', '2025-03-27 21:04:34', '24_Iced_Salted_Caramel_Macchiato.jpg', 'To Be Made', 0, NULL),
@@ -277,6 +325,7 @@ INSERT INTO `inventoryproduct` (`id`, `ProductName`, `UnitPrice`, `CategoryID (F
 ('30', 'Carrot Juice', 60.00, 3, 'Available', '2025-03-27 21:36:56', '30_Carrot_Juice.webp', 'To Be Made', 0, NULL),
 ('31', 'Mango Juice', 55.00, 3, 'Available', '2025-03-27 21:37:26', '31_Mango_Juice.jpg', 'To Be Made', 0, NULL),
 ('32', 'Yakult Lemonade', 55.00, 3, 'Available', '2025-03-27 21:38:20', '32_Yakult_Lemonade.jpeg', 'To Be Made', 0, NULL),
+('321', 'Bundaberg', 90.00, 9, 'Out of Stock', '2025-04-28 18:21:50', '321_Bundaberg.jpg', 'Ready-Made', 0, 10),
 ('33', 'Yakult Honey Lemonade', 75.00, 3, 'Available', '2025-03-27 21:39:01', '33_Yakult_Honey_Lemonade.jpg', 'To Be Made', 0, NULL),
 ('34', 'Yakult Apple Lemonade', 75.00, 2, 'Available', '2025-03-27 21:40:38', '34_Yakult_Apple_Lemonade.jpg', 'To Be Made', 0, NULL),
 ('35', 'Yakult Orange Lemonade', 75.00, 3, 'Available', '2025-03-27 21:41:31', '35_Yakult_Orange_Lemonade.png', 'To Be Made', 0, NULL),
@@ -301,7 +350,6 @@ INSERT INTO `inventoryproduct` (`id`, `ProductName`, `UnitPrice`, `CategoryID (F
 ('52', 'Avocado Milktea', 60.00, 4, 'Available', '2025-03-27 22:07:37', '52_Avocado_Milktea.jpg', 'To Be Made', 0, NULL),
 ('53', 'Wintermelon Milktea', 60.00, 4, 'Available', '2025-03-27 22:08:06', '53_Wintermelon_Milktea.jpg', 'To Be Made', 0, NULL),
 ('54', 'Okinawa Milktea', 60.00, 4, 'Available', '2025-03-27 22:09:11', '54_Okinawa_Milktea.webp', 'To Be Made', 0, NULL),
-('5431', 'Chicharon', 50000.00, 7, 'Available', '2025-04-04 14:09:36', NULL, 'To Be Made', 0, NULL),
 ('55', 'Mango Milktea', 60.00, 4, 'Available', '2025-03-27 22:09:45', '55_Mango_Milktea.jpg', 'To Be Made', 0, NULL),
 ('56', 'Oreo Milktea', 60.00, 4, 'Available', '2025-03-27 22:11:55', '56_Oreo_Milktea.jpg', 'To Be Made', 0, NULL),
 ('58', 'Caramel Milktea', 60.00, 4, 'Available', '2025-03-27 22:13:47', '58_Caramel_Milktea.jpg', 'To Be Made', 0, NULL),
@@ -545,7 +593,96 @@ INSERT INTO `inventory_reports` (`ReportID`, `ReportDate`, `ProductID`, `Product
 (184, '2025-04-24 12:06:12', '8777', 'lemuel', 2295, 2323.00, 2, 'Low Stock', '8777_lemuel.png'),
 (185, '2025-04-24 12:06:12', '9', 'Spanish Latte', 0, 90.00, 1, 'Available', '9_Spanish_Latte.jpeg'),
 (186, '2025-04-24 12:06:12', '97', 'Chicken', 0, 250.00, 7, 'Out of Stock', '97_Chicken.jpg'),
-(187, '2025-04-24 12:06:12', '99', 'Mineral wat', 80, 255.00, 9, 'Low Stock', '99_Mineral_wat.jpg');
+(187, '2025-04-24 12:06:12', '99', 'Mineral wat', 80, 255.00, 9, 'Low Stock', '99_Mineral_wat.jpg'),
+(188, '2025-04-28 21:34:19', '1', 'Cafe Americano', 0, 80.00, 1, 'Available', '1_Cafe_Americano.jpeg'),
+(189, '2025-04-28 21:34:19', '10', 'Peppermint Latte', 0, 90.00, 1, 'Available', '10_Peppermint_Latte.jpg'),
+(190, '2025-04-28 21:34:19', '11', 'Vanilla Latte', 0, 90.00, 1, 'Available', '11_Vanilla_Latte.jpg'),
+(191, '2025-04-28 21:34:19', '12', 'Matcha Cafe Latte', 0, 90.00, 1, 'Available', '12_Matcha_Cafe_Latte.jpg'),
+(192, '2025-04-28 21:34:19', '123', 'Mineral Water', 11, 20.00, 9, 'In Stock', '123_Mineral_Water.jpg'),
+(193, '2025-04-28 21:34:19', '1234', 'Cafe Latte', 0, 60.00, 1, 'Available', '1234_Cafe_Latte.png'),
+(194, '2025-04-28 21:34:19', '1235', 'Croissant', 10, 70.00, 10, 'Low Stock', '1235_Croissant.jpg'),
+(195, '2025-04-28 21:34:19', '13', 'Hot Tea', 0, 60.00, 1, 'Available', '13_Hot_Tea.jpg'),
+(196, '2025-04-28 21:34:19', '14', 'Iced Cafe Latte', 0, 80.00, 2, 'Available', '14_Iced_Cafe_Latte.jpeg'),
+(197, '2025-04-28 21:34:19', '15', 'Iced Caramel Macchiato', 0, 115.00, 2, 'Available', '15_Caramel_Macchiato.jpg'),
+(198, '2025-04-28 21:34:19', '16', 'Iced Cafe Mocha', 0, 115.00, 2, 'Available', '16_Iced_Cafe_Mocha.jpg'),
+(199, '2025-04-28 21:34:19', '17', 'Iced Cafe Americano', 0, 75.00, 2, 'Available', '17_Iced_Cafe_Americano.webp'),
+(200, '2025-04-28 21:34:19', '18', 'Iced Cafe Frizzy', 0, 80.00, 2, 'Available', '18_Iced_Cafe_Frizzy.jpg'),
+(201, '2025-04-28 21:34:19', '19', 'Iced Cappuccino', 0, 80.00, 2, 'Available', '19_Iced_Cappuccino.webp'),
+(202, '2025-04-28 21:34:19', '2', 'Coffee Cappuccino', 0, 750.00, 1, 'Available', '2_Coffee_Cappuccino.jpg'),
+(203, '2025-04-28 21:34:19', '20', 'Iced White Choco Mocha ', 0, 115.00, 2, 'Available', '20_Iced_White_Choco_Mocha_.jpg'),
+(204, '2025-04-28 21:34:19', '21', 'Angel Affogato', 0, 75.00, 2, 'Available', '21_Angel_Affogato.jpg'),
+(205, '2025-04-28 21:34:19', '213', 'Croissant', 0, 70.00, 10, 'Out of Stock', '213_Croissant.jpg'),
+(206, '2025-04-28 21:34:19', '22', 'Iced Spanish Latte', 0, 115.00, 2, 'Available', '22_Iced_Spanish_Latte.jpg'),
+(207, '2025-04-28 21:34:19', '23', 'Iced Hazelnut Latte', 0, 115.00, 2, 'Available', '23_Iced_Hazelnut_Latte.jpg'),
+(208, '2025-04-28 21:34:19', '24', 'Iced Salted Caramel Macchiato', 0, 115.00, 2, 'Available', '24_Iced_Salted_Caramel_Macchiato.jpg'),
+(209, '2025-04-28 21:34:19', '25', 'Iced Vanilla Latte', 0, 115.00, 2, 'Available', '25_Iced_Vanilla_Latte.webp'),
+(210, '2025-04-28 21:34:19', '26', 'Iced Peppermint Latte', 0, 115.00, 2, 'Available', '26_Iced_Peppermint_Latte.webp'),
+(211, '2025-04-28 21:34:19', '27', 'Iced Matcha Latte', 0, 115.00, 2, 'Available', '27_Iced_Matcha_Latte.jpg'),
+(212, '2025-04-28 21:34:19', '28', 'Iced Americano w/ Lemon', 0, 90.00, 2, 'Available', '28_Iced_Americano_w__Lemon.jpg'),
+(213, '2025-04-28 21:34:19', '29', 'Apple Juice', 0, 55.00, 3, 'Available', '29_Apple_Juice.webp'),
+(214, '2025-04-28 21:34:19', '3', 'Caramel Macchiato', 0, 90.00, 1, 'Available', '3_Caramel_Macchiato.jpg'),
+(215, '2025-04-28 21:34:19', '30', 'Carrot Juice', 0, 60.00, 3, 'Available', '30_Carrot_Juice.webp'),
+(216, '2025-04-28 21:34:19', '31', 'Mango Juice', 0, 55.00, 3, 'Available', '31_Mango_Juice.jpg'),
+(217, '2025-04-28 21:34:19', '32', 'Yakult Lemonade', 0, 55.00, 3, 'Available', '32_Yakult_Lemonade.jpeg'),
+(218, '2025-04-28 21:34:19', '321', 'Bundaberg', 0, 90.00, 9, 'Out of Stock', '321_Bundaberg.jpg'),
+(219, '2025-04-28 21:34:19', '33', 'Yakult Honey Lemonade', 0, 75.00, 3, 'Available', '33_Yakult_Honey_Lemonade.jpg'),
+(220, '2025-04-28 21:34:19', '34', 'Yakult Apple Lemonade', 0, 75.00, 2, 'Available', '34_Yakult_Apple_Lemonade.jpg'),
+(221, '2025-04-28 21:34:19', '35', 'Yakult Orange Lemonade', 0, 75.00, 3, 'Available', '35_Yakult_Orange_Lemonade.png'),
+(222, '2025-04-28 21:34:19', '36', 'Yakult Sprite Lemonade', 0, 75.00, 3, 'Available', '36_Yakult_Sprite_Lemonade.jpg'),
+(223, '2025-04-28 21:34:19', '37', 'Yakult Mango Lemonade', 0, 75.00, 3, 'Available', '37_Yakult_Mango_Lemonade.jpg'),
+(224, '2025-04-28 21:34:19', '38', 'Yakult Caramel Lemonade', 0, 75.00, 3, 'Available', NULL),
+(225, '2025-04-28 21:34:19', '39', 'Yakult Strawberry Lemonade', 0, 75.00, 3, 'Available', '39_Yakult_Strawberry_Lemonade.jpg'),
+(226, '2025-04-28 21:34:19', '4', 'Salted Caramel Macchiato', 0, 90.00, 1, 'Available', '4_Salted_Caramel_Macchiato.jpg'),
+(227, '2025-04-28 21:34:19', '40', 'Strawberry Mango Blue Lemonade', 0, 75.00, 3, 'Available', NULL),
+(228, '2025-04-28 21:34:19', '41', 'Strawberry Orange Blue Lemonade', 0, 75.00, 3, 'Available', NULL),
+(229, '2025-04-28 21:34:19', '42', 'Strawberry Apple Lemonade', 0, 75.00, 3, 'Available', '42_Strawberry_Apple_Lemonade.webp'),
+(230, '2025-04-28 21:34:19', '43', 'Orange Juice', 0, 55.00, 3, 'Available', '43_Orange_Juice.jpg'),
+(231, '2025-04-28 21:34:19', '44', 'Apple Carrot Juice', 0, 75.00, 3, 'Available', '44_Apple_Carrot_Juice.webp'),
+(232, '2025-04-28 21:34:19', '45', 'Fresh Lemon Juice', 0, 60.00, 3, 'Available', '45_Fresh_Lemon_Juice.jpg'),
+(233, '2025-04-28 21:34:19', '46', 'Mogu-Mogu Yakult', 0, 55.00, 3, 'Available', NULL),
+(234, '2025-04-28 21:34:19', '47', 'Mogu-Mogu Yakult w/ Lemon', 0, 75.00, 3, 'Available', NULL),
+(235, '2025-04-28 21:34:19', '48', 'Mogu-Mogu Yakult w/ Honey', 0, 85.00, 3, 'Available', NULL),
+(236, '2025-04-28 21:34:19', '49', 'Mogu-Mogu w/ Honey', 0, 85.00, 3, 'Available', NULL),
+(237, '2025-04-28 21:34:19', '5', 'Cafe Mocha', 0, 90.00, 1, 'Available', '5_Cafe_Mocha.jpg'),
+(238, '2025-04-28 21:34:19', '50', 'Mango Matcha Latte', 0, 75.00, 3, 'Available', '50_Mango_Matcha_Latte.jpg'),
+(239, '2025-04-28 21:34:19', '51', 'Mango Strawberry Latte', 0, 75.00, 3, 'Available', NULL),
+(240, '2025-04-28 21:34:19', '52', 'Avocado Milktea', 0, 60.00, 4, 'Available', '52_Avocado_Milktea.jpg'),
+(241, '2025-04-28 21:34:19', '53', 'Wintermelon Milktea', 0, 60.00, 4, 'Available', '53_Wintermelon_Milktea.jpg'),
+(242, '2025-04-28 21:34:19', '54', 'Okinawa Milktea', 0, 60.00, 4, 'Available', '54_Okinawa_Milktea.webp'),
+(243, '2025-04-28 21:34:19', '5431', 'Chicharon', 0, 50000.00, 7, 'Available', NULL),
+(244, '2025-04-28 21:34:19', '55', 'Mango Milktea', 0, 60.00, 4, 'Available', '55_Mango_Milktea.jpg'),
+(245, '2025-04-28 21:34:19', '56', 'Oreo Milktea', 0, 60.00, 4, 'Available', '56_Oreo_Milktea.jpg'),
+(246, '2025-04-28 21:34:19', '58', 'Caramel Milktea', 0, 60.00, 4, 'Available', '58_Caramel_Milktea.jpg'),
+(247, '2025-04-28 21:34:19', '59', 'Chocolate Milktea', 0, 60.00, 4, 'Available', '59_Chocolate_Milktea.jpg'),
+(248, '2025-04-28 21:34:19', '6', 'Cafe Latte', 0, 85.00, 1, 'Available', '6_Cafe_Latte.jpg'),
+(249, '2025-04-28 21:34:19', '60', 'Mocha Milktea', 0, 60.00, 4, 'Available', '60_Mocha_Milktea.jpg'),
+(250, '2025-04-28 21:34:19', '61', 'Matcha Milktea', 0, 60.00, 4, 'Available', '61_Matcha_Milktea.jpg'),
+(251, '2025-04-28 21:34:19', '62', 'Taro Milktea', 0, 60.00, 4, 'Available', '62_Taro_Milktea.jpeg'),
+(252, '2025-04-28 21:34:19', '63', 'Red Velvet Milktea', 0, 60.00, 4, 'Available', '63_Red_Velvet_Milktea.jpg'),
+(253, '2025-04-28 21:34:19', '64', 'Ube Milktea', 0, 60.00, 4, 'Available', '64_Ube_Milktea.jpg'),
+(254, '2025-04-28 21:34:19', '65', 'Pandan Milktea', 0, 60.00, 4, 'Available', '65_Pandan_Milktea.jpg'),
+(255, '2025-04-28 21:34:19', '66', 'Strawberry Milktea', 0, 60.00, 4, 'Available', '66_Strawberry_Milktea.jpg'),
+(256, '2025-04-28 21:34:19', '67', 'Melon Milktea', 0, 60.00, 4, 'Available', '67_Melon_Milktea.jpg'),
+(257, '2025-04-28 21:34:19', '68', 'Ube Taro Milktea', 0, 60.00, 4, 'Available', '68_Ube_Taro_Milktea.jpg'),
+(258, '2025-04-28 21:34:19', '69', 'Cookies & Cream', 0, 90.00, 6, 'Available', '69_Cookies_&_Cream.jpg'),
+(259, '2025-04-28 21:34:19', '7', 'Cafe Latte Macchiato', 0, 85.00, 1, 'Available', '7_Cafe_Latte_Macchiato.jpg'),
+(260, '2025-04-28 21:34:19', '70', 'Ube Frappe', 0, 90.00, 6, 'Available', '70_Ube_Frappe.jpg'),
+(261, '2025-04-28 21:34:19', '71', 'Mocha Frappe', 0, 135.00, 6, 'Available', '71_Mocha_Frappe.webp'),
+(262, '2025-04-28 21:34:19', '72', 'Matcha Frappe', 0, 90.00, 6, 'Available', '72_Matcha_Frappe.webp'),
+(263, '2025-04-28 21:34:19', '73', 'Mango Frappe', 3090, 90.00, 6, 'Available', '73_Mango_Frappe.jpg'),
+(264, '2025-04-28 21:34:19', '74', 'Chocolate Frappe', 0, 90.00, 6, 'Available', '74_Chocolate_Frappe.jpg'),
+(265, '2025-04-28 21:34:19', '75', 'Strawberry Frappe', 0, 90.00, 6, 'Available', '75_Strawberry_Frappe.webp'),
+(266, '2025-04-28 21:34:19', '76', 'Pandan Frappe', 0, 90.00, 6, 'Available', '76_Pandan_Frappe.jpg'),
+(267, '2025-04-28 21:34:19', '77', 'Avocado Frappe', 0, 90.00, 6, 'Available', '77_Avocado_Frappe.webp'),
+(268, '2025-04-28 21:34:19', '78', 'Melon Frappe', 0, 90.00, 6, 'Available', '78_Melon_Frappe.webp'),
+(269, '2025-04-28 21:34:19', '79', 'Cookies & Coffee Frappe', 0, 135.00, 6, 'Available', '79_Cookies_&_Coffee_Frappe.jpg'),
+(270, '2025-04-28 21:34:19', '8', 'Hazelnut Latte', 0, 90.00, 1, 'Available', '8_Hazelnut_Latte.jpg'),
+(271, '2025-04-28 21:34:19', '80', 'Hot Chocolate', 0, 75.00, 5, 'Available', '80_Hot_Chocolate.jpg'),
+(272, '2025-04-28 21:34:19', '81', 'Cold Chocolate', 0, 85.00, 5, 'Available', '81_Cold_Chocolate.jpg'),
+(273, '2025-04-28 21:34:19', '82', 'Carbonara', 0, 70.00, 7, 'Available', '82_Carbonara.jpg'),
+(274, '2025-04-28 21:34:19', '83', 'Baked Mac', 0, 70.00, 7, 'Available', '83_Baked_Mac.jpg'),
+(275, '2025-04-28 21:34:19', '84', 'Tuna Pasta', 0, 70.00, 7, 'Available', '84_Tuna_Pasta.jpg'),
+(276, '2025-04-28 21:34:19', '9', 'Spanish Latte', 0, 90.00, 1, 'Available', '9_Spanish_Latte.jpeg');
 
 -- --------------------------------------------------------
 
@@ -568,7 +705,13 @@ CREATE TABLE `inventory_transactions` (
 
 INSERT INTO `inventory_transactions` (`id`, `ProductID`, `product_name`, `transaction_type`, `quantity`, `created_at`) VALUES
 (62, '73', 'Mango Frappe', 'Add', 1545, '2025-04-01 07:39:27'),
-(63, '73', 'Mango Frappe', 'Add', 1545, '2025-04-01 07:40:04');
+(63, '73', 'Mango Frappe', 'Add', 1545, '2025-04-01 07:40:04'),
+(77, '123', 'Mineral Water', 'Add', 9, '2025-04-27 20:04:16'),
+(78, '123', 'Mineral Water', 'Add', 2, '2025-04-27 20:05:02'),
+(79, '1235', 'Croissant', 'Add', 9, '2025-04-28 08:24:49'),
+(80, '1235', 'Croissant', 'Add', 2, '2025-04-28 08:25:30'),
+(81, '1235', 'Croissant', 'Deduct', 3, '2025-04-28 08:29:09'),
+(82, '1235', 'Croissant', 'Add', 2, '2025-04-28 08:33:10');
 
 -- --------------------------------------------------------
 
@@ -1611,7 +1754,8 @@ INSERT INTO `order_history` (`history_id`, `order_id`, `customer_name`, `total_i
 (43, 0, 'sd', 1, 90.00, 'Cash', '2025-04-11 17:37:01'),
 (44, 0, 'ds', 2, 270.00, 'Cash', '2025-04-15 15:54:37'),
 (45, 0, 'gdff', 5, 540.00, 'Cash', '2025-04-15 16:06:45'),
-(46, 0, 'lors', 2, 225.00, 'Cash', '2025-04-16 06:30:05');
+(46, 0, 'lors', 2, 225.00, 'Cash', '2025-04-16 06:30:05'),
+(47, 0, 'Yuki', 7, 570.00, 'Cash', '2025-04-28 08:29:09');
 
 -- --------------------------------------------------------
 
@@ -1743,7 +1887,10 @@ INSERT INTO `order_history_detail` (`id`, `order_id`, `product_id`, `product_nam
 (108, 45, 79, 'Cookies & Coffee Frappe', 2, 135.00),
 (109, 45, 74, 'Chocolate Frappe', 3, 90.00),
 (110, 46, 74, 'Chocolate Frappe', 1, 90.00),
-(111, 46, 79, 'Cookies & Coffee Frappe', 1, 135.00);
+(111, 46, 79, 'Cookies & Coffee Frappe', 1, 135.00),
+(112, 47, 1235, 'Croissant', 3, 70.00),
+(113, 47, 3, 'Caramel Macchiato', 2, 90.00),
+(114, 47, 5, 'Cafe Mocha', 2, 90.00);
 
 -- --------------------------------------------------------
 
@@ -1830,7 +1977,18 @@ INSERT INTO `product_transactions` (`id`, `product_id`, `product_name`, `transac
 (48, '110', 'nuini', 'Delete', 'Ready-Made', 55.00, 1, '2025-04-26 05:16:09'),
 (49, '110', 'ln jhv', 'Delete', 'Ready-Made', 656.00, 1, '2025-04-26 05:17:24'),
 (50, '1211', 'VUHVH', 'Delete', 'Ready-Made', 5.00, 2, '2025-04-26 05:23:47'),
-(51, '121', 'NMKBIK', 'Delete', 'Ready-Made', 11.00, 5, '2025-04-26 05:23:49');
+(51, '121', 'NMKBIK', 'Delete', 'Ready-Made', 11.00, 5, '2025-04-26 05:23:49'),
+(52, '321', 'Bundaberg', 'Delete', 'Ready-Made', 80.00, 9, '2025-04-28 05:21:30'),
+(53, '411', ';n uhb', 'Delete', 'To Be Made', 78.00, 9, '2025-04-28 05:37:25'),
+(54, '541', '\';miouh', 'Delete', 'Ready-Made', 111.00, 1, '2025-04-28 05:37:37'),
+(55, '313', 'jbuyguy', '', 'To Be Made', 1.00, 4, '2025-04-28 05:40:50'),
+(56, '3112', 'miun', 'Add', 'To Be Made', 1.00, 3, '2025-04-28 05:42:59'),
+(57, '3112', 'miun', 'Edit', 'To Be Made', 20.00, 3, '2025-04-28 05:45:25'),
+(58, '3112', 'miun', 'Delete', 'To Be Made', 20.00, 3, '2025-04-28 05:45:49'),
+(59, '313', 'jbuyguy', 'Delete', 'To Be Made', 1.00, 4, '2025-04-28 05:45:51'),
+(60, '1234', 'Cafe Latte', 'Add', 'To Be Made', 60.00, 1, '2025-04-28 08:18:34'),
+(61, '1235', 'Croissant', 'Add', 'Ready-Made', 70.00, 10, '2025-04-28 08:21:26'),
+(62, '5431', 'Chicharon', 'Delete', 'To Be Made', 50000.00, 7, '2025-04-28 08:54:19');
 
 -- --------------------------------------------------------
 
@@ -1866,7 +2024,8 @@ INSERT INTO `reports` (`ReportID`, `ReportType`, `ReportName`, `ReportDate`) VAL
 (14, 'Daily', 'Inventory Summary', '2025-04-01 00:00:00'),
 (15, 'Daily', 'Inventory Summary', '2025-04-09 00:00:00'),
 (16, 'Daily', 'Inventory Summary', '2025-04-16 00:00:00'),
-(17, 'Daily', 'Inventory Summary', '2025-04-24 12:06:12');
+(17, 'Daily', 'Inventory Summary', '2025-04-24 12:06:12'),
+(18, 'Daily', 'Inventory Summary', '2025-04-28 21:34:19');
 
 -- --------------------------------------------------------
 
@@ -1958,7 +2117,10 @@ INSERT INTO `sales` (`id`, `product_id`, `product_name`, `Image`, `quantity_sold
 (81, '74', 'Chocolate Frappe', '74_Chocolate_Frappe.jpg', 1, 90.00, 90.00, '2025-03-31 15:33:57', '2025-03-31 15:33:57'),
 (82, '77', 'Avocado Frappe', '77_Avocado_Frappe.webp', 1, 90.00, 90.00, '2025-03-31 15:44:03', '2025-03-31 15:44:03'),
 (173, '74', 'Chocolate Frappe', '74_Chocolate_Frappe.jpg', 1, 90.00, 90.00, '2025-04-16 06:30:05', '2025-04-16 06:30:05'),
-(174, '79', 'Cookies & Coffee Frappe', '79_Cookies_&_Coffee_Frappe.jpg', 1, 135.00, 135.00, '2025-04-16 06:30:05', '2025-04-16 06:30:05');
+(174, '79', 'Cookies & Coffee Frappe', '79_Cookies_&_Coffee_Frappe.jpg', 1, 135.00, 135.00, '2025-04-16 06:30:05', '2025-04-16 06:30:05'),
+(175, '1235', 'Croissant', '1235_Croissant.jpg', 3, 70.00, 210.00, '2025-04-28 08:29:09', '2025-04-28 08:29:09'),
+(176, '3', 'Caramel Macchiato', '3_Caramel_Macchiato.jpg', 2, 90.00, 180.00, '2025-04-28 08:29:09', '2025-04-28 08:29:09'),
+(177, '5', 'Cafe Mocha', '5_Cafe_Mocha.jpg', 2, 90.00, 180.00, '2025-04-28 08:29:09', '2025-04-28 08:29:09');
 
 -- --------------------------------------------------------
 
@@ -6105,7 +6267,12 @@ CREATE TABLE `stock_details` (
 
 INSERT INTO `stock_details` (`id`, `ProductID`, `batch_number`, `quantity`, `expiration_date`, `SupplierID`, `created_at`, `transaction_type`) VALUES
 (44, '73', '23', 1545, '2025-04-01', 7, '2025-04-01 07:39:27', 'IN'),
-(45, '73', '23', 1545, '2025-04-01', 7, '2025-04-01 07:40:04', 'IN');
+(45, '73', '23', 1545, '2025-04-01', 7, '2025-04-01 07:40:04', 'IN'),
+(58, '123', '1', 9, '2025-04-30', 3, '2025-04-27 20:04:16', 'IN'),
+(59, '123', '2', 2, '2025-04-30', 3, '2025-04-27 20:05:02', 'IN'),
+(60, '1235', '1', 6, '2025-04-30', 2, '2025-04-28 08:24:49', 'IN'),
+(61, '1235', '1', 2, '2025-04-30', 2, '2025-04-28 08:25:30', 'IN'),
+(62, '1235', '3', 2, '2025-04-30', 9, '2025-04-28 08:33:10', 'IN');
 
 -- --------------------------------------------------------
 
@@ -6583,7 +6750,7 @@ INSERT INTO `suppliers` (`id`, `suppliername`, `contactinfo`, `email`) VALUES
 (2, 'James Smith', '0987456123', 'jamessmith@gmail.com'),
 (3, 'John Doe', '12234556', 'john.doe@example.com'),
 (6, 'lors', '16010101', 'lor@uic.edu.ph'),
-(7, 'lor', '3232132', '2@uic.edu.ph');
+(9, 'Paul', '1111', 'fgkjh@hfyr');
 
 -- --------------------------------------------------------
 
@@ -6608,11 +6775,7 @@ CREATE TABLE `users` (
 
 INSERT INTO `users` (`id`, `username`, `password`, `role`, `profile_pic`, `date_added`, `email`, `created_at`) VALUES
 (11, 'User1', '$2b$12$E6tss2w04JpIlm9nvA.ZNeD/L0axz9WXMprrORw/CXhO99TnKNLhi', 'admin', 'uploads/profile_pics/User1_1740796171.png', '2025-02-28 18:29:31', 'User1@cafebeata.com', '2025-03-30 12:39:50'),
-(13, 'Orent', '$2b$12$VxduYHm3ZryPTo/7ZjFq/uLxQ1Mtge/G91KxvIMYE9ZD4Mm5WSiBm', 'cafe_staff', 'Orent_1740800686.png', '2025-02-28 19:44:46', 'Orent@cafebeata.com', '2025-03-30 12:39:50'),
-(16, 'lors', '$2b$12$PaDbpil8wQ2asaWtoL3vq.T5ExXNxDSm5ocVZSygeTDj34GiSRZ.2', 'admin', 'uploads/profile_pics/lors_20250403232020_crocodile.jpg', '2025-03-29 23:01:50', 'lors@cafebeata.com', '2025-03-30 12:39:50'),
-(24, 'lor', '$2b$12$DaKhI0e4B9WCV4UGFbiYwuW6wsDSM/yvpGGxJghwQNj6E0SW2VBYe', 'cafe_staff', 'uploads/profile_pics/lor_20250331141044_zoro_san.jpg', '2025-03-31 06:10:44', 'lor@uic.edu.ph', '2025-03-31 06:10:44'),
-(27, 'admin', '$2b$12$2MPBum6G6ANZhuteanQZOeOyaN2RFO4TjoFtsc7f2iELrGT26500K', 'admin', NULL, '2025-04-01 07:22:57', 'admin@cafebeata.com', '2025-04-01 07:22:57'),
-(28, 'staff', '$2b$12$0ulT.E.aZ8f/reFWCKgtTul7QG2snWD6xvn0BmIw885o0qAdt2fmG', 'cafe_staff', NULL, '2025-04-01 07:22:57', 'staff@cafebeata.com', '2025-04-01 07:22:57');
+(13, 'Orent', '$2b$12$VxduYHm3ZryPTo/7ZjFq/uLxQ1Mtge/G91KxvIMYE9ZD4Mm5WSiBm', 'cafe_staff', 'Orent_1740800686.png', '2025-02-28 19:44:46', 'Orent@cafebeata.com', '2025-03-30 12:39:50');
 
 -- --------------------------------------------------------
 
@@ -6848,13 +7011,13 @@ ALTER TABLE `userso`
 -- AUTO_INCREMENT for table `activity_logs`
 --
 ALTER TABLE `activity_logs`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=108;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=125;
 
 --
 -- AUTO_INCREMENT for table `categories`
 --
 ALTER TABLE `categories`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
 
 --
 -- AUTO_INCREMENT for table `categorieso`
@@ -6866,19 +7029,19 @@ ALTER TABLE `categorieso`
 -- AUTO_INCREMENT for table `category`
 --
 ALTER TABLE `category`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=31;
 
 --
 -- AUTO_INCREMENT for table `inventory_reports`
 --
 ALTER TABLE `inventory_reports`
-  MODIFY `ReportID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=188;
+  MODIFY `ReportID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=277;
 
 --
 -- AUTO_INCREMENT for table `inventory_transactions`
 --
 ALTER TABLE `inventory_transactions`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=77;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=83;
 
 --
 -- AUTO_INCREMENT for table `itemso`
@@ -6908,13 +7071,13 @@ ALTER TABLE `orderso`
 -- AUTO_INCREMENT for table `order_history`
 --
 ALTER TABLE `order_history`
-  MODIFY `history_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=47;
+  MODIFY `history_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=48;
 
 --
 -- AUTO_INCREMENT for table `order_history_detail`
 --
 ALTER TABLE `order_history_detail`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=112;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=115;
 
 --
 -- AUTO_INCREMENT for table `order_items`
@@ -6926,19 +7089,19 @@ ALTER TABLE `order_items`
 -- AUTO_INCREMENT for table `product_transactions`
 --
 ALTER TABLE `product_transactions`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=52;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=63;
 
 --
 -- AUTO_INCREMENT for table `reports`
 --
 ALTER TABLE `reports`
-  MODIFY `ReportID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=18;
+  MODIFY `ReportID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
 
 --
 -- AUTO_INCREMENT for table `sales`
 --
 ALTER TABLE `sales`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=175;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=178;
 
 --
 -- AUTO_INCREMENT for table `stockin`
@@ -6962,7 +7125,7 @@ ALTER TABLE `stock_alerts`
 -- AUTO_INCREMENT for table `stock_details`
 --
 ALTER TABLE `stock_details`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=58;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=63;
 
 --
 -- AUTO_INCREMENT for table `stock_reports`
@@ -6980,13 +7143,13 @@ ALTER TABLE `stock_transactions`
 -- AUTO_INCREMENT for table `suppliers`
 --
 ALTER TABLE `suppliers`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
 
 --
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=29;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=31;
 
 --
 -- AUTO_INCREMENT for table `userso`
