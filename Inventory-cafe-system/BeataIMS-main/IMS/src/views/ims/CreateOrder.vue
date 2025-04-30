@@ -46,12 +46,12 @@
         </div>
 
         <OrderSummary 
-          :items="order.items"
-          :paymentMethod="order.paymentMethod"
-          :totalAmount="totalAmount"
-          @update-items="updateOrderItems"
-        />
-
+  :items="order.items"
+  :paymentMethod="order.paymentMethod"
+  :totalAmount="totalAmount"
+  @update-items="updateOrderItems"
+  @show-toast="toast.error"
+/>
         <div class="form-actions">
           <button type="button" @click="resetForm" class="reset-btn">Reset</button>
           <button 

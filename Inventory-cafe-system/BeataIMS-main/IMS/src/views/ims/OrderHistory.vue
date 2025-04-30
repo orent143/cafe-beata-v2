@@ -23,18 +23,35 @@
       <i class="fas fa-angle-down"></i>
     </button>
     <div v-if="showFilterDropdown" class="filter-dropdown">
-      <select v-model="selectedStatus" class="filter-select">
-        <option value="">All Orders</option>
-        <option value="Cash">Cash</option>
-        <option value="Tally">Tally</option>
-      </select>
-      <input 
-        type="date"
-        v-model="selectedDate"
-        class="date-select"
-        @change="filterByDate"
+  <select v-model="selectedStatus" class="filter-select">
+    <option value="">All Orders</option>
+    <option value="Cash">Cash</option>
+    <option value="Tally">Tally</option>
+  </select>
+  <div class="date-range">
+    <div class="date-input">
+     <label for="start-date">FROM</label>
+     <input 
+      type="date"
+      v-model="startDate"
+      class="date-select"
+      placeholder="Start Date"
       />
     </div>
+    <div class="date-range">
+    <div class="date-input">
+    <label for="end-date">TO</label>
+    <input 
+      type="date"
+      v-model="endDate"
+      class="date-select"
+      placeholder="End Date"
+      />
+      </div>
+    </div>
+    <button class="apply-filter" @click="filterByDateRange">Apply Filter</button>
+  </div>
+</div>
   </div>
 </div>
     </div>
@@ -112,6 +129,8 @@ export default {
       searchQuery: '',
       loading: false,
       selectedDate: '',
+      startDate: '',
+      endDate: '',
     };
   },
   computed: {
@@ -175,11 +194,44 @@ export default {
     }
   },
 
-  filterByDate() {
-    if (this.selectedDate) {
-      this.fetchOrders(this.selectedDate);
-    } else {
-      this.fetchOrders(); // fallback if date is cleared
+  async filterByDateRange() {
+    if (!this.startDate && !this.endDate) {
+      await this.fetchOrders();
+      return;
+    }
+
+    this.loading = true;
+    try {
+      let url = `${ORDER_SUMMARY_API}/orders/history/date?`;
+      const params = [];
+      
+      if (this.startDate) {
+        params.push(`start_date=${this.startDate}`);
+      }
+      if (this.endDate) {
+        params.push(`end_date=${this.endDate}`);
+      }
+      
+      url += params.join('&');
+      const response = await axios.get(url);
+      
+      this.orders = response.data.map(order => ({
+        history_id: order.history_id,
+        customer_name: order.customer_name,
+        total_items: order.total_items,
+        total_amount: order.total_amount,
+        payment_method: order.payment_method,
+        created_at: order.created_at || 'N/A'
+      }));
+
+      if (this.orders.length === 0) {
+        this.toast.info("No orders found for the selected date range");
+      }
+    } catch (error) {
+      console.error('Error fetching orders:', error);
+      this.toast.error('Failed to load order history. Please try again.');
+    } finally {
+      this.loading = false;
     }
   },
 
@@ -434,21 +486,7 @@ export default {
   display: inline-block; /* Ensure it behaves like a block element */
 }
 
-/* Specific Status Styles */
-.status-completed {
-  background: #E8F5E9; /* Light green */
-  color: #4CAF50; /* Dark green */
-}
 
-.status-pending {
-  background: #FFF3E0; /* Light yellow */
-  color: #FF9800; /* Dark yellow */
-}
-
-.status-cancelled {
-  background: #F8D7DA; /* Light red */
-  color: #721c24; /* Dark red */
-}
 ul {
   list-style-type: none;
   padding: 0;
@@ -524,5 +562,32 @@ input[type="checkbox"] {
 
 .action-btn i {
   font-size: 14px;
+}
+.date-range {
+  display: flex;
+  flex-direction: column;
+  margin-top: 8px;
+}
+.date-input {
+  display: flex;
+  flex-direction: column;
+}
+
+.date-input label {
+  font-size: 0.8rem;
+}
+.apply-filter {
+  background-color: #E54F70;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.3s;
+}
+
+.apply-filter:hover {
+  background-color: #d33d5e;
 }
 </style>

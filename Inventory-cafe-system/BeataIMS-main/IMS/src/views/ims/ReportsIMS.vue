@@ -18,13 +18,12 @@
       <div class="report-card" @click="goToReport('summary')">
         <div class="report-card-header">
           <i class="pi pi-chart-line report-icon"></i>
-          <h3>Product Summary Report</h3>
+          <h3>Inventory Summary Report</h3>
         </div>
         <div class="report-card-body">
-          <p>Complete overview of all inventory products with quantities and values</p>
+          <p>View a detailed summary of total items sold and total sales across all categories.</p>
           <div class="report-stats">
-            <span><strong>{{ totalSummaryReports }}</strong> Total Products</span>
-            <span>₱{{ totalSummaryAmount }}</span>
+            <span><strong>Today's Date:</strong> {{ formatCurrentDate() }}</span>
           </div>
         </div>
       </div>

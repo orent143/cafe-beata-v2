@@ -178,7 +178,10 @@ export default {
   background-color: #E8F5E9;
   color: #4CAF50;
 }
-
+.transaction-type.deduct {
+  background: #F8D7DA;
+  color: #721c24;
+}
 .transaction-type.update {
   background-color: #E3F2FD;
   color: #2196F3;

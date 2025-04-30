@@ -20,7 +20,7 @@ class StockItem(BaseModel):
 
 
 class StockInRequest(BaseModel):
-    ProductID: str
+    ProductName: str
     Stocks: List[StockItem]
 
 
@@ -32,46 +32,40 @@ logger = logging.getLogger(__name__)
 async def stock_in(request: StockInRequest, db=Depends(get_db)):
     try:
         cursor = db.cursor()
-        cursor.execute("SELECT ProductName FROM inventoryproduct WHERE id = %s", (request.ProductID,))
+
+        # Fetch product by ProductName instead of ProductID
+        cursor.execute("SELECT id, ProductName, ProcessType FROM inventoryproduct WHERE ProductName = %s", (request.ProductName,))
         product = cursor.fetchone()
         if not product:
             raise HTTPException(status_code=404, detail="Product not found")
 
+        product_id = product[0]
+        process_type = product[2]
         total_quantity_added = 0
+
         for stock in request.Stocks:
+            # If ready-made, set original_quantity, else set to 0
+            original_quantity = stock.quantity if process_type and process_type.lower() == "ready-made" else 0
+
+            cursor.execute("""
+                INSERT INTO stock_details (ProductID, batch_number, quantity, expiration_date, SupplierID, original_quantity, created_at, transaction_type)
+                VALUES (%s, %s, %s, %s, %s, %s, NOW(), 'IN')
+            """, (product_id, stock.batch_number, stock.quantity, stock.expiration_date, stock.SupplierID, original_quantity))
             total_quantity_added += stock.quantity
 
-            exp_date = None if not stock.expiration_date or stock.expiration_date == "0000-00-00" else datetime.strptime(stock.expiration_date, "%Y-%m-%d").date()
-
-            # Insert into stock_details table
-            cursor.execute(
-                """
-                INSERT INTO stock_details (ProductID, batch_number, quantity, expiration_date, SupplierID) 
-                VALUES (%s, %s, %s, %s, %s)
-                """,
-                (request.ProductID, stock.batch_number, stock.quantity, exp_date, stock.SupplierID)
-            )
-
-            # Insert transaction into inventory_transactions
-            cursor.execute(
-                """
-                INSERT INTO inventory_transactions (ProductID, product_name, transaction_type, quantity)
-                VALUES (%s, %s, 'Add', %s)
-                """,
-                (request.ProductID, product[0], stock.quantity)
-            )
-
-        # Update the quantity in inventoryproduct by adding only the newly added stock
-        cursor.execute("UPDATE inventoryproduct SET Quantity = Quantity + %s WHERE id = %s", (total_quantity_added, request.ProductID))
+        # Update the quantity in inventoryproduct
+        cursor.execute("UPDATE inventoryproduct SET Quantity = Quantity + %s WHERE id = %s", (total_quantity_added, product_id))
         db.commit()
 
-        return {"message": "Stock added successfully", "ProductID": request.ProductID, "TotalQuantityAdded": total_quantity_added}
+        return {"message": "Stock added successfully", "ProductName": product[1], "TotalQuantityAdded": total_quantity_added}
 
     except Exception as e:
         if db:
             db.rollback()
         logger.error(f"Error in stock_in: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Internal Server Error: {str(e)}")
+
+
 
 @StockRouter.get("/stockin/{product_id}", response_model=dict)
 @db_transaction
@@ -138,10 +132,9 @@ async def get_stock_details(product_id: str, db=Depends(get_db)):
     """Get detailed stock info with remaining quantity and basic product details."""
     try:
         cursor = db.cursor()
-        # Log the request
         logger.info(f"Getting stock details for product ID: {product_id}")
-        
-        # Fetch product details from the inventoryproduct table using a simpler query first
+
+        # Fetch product details from the inventoryproduct table
         cursor.execute("""
             SELECT id, ProductName, Quantity, ProcessType, Image, Threshold, UnitPrice
             FROM inventoryproduct 
@@ -186,7 +179,8 @@ async def get_stock_details(product_id: str, db=Depends(get_db)):
                 sd.quantity,
                 sd.expiration_date,
                 sd.created_at,
-                COALESCE(s.SupplierName, 'Unknown') AS SupplierName
+                COALESCE(s.SupplierName, 'Unknown') AS SupplierName,
+                sd.original_quantity
             FROM stock_details sd
             LEFT JOIN suppliers s ON sd.SupplierID = s.id
             WHERE sd.ProductID = %s
@@ -205,31 +199,32 @@ async def get_stock_details(product_id: str, db=Depends(get_db)):
                     "quantity": stock[2] if stock[2] is not None else 0,
                     "expiration_date": stock[3].strftime('%Y-%m-%d') if stock[3] else None,
                     "created_at": stock[4].strftime('%Y-%m-%d %H:%M:%S') if stock[4] else None,
-                    "SupplierName": stock[5] or "Unknown"
+                    "SupplierName": stock[5] or "Unknown",
+                    "original_quantity": stock[6] if stock[6] is not None else 0
                 }
                 stock_list.append(stock_item)
             except Exception as date_error:
                 logger.error(f"Error formatting stock data: {date_error}")
-                # Add a stock item with safer values
                 stock_list.append({
                     "id": stock[0] if stock[0] is not None else 0,
                     "batch_number": str(stock[1]) if stock[1] else "Unknown",
                     "quantity": stock[2] if stock[2] is not None else 0,
                     "expiration_date": None,
                     "created_at": None,
-                    "SupplierName": str(stock[5]) if stock[5] else "Unknown"
+                    "SupplierName": str(stock[5]) if stock[5] else "Unknown",
+                    "original_quantity": stock[6] if len(stock) > 6 and stock[6] is not None else 0
                 })
 
-        # Fetch deducted transactions from inventory_transactions table
+        # Fetch unique deducted transactions from inventory_transactions table
         cursor.execute("""
             SELECT 
-                it.id,
-                it.quantity,
-                it.transaction_type,
-                it.created_at
+                MIN(it.id) AS TransactionID,  -- Use MIN(id) to ensure unique rows
+                it.quantity AS QuantityDeducted,
+                it.created_at AS TransactionDate
             FROM inventory_transactions it
             WHERE it.ProductID = %s
             AND it.transaction_type = 'Deduct'
+            GROUP BY it.quantity, it.created_at  -- Group by quantity and created_at to remove duplicates
             ORDER BY it.created_at DESC
         """, (product_id,))
 
@@ -241,7 +236,7 @@ async def get_stock_details(product_id: str, db=Depends(get_db)):
                 deducted_item = {
                     "TransactionID": trans[0],
                     "QuantityDeducted": trans[1] if trans[1] is not None else 0,
-                    "TransactionDate": trans[3].strftime('%Y-%m-%d %H:%M:%S') if trans[3] else None
+                    "TransactionDate": trans[2].strftime('%Y-%m-%d %H:%M:%S') if trans[2] else None
                 }
                 deducted_list.append(deducted_item)
             except Exception as date_error:
@@ -285,6 +280,110 @@ async def get_stock_details(product_id: str, db=Depends(get_db)):
         logger.error(f"Error in get_stock_details for product {product_id}: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Internal Server Error: {str(e)}")
 
+@StockRouter.delete("/stockdetails/{product_id}/{TransactionID}")
+@db_transaction
+async def delete_stock_transaction(product_id: str, TransactionID: int, db=Depends(get_db)):
+    """
+    Delete a stock transaction by its ID and associated Product ID.
+    """
+    try:
+        cursor = db.cursor(dictionary=True)
+
+        # Ensure the transaction exists and matches the product ID
+        cursor.execute("""
+            SELECT id, ProductID, transaction_type, quantity
+            FROM stock_details
+            WHERE id = %s AND ProductID = %s
+        """, (TransactionID, product_id))
+        transaction = cursor.fetchone()
+
+        if not transaction:
+            raise HTTPException(status_code=404, detail=f"Transaction with ID {TransactionID} for product {product_id} not found")
+
+        transaction_type = transaction["transaction_type"]
+        quantity = transaction["quantity"]
+
+        # Delete the transaction
+        cursor.execute("DELETE FROM stock_details WHERE id = %s", (TransactionID,))
+
+        # Update inventory quantity
+        if transaction_type == "IN":
+            cursor.execute("""
+                UPDATE inventoryproduct
+                SET Quantity = Quantity - %s
+                WHERE id = %s
+            """, (quantity, product_id))
+        elif transaction_type == "OUT":
+            cursor.execute("""
+                UPDATE inventoryproduct
+                SET Quantity = Quantity + %s
+                WHERE id = %s
+            """, (quantity, product_id))
+
+        db.commit()
+
+        return {
+            "message": f"Transaction {TransactionID} for product {product_id} deleted successfully",
+            "transaction_type": transaction_type,
+            "ProductID": product_id
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        if db:
+            db.rollback()
+        logger.error(f"Error deleting stock transaction: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Internal Server Error: {str(e)}")
+    
+@StockRouter.delete("/stockout/{TransactionID}")
+@db_transaction
+async def delete_stock_out_transaction(TransactionID: int, db=Depends(get_db)):
+    """
+    Delete a stock out/deducted transaction by its ID and update the product quantity.
+    """
+    try:
+        cursor = db.cursor(dictionary=True)
+
+        # Fetch the transaction details to determine its type
+        cursor.execute("""
+            SELECT id, ProductID, quantity, transaction_type
+            FROM inventory_transactions
+            WHERE id = %s AND transaction_type = 'Deduct'
+        """, (TransactionID,))
+        transaction = cursor.fetchone()
+
+        if not transaction:
+            raise HTTPException(status_code=404, detail=f"Transaction with ID {TransactionID} not found or is not a 'Deduct' transaction")
+
+        product_id = transaction["ProductID"]
+        quantity = transaction["quantity"]
+
+        # Delete the transaction
+        cursor.execute("DELETE FROM inventory_transactions WHERE id = %s", (TransactionID,))
+
+        # Update the product quantity by adding back the deducted quantity
+        cursor.execute("""
+            UPDATE inventoryproduct
+            SET Quantity = Quantity + %s
+            WHERE id = %s
+        """, (quantity, product_id))
+
+        db.commit()
+
+        return {
+            "message": f"Stock out transaction {TransactionID} deleted successfully",
+            "ProductID": product_id,
+            "RestoredQuantity": quantity
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        if db:
+            db.rollback()
+        logger.error(f"Error deleting stock out transaction: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Internal Server Error: {str(e)}")
     
 @StockRouter.get("/inventory-transactions", response_model=list)
 @db_transaction

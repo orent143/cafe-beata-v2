@@ -17,27 +17,27 @@
             <div class="form-section">
               <h2 class="section-title">Stock Details</h2>
               <div class="form-group">
-                <label>Stock ID</label>
+                <label>Product Name</label>
                 <div class="stock-id-input">
                   <input 
-                    list="product-list"
-                    v-model.trim="stockData.StockID" 
-                    type="text"
-                    required
-                    class="form-input"
-                    placeholder="Enter Stock ID or select from list"
-                    @change="handleStockSelection"
-                  />
-                  <datalist id="product-list">
-                    <option 
-                      v-for="product in inventoryProducts" 
-                      :key="product.ProductID" 
-                      :value="product.ProductID"
-                      :data-name="product.ProductName"
-                    >
-                      {{ product.ProductName }} ({{ product.ProcessType }})
-                    </option>
-                  </datalist>
+  list="product-list"
+  v-model.trim="selectedProductName"
+  type="text"
+  required
+  class="form-input"
+  placeholder="Enter Product Name or select from list"
+  @change="handleStockSelection"
+/>
+<datalist id="product-list">
+  <option 
+    v-for="product in inventoryProducts" 
+    :key="product.ProductID" 
+    :value="product.ProductName"
+  >
+    {{ product.ProductName }} ({{ product.ProcessType }})
+  </option>
+</datalist>
+
                 </div>
               </div>
 
@@ -63,55 +63,67 @@
               </div>
             </div>
 
-            <div class="form-section">
-              <h2 class="section-title">Stock Information</h2>
-              <div v-for="(stock, index) in stockData.Stocks" :key="index" class="stock-entry">
-                <div class="form-group">
-                  <label>Batch Number (Optional)</label>
-                  <input 
-                    v-model.trim="stock.batch_number" 
-                    type="text" 
-                    class="form-input" 
-                  />
-                </div>
+<!-- Replace the existing stock information section with this -->
+<div class="form-section">
+  <h2 class="section-title">Stock Information</h2>
+  <div class="table-container">
+    <table class="stock-table">
+      <thead>
+        <tr>
+          <th>Batch Number</th>
+          <th>Quantity</th>
+          <th>Expiration Date</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr v-for="(stock, index) in stockData.Stocks" :key="index">
+          <td>
+            <input 
+              v-model.trim="stock.batch_number" 
+              type="text" 
+              class="form-input"
+              placeholder="Optional"
+            />
+          </td>
+          <td>
+            <input 
+              v-model.number="stock.quantity" 
+              type="number" 
+              min="1" 
+              step="1"
+              required 
+              class="form-input"
+              @input="validateQuantity($event, index)"
+            />
+          </td>
+          <td>
+            <input 
+              v-model="stock.expiration_date" 
+              type="date" 
+              class="form-input"
+              :min="getCurrentDate()"
+            />
+          </td>
+          <td>
+            <button 
+              type="button" 
+              @click="removeStock(index)" 
+              class="remove-btn"
+              v-if="stockData.Stocks.length > 1"
+            >
+              <i class="fas fa-trash"></i>
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
 
-                <div class="form-group">
-                  <label>Quantity</label>
-                  <input 
-                    v-model.number="stock.quantity" 
-                    type="number" 
-                    min="1" 
-                    step="1"
-                    required 
-                    class="form-input"
-                    @input="validateQuantity($event, index)"
-                  />
-                </div>
-
-                <div class="form-group">
-                  <label>Expiration Date (Optional)</label>
-                  <input 
-                    v-model="stock.expiration_date" 
-                    type="date" 
-                    class="form-input"
-                    :min="getCurrentDate()"
-                  />
-                </div>
-
-                <button 
-                  type="button" 
-                  @click="removeStock(index)" 
-                  class="remove-btn"
-                  v-if="stockData.Stocks.length > 1"
-                >
-                  <i class="fas fa-trash"></i>
-                </button>
-              </div>
-
-              <button type="button" @click="addStock" class="add-btn">
-                <i class="fas fa-plus"></i> Add Stock Location
-              </button>
-            </div>
+  <button type="button" @click="addStock" class="add-btn">
+    <i class="fas fa-plus"></i> Add Stock Location
+  </button>
+</div>
 
             <div class="form-actions">
               <button type="button" @click="resetForm" class="reset-btn">Reset</button>
@@ -195,6 +207,7 @@ export default {
       stockData: {
         StockID: '',
         StockName: '',
+        selectedProductName: '', // new field
         ProductType: '',
         UnitPrice: '',
         CurrentSupplier: '',
@@ -224,43 +237,45 @@ export default {
     },
 
     async handleStockSelection() {
-      if (this.stockData.StockID) {
-        try {
-          this.loading = true;
-          const response = await axios.get(`${STOCK_API}/stockdetails/${this.stockData.StockID}`);
-          this.stockDetails = response.data;
-          
-          // Update the stockData with information from the response
-          this.stockData.ProductName = this.stockDetails.ProductName;
-          this.stockData.CurrentQuantity = this.stockDetails.Quantity;
-          this.stockData.UnitPrice = this.stockDetails.UnitPrice;
-          this.stockData.Status = this.stockDetails.Status;
-          this.stockData.CurrentSupplier = this.stockDetails.CurrentSupplier;
-          this.stockData.Image = this.stockDetails.Image;
-          this.stockData.Stocks = this.stockDetails.StockDetails.map(stock => ({
-            batch_number: stock.batch_number,
-            quantity: stock.quantity,
-            expiration_date: stock.expiration_date
-          }));
-          this.selectedSupplier = this.suppliers.find(s => s.suppliername === this.stockDetails.CurrentSupplier)?.id || null;
-          
-          this.loading = false;
-        } catch (error) {
-          this.toast.error("Failed to fetch stock details");
-          console.error("Error fetching stock details:", error);
-          this.loading = false;
-        }
-      } else {
-        this.stockDetails = null;
-        this.stockData.ProductName = '';
-        this.stockData.CurrentQuantity = 0;
-        this.stockData.Status = '';
-        this.stockData.CurrentSupplier = '';
-        this.stockData.Image = '';
-        this.stockData.Stocks = [{ batch_number: '', quantity: 1, expiration_date: '' }];
-        this.selectedSupplier = null;
-      }
-    },
+  const selectedProduct = this.inventoryProducts.find(
+    p => p.ProductName === this.selectedProductName
+  );
+
+  if (selectedProduct) {
+    const productId = selectedProduct.ProductID || selectedProduct.id;
+    this.stockData.StockID = productId;
+    this.stockData.ProductName = selectedProduct.ProductName;
+    this.stockData.ProductType = selectedProduct.ProcessType;
+
+    try {
+      this.loading = true;
+      const response = await axios.get(`${STOCK_API}/stockdetails/${productId}`);
+      const details = response.data;
+
+      this.stockDetails = details;
+      this.stockData.UnitPrice = details.UnitPrice;
+      this.stockData.Status = details.Status;
+      this.stockData.CurrentSupplier = details.CurrentSupplier;
+      this.stockData.Image = details.Image;
+      this.stockData.Stocks = details.StockDetails.map(stock => ({
+        batch_number: stock.batch_number,
+        quantity: stock.quantity,
+        expiration_date: stock.expiration_date
+      }));
+
+      this.selectedSupplier = this.suppliers.find(s => s.suppliername === details.CurrentSupplier)?.id || null;
+    } catch (error) {
+      this.toast.error("Failed to fetch stock details");
+      console.error("Error fetching stock details:", error);
+    } finally {
+      this.loading = false;
+    }
+  } else {
+    this.toast.warning("Selected product is not valid");
+    this.resetForm();
+  }
+},
+
     getCurrentDate() {
       const today = new Date();
       return today.toISOString().split("T")[0];
@@ -314,47 +329,60 @@ export default {
     },
 
     async confirmSubmit() {
-      this.showConfirmModal = false;
-      this.isSubmitting = true;
+  if (!this.validateForm()) {
+    return;
+  }
 
-      try {
-        const requestBody = {
-          ProductID: this.stockData.StockID,
-          Stocks: this.stockData.Stocks.map(stock => ({
-            batch_number: stock.batch_number || null,
-            quantity: stock.quantity,
-            expiration_date: stock.expiration_date || null,
-            SupplierID: this.selectedSupplier
-          }))
-        };
+  this.showConfirmModal = false;
+  this.isSubmitting = true;
 
-        const response = await axios.post(`${STOCK_API}/stockin/`, requestBody);
-        this.toast.success(response.data.message || 'Stock added successfully');
-        this.resetForm();
-      } catch (error) {
-        console.error('Error submitting stock:', error);
-        this.toast.error('Failed to add stock');
-      } finally {
-        this.isSubmitting = false;
-      }
-    },
+  try {
+    const requestBody = {
+      ProductName: this.stockData.ProductName,
+      Stocks: this.stockData.Stocks.map(stock => ({
+        batch_number: stock.batch_number || null,
+        quantity: stock.quantity,
+        expiration_date: stock.expiration_date || null,
+        SupplierID: this.selectedSupplier
+      }))
+    };
+
+    console.log('Sending request:', requestBody); // Debug log
+
+    const response = await axios.post(`${STOCK_API}/stockin/`, requestBody);
+    this.toast.success(response.data.message || 'Stock added successfully');
+    this.resetForm();
+  } catch (error) {
+    console.error('Error submitting stock:', error.response?.data || error);
+    this.toast.error(error.response?.data?.detail || 'Failed to add stock');
+  } finally {
+    this.isSubmitting = false;
+  }
+},
 
     cancelSubmit() {
       this.showConfirmModal = false;
     },
 
-
     validateForm() {
-      if (!this.stockData.StockID || !this.selectedSupplier) {
-        this.toast.error('Please fill all required fields');
-        return false;
-      }
-      if (this.stockData.Stocks.some(stock => !stock.batch_number)) {
-        this.toast.error('Batch number is required for all entries');
-        return false;
-      }
-      return true;
-    },
+  if (!this.stockData.ProductName) {
+    this.toast.error('Please select a product');
+    return false;
+  }
+  if (!this.selectedSupplier) {
+    this.toast.error('Please select a supplier');
+    return false;
+  }
+  if (!this.stockData.Stocks.length) {
+    this.toast.error('Please add at least one stock entry');
+    return false;
+  }
+  if (this.stockData.Stocks.some(stock => !stock.quantity || stock.quantity < 1)) {
+    this.toast.error('Each stock entry must have a valid quantity');
+    return false;
+  }
+  return true;
+},
 
     prepareRequestBody() {
       return {
@@ -393,29 +421,30 @@ export default {
     },
 
     async fetchProductsAndSuppliers() {
-      try {
-        this.loading = true;
-        
-        // Get all ready-made products
-        const productsResponse = await axios.get(`${INVENTORY_API}/inventoryproducts/filter?process_type=Ready-Made`);
-        this.products = productsResponse.data.map(product => ({
-          id: product.id,
-          name: product.ProductName,
-          quantity: product.Quantity,
-          image: product.Image
-        }));
-        
-        // Get all suppliers
-        const suppliersResponse = await axios.get(`${SUPPLIERS_API}/`);
-        this.suppliers = suppliersResponse.data;
-        
-        this.loading = false;
-      } catch (error) {
-        this.toast.error("Failed to load products and suppliers");
-        console.error("Error fetching data:", error);
-        this.loading = false;
-      }
-    }
+  try {
+    this.loading = true;
+
+    // Get all ready-made products
+    const productsResponse = await axios.get(`${INVENTORY_API}/inventoryproducts/filter?process_type=Ready-Made`);
+    this.inventoryProducts = productsResponse.data.map(product => ({
+      ProductID: product.id,
+      ProductName: product.ProductName,
+      ProcessType: product.ProcessType,
+      Quantity: product.Quantity,
+      Image: product.Image
+    }));
+
+    // Get all suppliers
+    const suppliersResponse = await axios.get(`${SUPPLIERS_API}/`);
+    this.suppliers = suppliersResponse.data;
+
+    this.loading = false;
+  } catch (error) {
+    this.toast.error("Failed to load products and suppliers");
+    console.error("Error fetching data:", error);
+    this.loading = false;
+  }
+}
   },
   mounted() {
     this.fetchProductsAndSuppliers();
@@ -479,6 +508,7 @@ export default {
   background: white;
   padding: 30px;
   border-radius: 10px;
+  height: fit-content;
   box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
 }
 
@@ -672,7 +702,9 @@ select.form-input:focus {
 }
 .existing-stocks {
   margin-top: 20px;
+  height: fit-content;
   padding-top: 20px;
+  overflow-y: auto;
   border-top: 1px solid #eee;
 }
 
@@ -686,6 +718,7 @@ select.form-input:focus {
   display: flex;
   flex-direction: column;
   gap: 10px;
+  height: 400px;
 }
 
 .stock-item {
@@ -790,5 +823,147 @@ select.form-input:focus {
 
 .confirm-btn:hover {
   background-color: #d84666;
+}
+/* Add to your existing styles */
+/* Replace the existing table-container and stock-table styles */
+.table-container {
+  max-height: 400px;
+  overflow-y: auto;
+  margin-bottom: 20px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  background: white;
+}
+
+.stock-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  background: white;
+}
+
+.stock-table th {
+  position: sticky;
+  top: 0;
+  background: #f8fafc;
+  padding: 16px;
+  text-align: left;
+  font-weight: 600;
+  color: #1e293b;
+  border-bottom: 2px solid #e2e8f0;
+  white-space: nowrap;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.stock-table td {
+  padding: 12px 16px;
+  border-bottom: 1px solid #e2e8f0;
+  vertical-align: middle;
+}
+
+.stock-table tbody tr {
+  transition: background-color 0.2s ease;
+}
+
+.stock-table tbody tr:hover {
+  background-color: #f8fafc;
+}
+
+.stock-table tr:last-child td {
+  border-bottom: none;
+}
+
+.stock-table .form-input {
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 0.95rem;
+  width: 80%;
+  transition: all 0.2s ease;
+  background-color: #fff;
+}
+
+.stock-table .form-input:focus {
+  border-color: #E54F70;
+  box-shadow: 0 0 0 3px rgba(229, 79, 112, 0.1);
+  outline: none;
+}
+
+.stock-table .form-input:hover {
+  border-color: #cbd5e1;
+}
+
+.stock-table .remove-btn {
+  position: static;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  background-color: #fee2e2;
+  color: #ef4444;
+  border: none;
+  transition: all 0.2s ease;
+}
+
+.stock-table .remove-btn:hover {
+  background-color: #fecaca;
+  transform: scale(1.05);
+}
+
+/* Update scrollbar styles */
+.table-container::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.table-container::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 8px;
+}
+
+.table-container::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 8px;
+  border: 2px solid #f1f5f9;
+}
+
+.table-container::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Add these new styles for input types */
+.stock-table input[type="number"] {
+  -moz-appearance: textfield;
+}
+
+.stock-table input[type="number"]::-webkit-outer-spin-button,
+.stock-table input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.stock-table input[type="date"] {
+  min-width: 150px;
+}
+
+/* Add visual feedback for required fields */
+.stock-table input:required {
+  background-image: linear-gradient(to right, white 95%, #E54F70 95%);
+}
+
+/* Empty state style */
+.stock-table tbody:empty::after {
+  content: "No stock entries yet";
+  display: block;
+  text-align: center;
+  padding: 20px;
+  color: #64748b;
+  font-style: italic;
 }
 </style>

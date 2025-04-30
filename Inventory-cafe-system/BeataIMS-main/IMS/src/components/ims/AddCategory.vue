@@ -101,37 +101,44 @@ export default {
     },
 
     async submitForm() {
-      const toast = useToast();
-      if (!this.newCategory.CategoryName) {
-        toast.error("Category Name is required!");
-        return;
-      }
+  const toast = useToast();
+  if (!this.newCategory.CategoryName) {
+    toast.error("Category Name is required!");
+    return;
+  }
 
-      try {
-        const formData = new FormData();
-        formData.append('CategoryName', this.newCategory.CategoryName);
-        if (this.newCategory.Image) {
-          formData.append('Image', this.newCategory.Image);
+  try {
+    const formData = new FormData();
+    formData.append('CategoryName', this.newCategory.CategoryName);
+    if (this.newCategory.Image) {
+      formData.append('Image', this.newCategory.Image);
+    }
+
+    const response = await axios.post(
+      `${CATEGORIES_API}/categories/`,
+      formData,
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data'
         }
-
-        const response = await axios.post(
-          `${CATEGORIES_API}/categories/`,
-          formData,
-          {
-            headers: {
-              'Content-Type': 'multipart/form-data'
-            }
-          }
-        );
-
-        toast.success('Category added successfully!');
-        this.$emit('add', response.data);
-        this.closeForm();
-      } catch (error) {
-        toast.error('Error adding category.');
-        console.error("Error adding category:", error.response?.data || error);
       }
-    },
+    );
+
+    toast.success('Category added successfully!');
+    this.$emit('add', response.data);
+    this.closeForm();
+  } catch (error) {
+    const message = error.response?.data?.detail;
+
+    if (message === "Category name already taken") {
+      toast.error("Category name already taken.");
+    } else {
+      toast.error("Error adding category.");
+    }
+
+    console.error("Error adding category:", message || error);
+  }
+},
     closeForm() {
       this.newCategory = {
         CategoryName: '',

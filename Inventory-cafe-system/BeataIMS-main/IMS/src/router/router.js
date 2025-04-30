@@ -15,6 +15,7 @@ import ProductSales from '@/views/ims/Sales.vue';
 import StockVue from '@/views/ims/Stock.vue';
 import OrdersHistory from '@/views/ims/OrderHistory.vue';
 import SummaryReport from '@/views/ims/reports/SummaryReport.vue';
+import CategoryDetails from '@/views/ims/reports/CategoryDetails.vue';
 import LowStockReport from '@/views/ims/reports/LowStockReport.vue';
 import DailySalesReport from '@/views/ims/reports/DailySalesReport.vue';
 import OrderDetailsVue from '@/views/ims/OrderDetails.vue';
@@ -44,6 +45,7 @@ const routes = [
   { path: '/category', component: Category, meta: { requiresAuth: true } },
   { path: '/reportsims', component: ReportsIMS, meta: { requiresAuth: true } },
   { path: '/reportsims/summary', component: SummaryReport, meta: { requiresAuth: true } },
+  { path: '/reportsims/category-details/:categoryName/:date', name: 'CategoryDetails', component: CategoryDetails, meta: { requiresAuth: true } },
   { path: '/reportsims/lowStock', component: LowStockReport, meta: { requiresAuth: true } },
   { path: '/reportsims/dailySales', component: DailySalesReport, meta: { requiresAuth: true } },
   { path: '/createorder', component: CreateOrder, meta: { requiresAuth: true } },

@@ -5,6 +5,7 @@ from .db import get_db
 import os
 import shutil
 import logging
+from mysql.connector import IntegrityError
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -25,27 +26,35 @@ async def create_category(
         cursor = db.cursor()
         image_path = None
 
+        # Save image if provided
         if Image:
-            image_filename = f"{CategoryName.replace(' ', '_')}_{Image.filename}"
-            image_path = f"{UPLOAD_DIR}/{image_filename}"
-            
+            file_extension = Image.filename.split(".")[-1]
+            image_filename = f"{CategoryName.replace(' ', '_')}.{file_extension}"
+            image_path = os.path.join(UPLOAD_DIR, image_filename)
+
             with open(image_path, "wb") as buffer:
                 shutil.copyfileobj(Image.file, buffer)
 
-        query = "INSERT INTO categories (CategoryName, ImagePath) VALUES (%s, %s)"
-        cursor.execute(query, (CategoryName, image_path))
-        db.commit()
+        try:
+            # Insert category into DB
+            query = "INSERT INTO categories (CategoryName, ImagePath) VALUES (%s, %s)"
+            cursor.execute(query, (CategoryName, image_path))
+            db.commit()
+            category_id = cursor.lastrowid
+        except IntegrityError as e:
+            if "Duplicate entry" in str(e) and "CategoryName" in str(e):
+                raise HTTPException(status_code=400, detail="Category name already taken")
+            else:
+                raise
 
-        cursor.execute("SELECT LAST_INSERT_ID()")
-        new_category_id = cursor.fetchone()[0]
-        
         cursor.close()
+        return {"id": category_id, "CategoryName": CategoryName, "ImagePath": image_path}
 
-        return {"id": new_category_id, "CategoryName": CategoryName, "ImagePath": image_path}
+    except HTTPException as http_exc:
+        raise http_exc
     except Exception as e:
         logger.error(f"Error creating category: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
-
+        raise HTTPException(status_code=500, detail="Internal Server Error")
 
 @CategoryRouter.get("/", response_model=List[dict])
 async def read_categories(db=Depends(get_db)):

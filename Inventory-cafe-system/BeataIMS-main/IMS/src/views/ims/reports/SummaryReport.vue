@@ -9,9 +9,11 @@
           type="date" 
           v-model="selectedDate" 
           class="date-picker" 
-          @change="fetchInventoryReport"
+          @change="fetchCategoryReport"
         />
-        <button class="export-btn" @click="exportSummary">Export CSV</button>
+        <button class="export-btn" @click="exportSummaryReport">
+          <i class="pi pi-download"></i> Export CSV
+        </button>
       </div>
     </div>
 
@@ -21,8 +23,8 @@
         <p>Loading report data...</p>
       </div>
       
-      <div v-else-if="filteredInventory.length === 0" class="no-data-container">
-        <p>No inventory items found for the selected date.</p>
+      <div v-else-if="categories.length === 0" class="no-data-container">
+        <p>No category data found for the selected date.</p>
       </div>
       
       <div v-else>
@@ -30,42 +32,35 @@
           <table class="stock-table">
             <thead>
               <tr>
-                <th>Product ID</th>
-                <th>Product Name</th>
-                <th>Category</th>
-                <th>Unit Price</th>
-                <th>Status</th>
+                <th>Category Name</th>
+                <th>Total Items</th>
+                <th>Total Amount</th>
+                <th>Details</th>
               </tr>
             </thead>
             <tbody>
-              <tr v-for="product in filteredInventory" :key="product.ProductID">
-                <td>{{ product.ProductID }}</td>
-                <td>{{ product.ProductName }}</td>
-                <td>{{ product.CategoryName }}</td>
-                <td>₱{{ parseFloat(product.UnitPrice).toFixed(2) }}</td>
+              <tr v-for="category in categories" :key="category.category_name">
+                <td>{{ category.category_name }}</td>
+                <td>{{ category.total_items }}</td>
+                <td>₱{{ parseFloat(category.total_amount).toFixed(2) }}</td>
                 <td>
-                  <span :class="'status status-' + product.Status.toLowerCase().replace(' ', '-')">
-                    {{ product.Status }}
-                  </span>
+                  <button class="btn-details" @click="viewCategoryDetails(category)">
+                    View Details
+                  </button>
                 </td>
               </tr>
             </tbody>
           </table>
         </div>
-
-        <div class="totals-container">
-          <div class="totals-item">
-            <span>Report Date: </span>
-            <span>{{ formatDate(reportData.date) }}</span>
-          </div>
-          <div class="totals-item">
-            <span>Total Items: </span>
-            <span>{{ reportData.total_items }}</span>
-          </div>
-          <div class="totals-item">
-            <span>Total Value: </span>
-            <span>₱{{ parseFloat(reportData.total_value).toFixed(2) }}</span>
-          </div>
+      </div>
+      <div class="totals-container">
+        <div class="totals-item">
+          <span>Total Items Sold:</span>
+          <span>{{ overallItems }}</span>
+        </div>
+        <div class="totals-item">
+          <span>Total Sales:</span>
+          <span>₱{{ parseFloat(overallTotal).toFixed(2) }}</span>
         </div>
       </div>
     </div>
@@ -73,10 +68,10 @@
 </template>
 
 <script>
+import axios from "axios";
 import SideBar from "@/components/ims/SideBar.vue";
 import Header from "@/components/Header.vue";
-import axios from "axios";
-import { REPORTS_API, CATEGORIES_API, getImageUrl } from "@/api/config.js";
+import { SALES_API } from "@/api/config.js";
 import { useToast } from "vue-toastification";
 
 export default {
@@ -84,111 +79,52 @@ export default {
     SideBar,
     Header,
   },
-  setup() {
-    const toast = useToast();
-    return { toast };
-  },
-  name: "SummaryReport",
   data() {
     return {
-      reportData: {
-        date: "",
-        total_items: 0,
-        total_value: 0,
-      },
-      inventoryProducts: [],
-      selectedDate: new Date().toISOString().split("T")[0], 
-      currentDate: new Date().toISOString().split("T")[0],
+      selectedDate: localStorage.getItem("selectedDate") || new Date().toISOString().split("T")[0],
+      categories: [],
+      overallItems: 0,
+      overallTotal: 0,
       loading: false,
-      fallbackImage: "https://via.placeholder.com/100",
-      error: null,
-      categories: []
+      toast: useToast(),
     };
   },
-  computed: {
-    filteredInventory() {
-      return this.inventoryProducts;
-    },
-  },
   methods: {
-    async fetchInventoryReport() {
-    try {
-      this.loading = true;
-      this.error = null;
-
-      console.log(`Fetching inventory report from: ${REPORTS_API}/inventory_report?date=${this.selectedDate}`);
-      const response = await axios.get(`${REPORTS_API}/inventory_report?date=${this.selectedDate}`);
-      console.log("Inventory API Response:", response.data);
-
-      this.reportData = {
-        date: response.data.date || new Date().toISOString(),
-        total_items: response.data.total_items || 0,
-        total_value: parseFloat(response.data.total_value || 0),
-      };
-
-      this.inventoryProducts = (response.data.items || []).map(item => ({
-        ProductID: item.ProductID || 0,
-        ProductName: item.ProductName || "Unknown Product",
-        CategoryID: item.CategoryID || 0,
-        CategoryName: item.CategoryName || "Unknown Category",
-        UnitPrice: parseFloat(item.UnitPrice || 0).toFixed(2),
-        Status: item.Status || "Unknown"
-      }));
-
-      if (this.inventoryProducts.length === 0) {
-        this.toast.info("No inventory data found for the selected date");
-      }
-    } catch (error) {
-      console.error("Error fetching inventory report:", error);
-      this.error = error.message || "Failed to load report";
-      this.toast.error(`Error fetching inventory report: ${this.error}`);
-      this.inventoryProducts = [];
-      this.reportData = {
-        date: new Date().toISOString(),
-        total_items: 0,
-        total_value: 0,
-      };
-    } finally {
-      this.loading = false;
-    }
-  },
- 
-    formatDate(dateString) {
-      if (!dateString) return "N/A";
+    async fetchCategoryReport() {
       try {
-        return new Date(dateString).toLocaleString("en-US", {
-          year: "numeric",
-          month: "long",
-          day: "numeric",
-          hour: "2-digit",
-          minute: "2-digit",
-          hour12: true, 
+        this.loading = true;
+        localStorage.setItem("selectedDate", this.selectedDate);
+        const response = await axios.get(`${SALES_API}/sales/category-report`, {
+          params: { date: this.selectedDate },
         });
-      } catch (e) {
-        return dateString || "N/A";
+        this.categories = response.data.categories || [];
+        this.overallItems = response.data.overall_items || 0;
+        this.overallTotal = response.data.overall_total || 0;
+      } catch (error) {
+        console.error("Error fetching category report:", error);
+        this.toast.error("Failed to load category report.");
+      } finally {
+        this.loading = false;
       }
     },
-    handleImageError(event) {
-      event.target.src = this.fallbackImage;
+    viewCategoryDetails(category) {
+      this.$router.push({
+        name: "CategoryDetails",
+        params: { categoryName: category.category_name, date: this.selectedDate },
+      });
     },
-    getCategoryName(categoryId) {
-      const category = this.categories.find(cat => cat.id === categoryId);
-      return category ? category.CategoryName : 'Unknown Category';
-    },
-    exportSummary() {
-      if (!this.inventoryProducts.length) {
+    exportSummaryReport() {
+      if (!this.categories.length) {
         this.toast.warning("No data to export");
         return;
       }
 
       try {
-        const headers = ["Product ID", "Product Name", "Category", "Unit Price", "Status"];
-        const data = this.inventoryProducts.map((product) => [
-          product.ProductID,
-          product.ProductName,
-          product.CategoryName,
-          parseFloat(product.UnitPrice).toFixed(2),
-          product.Status,
+        const headers = ["Category Name", "Total Items", "Total Amount"];
+        const data = this.categories.map((category) => [
+          category.category_name,
+          category.total_items,
+          parseFloat(category.total_amount).toFixed(2),
         ]);
 
         const csvContent = [headers.join(","), ...data.map((row) => row.join(","))].join("\n");
@@ -197,39 +133,18 @@ export default {
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
-        a.download = `inventory-summary-${this.selectedDate || "all"}.csv`;
+        a.download = `summary-report-${this.selectedDate}.csv`;
         a.click();
-        
+
         this.toast.success("Report exported successfully");
       } catch (error) {
         console.error("Error exporting report:", error);
         this.toast.error("Failed to export report");
       }
     },
-    getImageUrl(imagePath) {
-      if (!imagePath) return this.fallbackImage;
-      
-      // Special case for product image paths
-      if (imagePath && imagePath.includes('products/')) {
-        const filename = imagePath.split('/').pop();
-        return `${REPORTS_API.split('/api/reports')[0]}/products/${filename}`;
-      }
-      
-      return imagePath.startsWith("http") ? imagePath : getImageUrl(imagePath);
-    },
-    async fetchCategories() {
-      try {
-        const response = await axios.get(`${CATEGORIES_API}`);
-        this.categories = response.data;
-      } catch (error) {
-        console.error('Error fetching categories:', error);
-        this.toast.error('Failed to load categories');
-      }
-    },
   },
   created() {
-    this.fetchCategories();
-    this.fetchInventoryReport();
+    this.fetchCategoryReport();
   },
 };
 </script>
@@ -362,7 +277,7 @@ export default {
 
 .stock-table th,
 .stock-table td {
-  padding: 10px;
+  padding: 15px;
   text-align: center;
   border-bottom: 1px solid #eee;
 }
@@ -379,12 +294,11 @@ export default {
 }
 .stock-table td {
   font-size: 14px;
-  color: #333;
-  font-weight: 500;
+    color: #333;
+    font-weight: 500;
 }
 .inventory-container {
   position: relative;
-  flex-grow: 1;
   height: 37dvw;
   box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
   background-color: #ffffff;
@@ -399,6 +313,7 @@ export default {
   overflow-y: auto;
   border-radius: 15px;
 }
+
 
 .totals-container {
   display: flex;
@@ -419,6 +334,12 @@ export default {
   font-weight: 600;
   color: #343a40;
   font-size: 15px;
+}
+
+
+.totals-item span {
+  font-weight: bold;
+  margin-right: 5px;
 }
 .export-btn {
   background-color: #E54F70;
@@ -457,29 +378,24 @@ export default {
   height: 5px;
 }
 
-.status {
-  padding: 4px 8px;
-  border-radius: 15px;
-  font-size: 12px;
-  display: inline-block; 
-}
-
-.status-in-stock {
-  background: #E8F5E9; 
+.btn-details {
+  background-color: transparent;
   color: #4CAF50;
+  border: 1.5px solid #4CAF50;
+  border-radius: 4px;
+  padding: 6px 15px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  width: 120px;
 }
 
-.status-low-stock {
-  background: #FFF3E0; 
-  color: #FF9800;
-}
-.status-available {
-  background-color: rgba(2, 136, 209, 0.1);
-  color: #0288D1;
-}
-.status-out-of-stock {
-  background: #F8D7DA; 
-  color: #721c24; 
+.btn-details:hover {
+  background-color: #4CAF50;
+  color: white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 .stock-table td {
   font-size: 14px;

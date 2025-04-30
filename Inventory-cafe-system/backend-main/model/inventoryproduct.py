@@ -195,7 +195,6 @@ async def read_inventory_product(product_id: str, db=Depends(get_db)):
 @InventoryRouter.post("/inventoryproduct/")
 async def create_inventory_product(
     request: Request,
-    ProductID: str = Form(...),
     ProductName: str = Form(...),
     UnitPrice: float = Form(...),
     CategoryID: Optional[int] = Form(None),
@@ -215,7 +214,7 @@ async def create_inventory_product(
 
         if Image:
             file_extension = Image.filename.split(".")[-1]
-            image_filename = f"{ProductID}_{ProductName.replace(' ', '_').replace('/', '_')}.{file_extension}"
+            image_filename = f"{ProductName.replace(' ', '_').replace('/', '_')}.{file_extension}"
             file_path = os.path.join(UPLOAD_DIR, image_filename)
             with open(file_path, "wb") as buffer:
                 shutil.copyfileobj(Image.file, buffer)
@@ -227,15 +226,20 @@ async def create_inventory_product(
         cursor = db.cursor()
 
         # Insert product into the database with threshold
-        cursor.execute(
-            """INSERT INTO inventoryproduct 
-            (id, ProductName, UnitPrice, `CategoryID (FK)`, ProcessType, Threshold, Image, Status) 
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)""",
-            (ProductID, ProductName, UnitPrice, CategoryID, ProcessType, Threshold, image_filename, status)
-        )
-        
-        # Commit the transaction
-        db.commit()
+        try:
+            cursor.execute(
+                """INSERT INTO inventoryproduct 
+                (ProductName, UnitPrice, `CategoryID (FK)`, ProcessType, Threshold, Image, Status) 
+                VALUES (%s, %s, %s, %s, %s, %s, %s)""",
+                (ProductName, UnitPrice, CategoryID, ProcessType, Threshold, image_filename, status)
+            )
+            db.commit()
+            product_id = cursor.lastrowid  # Get auto-generated ID
+        except mysql.connector.IntegrityError as e:
+            if "Duplicate entry" in str(e) and "ProductName" in str(e):
+                raise HTTPException(status_code=400, detail="A product with this name already exists.")
+            else:
+                raise
         
         try:
             cursor.execute(
@@ -244,7 +248,7 @@ async def create_inventory_product(
                 (product_id, product_name, transaction_type, process_type, unit_price, category_id)
                 VALUES (%s, %s, %s, %s, %s, %s)
                 """, 
-                (ProductID, ProductName, "Add", ProcessType, UnitPrice, CategoryID)
+                (product_id, ProductName, "Add", ProcessType, UnitPrice, CategoryID)
             )
             db.commit()
         except Exception as log_error:
@@ -268,7 +272,6 @@ async def create_inventory_product(
         image_url = f"{base_url}uploads/products/{image_filename}" if image_filename else None
 
         return {
-            "ProductID": ProductID,
             "ProductName": ProductName,
             "UnitPrice": UnitPrice,
             "CategoryID": CategoryID,
@@ -278,10 +281,11 @@ async def create_inventory_product(
             "Image": image_url,
             "message": "Product created successfully"
         }
+    except HTTPException as http_exc:
+        raise http_exc
     except Exception as e:
         logger.error(f"Error creating inventory product: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Internal Server Error: {str(e)}")
-
+        raise HTTPException(status_code=500, detail="Internal Server Error")
         
 @InventoryRouter.put("/inventoryproduct/{product_id}", response_model=dict)
 async def update_inventory_product(

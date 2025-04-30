@@ -165,6 +165,7 @@ import Header from '@/components/Header.vue';
 import SideBar from '@/components/ims/SideBar.vue';
 import { useToast } from 'vue-toastification';
 import { API_BASE_URL } from '@/api/config.js';
+import { STOCK_API } from '@/api/config.js';
 
 export default {
   components: {
@@ -218,14 +219,27 @@ export default {
     handleSidebarToggle(collapsed) {
       this.isSidebarCollapsed = collapsed;
     },
-    deleteAddedTransaction(id) {
-      this.addedTransactions = this.addedTransactions.filter(item => item.id !== id);
-      useToast().success('Added transaction deleted');
-    },
-    deleteDeductedTransaction(TransactionID) {
+    async deleteAddedTransaction(id) {
+    try {
+        const response = await axios.delete(`${STOCK_API}/stockdetails/${this.product.ProductID}/${id}`);
+        useToast().success(response.data.message || 'Added transaction deleted successfully');
+        this.addedTransactions = this.addedTransactions.filter(item => item.id !== id);
+    } catch (error) {
+        console.error('Error deleting added transaction:', error);
+        useToast().error(error.response?.data?.detail || 'Failed to delete added transaction');
+    }
+},
+
+  async deleteDeductedTransaction(TransactionID) {
+    try {
+      const response = await axios.delete(`${STOCK_API}/stockout/${TransactionID}`);
+      useToast().success(response.data.message || 'Deducted transaction deleted successfully');
       this.deductedTransactions = this.deductedTransactions.filter(item => item.TransactionID !== TransactionID);
-      useToast().success('Deducted transaction deleted');
-    },
+    } catch (error) {
+      console.error('Error deleting deducted transaction:', error);
+      useToast().error(error.response?.data?.detail || 'Failed to delete deducted transaction');
+    }
+  },
     clearDateFilter() {
       this.dateFilter = { from: '', to: '' };
     },
@@ -251,56 +265,44 @@ export default {
       
       console.log('Processing image path:', imagePath);
       
-      // If it's already a full URL, return it
       if (imagePath.startsWith('http')) {
         return imagePath;
       }
       
-      // For local development - check if we have a direct product image
-      // This might be in the format like: /uploads/products/water.jpg or just water.jpg
       const baseUrl = API_BASE_URL;
       
-      // If path is just a filename (no slashes)
       if (!imagePath.includes('/')) {
         return `${baseUrl}/uploads/products/${imagePath}`;
       }
       
-      // If path starts with /uploads
       if (imagePath.startsWith('/uploads') || imagePath.includes('/uploads/')) {
-        // Ensure no double slash
         const cleanPath = imagePath.startsWith('/') ? imagePath.substring(1) : imagePath;
         return `${baseUrl}/${cleanPath}`;
       }
       
-      // Default case - just join the base URL and path
       return `${baseUrl}/${imagePath.startsWith('/') ? imagePath.substring(1) : imagePath}`;
     },
     async fetchProductDetails() {
       try {
-        // Get the product ID from the route params
         let productId = this.$route.params.id;
         
         if (!productId) {
           throw new Error("Invalid product ID in the URL");
         }
         
-        // Make sure we're using a numeric ID
         productId = parseInt(productId, 10).toString();
         console.log(`Fetching details for product ID: ${productId}`);
         
-        // Try all possible endpoints until we find the product
         let baseUrl = API_BASE_URL;
         let productResponse = null;
         let lastError = null;
         
-        // Try each possible endpoint
         const endpoints = [
           `/api/inventory/products/${productId}`,
           `/api/products/${productId}`,
           `/api/inventoryproducts/${productId}`,
           `/api/inventory/${productId}`,
           `/api/stock/stockin/${productId}`,
-          // Add additional endpoints if needed
         ];
         
         for (const endpoint of endpoints) {
@@ -315,18 +317,15 @@ export default {
           } catch (error) {
             console.log(`Failed endpoint ${endpoint}:`, error.message);
             lastError = error;
-            // Continue to next endpoint rather than failing immediately
           }
         }
         
-        // If we still couldn't find it, create a fallback product instead of throwing an error
         if (!productResponse) {
           console.log(`Product ID ${productId} not found in any endpoint`);
           this.createFallbackProduct(productId);
           return; // Exit the method early
         }
         
-        // Extract product data
         let productData = null;
         if (productResponse.data && productResponse.data.product) {
           productData = productResponse.data.product;
@@ -334,11 +333,9 @@ export default {
           productData = productResponse.data;
         }
         
-        // Assign product data and normalize properties
         this.product = { ...productData };
         this.normalizeProductData(productId);
         
-        // Now try to get stock details
         await this.fetchStockDetails(productId, baseUrl);
         
       } catch (error) {
@@ -351,7 +348,6 @@ export default {
     },
     
     normalizeProductData(productId) {
-      // Make sure we have at least basic properties with proper casing
       this.product.ProductID = this.product.ProductID || this.product.id || productId;
       this.product.ProductName = this.product.ProductName || this.product.name || this.product.product_name || "Product " + productId;
       this.product.Quantity = this.product.Quantity !== undefined ? this.product.Quantity : 
@@ -809,6 +805,7 @@ export default {
 .transactions-table {
   width: 100%;
   overflow-x: auto;
+  height: 300px;
   margin-top: 15px;
 }
 

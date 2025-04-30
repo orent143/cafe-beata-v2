@@ -14,7 +14,7 @@
 
       <p class="stock" 
          :class="{ 'low-stock': !isToBeMade && item.stock <= 5, 'to-be-made-tag': isToBeMade }">
-        {{ isToBeMade ? 'To Be Made (∞)' : `Stock: ${item.stock}` }}
+        {{ isToBeMade ? 'To Be Made' : `Stock: ${item.stock}` }}
       </p>
 
       <div class="item-controls">

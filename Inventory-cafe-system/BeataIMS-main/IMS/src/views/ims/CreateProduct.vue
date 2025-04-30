@@ -12,16 +12,21 @@
       <div class="content-wrapper">
         <div class="product-details">
           <h2>Product Details</h2>
-          
-          <div class="form-group">
-            <label>Product ID</label>
-            <input v-model="product.ProductID" type="text" required class="form-input" placeholder="Enter Product ID" />
-          </div>
 
           <div class="form-group">
-            <label>Product Name</label>
-            <input v-model="product.ProductName" type="text" required class="form-input" placeholder="Enter Product Name" />
-          </div>
+        <label>Product Name</label>
+        <input 
+          v-model="product.ProductName" 
+          type="text" 
+          required 
+          class="form-input" 
+          placeholder="Enter Product Name"
+          :class="{ 'error': validationErrors.ProductName }"
+        />
+        <span class="error-message" v-if="validationErrors.ProductName">
+          {{ validationErrors.ProductName }}
+        </span>
+      </div>
 
           <div class="form-group">
             <label>Unit Price (₱)</label>
@@ -79,7 +84,6 @@
         <div class="summary-section">
           <h2>Product Summary</h2>
           <div class="summary-details">
-            <p><strong>Product ID:</strong> {{ product.ProductID || 'N/A' }}</p>
             <p><strong>Product Name:</strong> {{ product.ProductName || 'N/A' }}</p>
             <p><strong>Category:</strong> {{ selectedCategoryName }}</p>
             <p><strong>Unit Price:</strong> ₱{{ product.UnitPrice.toFixed(2) }}</p>
@@ -141,6 +145,9 @@ export default {
       showConfirmModal: false,
       toast: useToast(),
       imagePreview: null,
+      validationErrors: {  // Add this object
+        ProductName: null
+      }
     };
   },
   computed: {
@@ -150,6 +157,21 @@ export default {
     }
   },
   methods: {
+    validateAndSubmit() {
+      // Reset validation errors
+      this.validationErrors = {
+        ProductName: null
+      };
+
+      // Basic validation
+      if (!this.product.ProductName.trim()) {
+        this.validationErrors.ProductName = "Product name is required";
+        return;
+      }
+
+      // If validation passes, show confirmation modal
+      this.showConfirmModal = true;
+    },
     handleSidebarToggle(collapsed) {
       this.isSidebarCollapsed = collapsed;
     },
@@ -182,7 +204,6 @@ export default {
       this.showConfirmModal = false;
       try {
         const formData = new FormData();
-        formData.append("ProductID", this.product.ProductID);
         formData.append("ProductName", this.product.ProductName);
         formData.append("CategoryID", this.product.CategoryID);
         formData.append("UnitPrice", this.product.UnitPrice);
@@ -199,8 +220,23 @@ export default {
         const response = await axios.post(
           `${INVENTORY_API}/inventoryproduct/`,
           formData,
-          { headers: { "Content-Type": "multipart/form-data" } }
+          { headers: { "Content-Type": "multipart/form-data" },
+          validateStatus: function (status) {
+              return status < 500; 
+            }
+         }
         );
+
+        if (response.status === 400) {
+          if (response.data.detail.includes("already exists")) {
+            this.validationErrors.ProductName = "Product name already taken";
+            this.toast.error("Product name already taken");
+            return;
+          }
+          this.toast.error(response.data.detail);
+          return;
+        }
+
 
         this.toast.success(response.data.message || "Product created successfully!");
         this.resetForm();
@@ -210,7 +246,6 @@ export default {
     },
     resetForm() {
       this.product = {
-        ProductID: "",
         ProductName: "",
         CategoryID: null,
         UnitPrice: 0,

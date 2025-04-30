@@ -527,8 +527,8 @@ export default {
 }
 
 .payment-badge.tally {
-  background-color: #FFF3E0;
-  color: #F57C00;
+  background-color: #E3F2FD;
+  color: #1565C0;
 }
 .order-id {
   font-family: monospace;

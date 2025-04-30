@@ -31,25 +31,42 @@ class OrderHistoryDetail(BaseModel):
 
 
 @OrderSummaryRouter.get("/orders/history/date", response_model=List[OrderSummary])
-async def get_order_history(order_date: Optional[str] = Query(None, description="Format: YYYY-MM-DD")):
+async def get_order_history(
+    start_date: Optional[str] = Query(None, description="Start date (YYYY-MM-DD)"),
+    end_date: Optional[str] = Query(None, description="End date (YYYY-MM-DD)")
+):
     with db_connection() as db:
         cursor = None
         try:
             cursor = db.cursor()
-            if order_date:
+            if start_date or end_date:
                 try:
                     # Validate date format
-                    parsed_date = datetime.strptime(order_date, "%Y-%m-%d")
+                    if start_date:
+                        datetime.strptime(start_date, "%Y-%m-%d")
+                    if end_date:
+                        datetime.strptime(end_date, "%Y-%m-%d")
                 except ValueError:
                     raise HTTPException(status_code=400, detail="Invalid date format. Use YYYY-MM-DD")
 
-                cursor.execute("""
+                query = """
                     SELECT history_id, customer_name, total_items, 
                            total_amount, payment_method, created_at
                     FROM order_history
-                    WHERE DATE(created_at) = %s
-                    ORDER BY created_at DESC
-                """, (order_date,))
+                    WHERE 1=1
+                """
+                params = []
+
+                if start_date:
+                    query += " AND DATE(created_at) >= %s"
+                    params.append(start_date)
+                
+                if end_date:
+                    query += " AND DATE(created_at) <= %s"
+                    params.append(end_date)
+
+                query += " ORDER BY created_at DESC"
+                cursor.execute(query, tuple(params))
             else:
                 cursor.execute("""
                     SELECT history_id, customer_name, total_items, 
