@@ -35,103 +35,21 @@ async def login_user(login_data: LoginRequest, request: Request):
         
         # Try to find user by username
         logger.info(f"Searching for user: {login_data.username}")
-        query = "SELECT id, username, password, role FROM users WHERE username = %s"
+        query = "SELECT id, username, password, role, status FROM users WHERE username = %s"
         cursor.execute(query, (login_data.username,))
         user = cursor.fetchone()
         
-        # For debugging: list all users
-        cursor.execute("SELECT username, role FROM users")
-        all_users = cursor.fetchall()
-        logger.info(f"All users in database: {all_users}")
-        
         if not user:
             logger.warning(f"User not found: {login_data.username}")
-            # Try to create a default admin user first
-            try:
-                # Check if users table is empty
-                cursor.execute("SELECT COUNT(*) as count FROM users")
-                count = cursor.fetchone()
-                
-                if count and count.get('count', 0) == 0:
-                    # No users in the database, create a default admin
-                    logger.info("Creating default admin user")
-                    
-                    # Create unhashed password for testing
-                    plain_password = 'admin123'
-                    
-                    # Check if email column exists
-                    cursor.execute("SHOW COLUMNS FROM users LIKE 'email'")
-                    email_column_exists = cursor.fetchone()
-                    
-                    # Check if created_at or date_added exists
-                    cursor.execute("SHOW COLUMNS FROM users LIKE 'created_at'")
-                    created_at_exists = cursor.fetchone()
-                    
-                    cursor.execute("SHOW COLUMNS FROM users LIKE 'date_added'")
-                    date_added_exists = cursor.fetchone()
-                    
-                    # Insert based on column structure
-                    if email_column_exists and created_at_exists:
-                        cursor.execute("""
-                        INSERT INTO users (username, email, password, role, created_at)
-                        VALUES ('admin', 'admin@cafebeata.com', %s, 'admin', NOW())
-                        """, (plain_password,))
-                    elif email_column_exists and date_added_exists:
-                        cursor.execute("""
-                        INSERT INTO users (username, email, password, role, date_added)
-                        VALUES ('admin', 'admin@cafebeata.com', %s, 'admin', NOW())
-                        """, (plain_password,))
-                    elif date_added_exists:
-                        cursor.execute("""
-                        INSERT INTO users (username, password, role, date_added)
-                        VALUES ('admin', %s, 'admin', NOW())
-                        """, (plain_password,))
-                    else:
-                        cursor.execute("""
-                        INSERT INTO users (username, password, role)
-                        VALUES ('admin', %s, 'admin')
-                        """, (plain_password,))
-                        
-                    connection.commit()
-                    logger.info("Created default admin user: admin / admin123")
-                    
-                    # Now fetch the newly created user
-                    cursor.execute("SELECT id, username, password, role FROM users WHERE username = 'admin'")
-                    user = cursor.fetchone()
-                    
-                    # For extreme cases, return a default user object
-                    if not user:
-                        logger.warning("Failed to retrieve created admin user, using fallback")
-                        return {
-                            "user_id": 1,
-                            "username": "admin",
-                            "role": "admin"
-                        }
-                        
-                else:
-                    # Users exist but this username wasn't found
-                    raise HTTPException(status_code=401, detail="Invalid username or password")
-            except Exception as e:
-                logger.error(f"Error creating default user: {e}")
-                raise HTTPException(status_code=401, detail="Invalid username or password")
+            raise HTTPException(status_code=401, detail="Invalid username or password")
         
-        logger.info(f"User found: {login_data.username}")
+        # Check if the user is inactive
+        if user['status'] == 'Inactive':
+            logger.warning(f"Inactive user attempted login: {login_data.username}")
+            raise HTTPException(status_code=403, detail="Your account is inactive. Please contact support.")
         
-        # For debugging/development - bypass password check
-        if login_data.username == 'admin' and login_data.password == 'admin123':
-            logger.warning("Using default admin credentials")
-            return {
-                "user_id": user["id"] if user else 1,
-                "username": "admin",
-                "role": "admin"
-            }
-            
         # Regular password checking
         stored_password = user.get("password", "")
-        
-        # Log for debugging
-        logger.info(f"Stored password: {stored_password[:3]}... (truncated)")
-        logger.info(f"Input password: {login_data.password[:3]}... (truncated)")
         
         # Handle both hashed and plain text passwords during transition
         is_password_valid = False
@@ -155,13 +73,7 @@ async def login_user(login_data: LoginRequest, request: Request):
         
         if not is_password_valid:
             logger.warning(f"Invalid password for user: {login_data.username}")
-            
-            # For testing only: allow login with matching username as password
-            if login_data.username == login_data.password:
-                logger.warning("Allowing login with username=password (INSECURE, FOR TESTING)")
-                is_password_valid = True
-            else:
-                raise HTTPException(status_code=401, detail="Invalid username or password")
+            raise HTTPException(status_code=401, detail="Invalid username or password")
         
         # Successful login
         logger.info(f"Successful login for user: {login_data.username}")

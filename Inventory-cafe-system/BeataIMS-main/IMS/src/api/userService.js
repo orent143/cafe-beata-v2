@@ -145,79 +145,51 @@ export default {
    */
   async updateUser(userId, userData) {
     try {
-      // Check if userData is FormData
       const isFormData = userData instanceof FormData;
       const apiEndpoint = `${API_URL}/users/${userId}`;
-      
-      console.log('Updating user at URL:', apiEndpoint);
-      console.log('Updating user with data:', isFormData ? 'FormData (binary)' : userData);
-      
+  
       if (isFormData) {
-        console.log('Updating user with FormData (binary)');
-        
-        // Use native fetch API instead of axios
+        // Check if there's an actual file in the FormData
+        const fileEntry = userData.get('profile_pic');
+        if (!fileEntry || (fileEntry instanceof File && fileEntry.size === 0)) {
+          // Remove empty file entry to keep existing image
+          userData.delete('profile_pic');
+        }
+  
         const response = await fetch(apiEndpoint, {
           method: 'PUT',
           body: userData,
-          credentials: 'include', // Add credentials
-          mode: 'cors' // Ensure CORS mode
+          mode: 'cors',
         });
-        
+  
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({}));
-          console.error('Server error response:', errorData);
           throw new Error(`Server returned ${response.status}: ${errorData.detail || response.statusText}`);
         }
-        
-        const data = await response.json();
-        console.log('Update user response:', data);
-        
-        // Process profile picture URL if exists in the response
-        if (data && data.user && data.user.profile_pic) {
-          data.user.profile_pic = getImageUrl(data.user.profile_pic);
-        }
-        
-        return data;
+  
+        return await response.json();
       } else {
-        // For JSON data
-        console.log('Updating user with JSON data:', userData);
-        
-        // Use native fetch API instead of axios
+        // For JSON data, ensure profile_pic is not included if not changed
+        if (!userData.profile_pic) {
+          delete userData.profile_pic; // Remove profile_pic if it's null/undefined
+        }
+  
         const response = await fetch(apiEndpoint, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
-            'Accept': 'application/json'
           },
-          credentials: 'include', // Add credentials
-          mode: 'cors', // Ensure CORS mode
-          body: JSON.stringify(userData)
+          body: JSON.stringify(userData),
         });
-        
+  
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({}));
-          console.error('Server error response:', errorData);
           throw new Error(`Server returned ${response.status}: ${errorData.detail || response.statusText}`);
         }
-        
-        const data = await response.json();
-        console.log('Update user response:', data);
-        
-        // Process profile picture URL if exists in the response
-        if (data && data.user && data.user.profile_pic) {
-          data.user.profile_pic = getImageUrl(data.user.profile_pic);
-        }
-        
-        return data;
+  
+        return await response.json();
       }
     } catch (error) {
-      console.error('Update user error:', error);
-      if (error.response) {
-        console.error('Error response:', error.response.data);
-        console.error('Error status:', error.response.status);
-      } else if (error.request) {
-        console.error('Error request:', error.request);
-      }
       throw error;
     }
   },

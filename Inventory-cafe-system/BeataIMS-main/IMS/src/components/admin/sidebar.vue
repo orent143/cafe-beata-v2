@@ -87,124 +87,117 @@
   </script>
   
   <style scoped>
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  width: 180px;
+  padding: 20px;
+  background-color: rgb(255, 255, 255);
+  height: 100vh;
+  box-shadow: 0 8px 8px rgba(0, 0, 0, 0.1);
+  position: fixed;
+  transition: width 0.3s ease;
+}
+
+.sidebar.collapsed {
+  width: 70px;
+  padding: 20px 5px;
+}
+
+.sidebar-list {
+  list-style-type: none;
+  padding: 0;
+  margin-bottom: auto;
+}
+
+.sidebar-link {
+  color: rgba(14, 14, 14, 0.54);
+  text-decoration: none;
+  font-weight: 450;
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+  padding: 10px 10px;
+  margin: 10px 0;
+  border-radius: 10px;
+  transition: all 0.3s ease;
+  gap: 10px; /* Add gap between icon and text */
+}
+
+.sidebar.collapsed .sidebar-link {
+  justify-content: center;
+  padding: 12px;
+}
+
+.sidebar.collapsed .sidebar-link span {
+  display: none;
+}
+
+.sidebar-link i {
+  font-size: 18px;
+  min-width: 24px;
+  text-align: center;
+}
+
+.sidebar-link:hover {
+  color: #000000;
+  background-color: #f0f0f0;
+}
+
+.active-link {
+  color: #000000;
+  font-weight: bold;
+  background-color: #ed9598 !important;
+  padding: 8px 5px !important;
+  width: 100%;
+  box-sizing: content-box;
+  border-radius: 10px;
+}
+
+.submenu {
+  list-style-type: none;
+  padding-left: 20px;
+  margin: 10px 0;
+}
+
+.sidebar-footer {
+  margin-top: auto;
+  padding-top: 20px;
+}
+
+.sidebar-footer .sidebar-link {
+  justify-content: center;
+}
+
+.sidebar-footer .sidebar-link span {
+  display: none;
+}
+
+.sidebar-footer .sidebar-link i {
+  font-size: 18px;
+}
+
+.sidebar.collapsed .sidebar-footer .sidebar-link {
+  justify-content: center;
+}
+
+@media (max-width: 768px) {
   .sidebar {
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    width: 180px;
-    padding: 20px;
-    background-color:rgb(255, 255, 255);
-    height: 100vh;
-    box-shadow: 0 8px 8px rgba(0, 0, 0, 0.1);
-  
-    position: fixed;
-    transition: width 0.3s ease;
-  
+    width: 70px;
+    padding: 20px 5px;
   }
-  
-  .sidebar-logo {
-    width: 42%;
-    height: auto;
-    margin: 0 auto;
-    display: block;
+
+  .sidebar-link span {
+    display: none;
   }
-  
-  .sidebar-title {
-    text-align: center;
-    margin-top: 5px;
-    margin-bottom: 30px;
-  }
-  
-  .collapsed {
-    width: 50px;
-  }
-  
-  .toggle-btn {
-    background: none;
-    border: none;
-    cursor: pointer;
-    font-size: 20px;
-    color: rgb(165, 165, 165);
-  }
-  
-  
-  .sidebar-list {
-    list-style-type: none;
-    padding: 0;
-    margin-bottom: auto;
-  }
-  
+
   .sidebar-link {
-    color:rgba(14, 14, 14, 0.54);
-    text-decoration: none;
-    font-weight: 450;
-    font-size: 15px;
-    font-family: 'Arial', sans-serif;
-    display: flex;
-    align-items: center;
-    padding: 5px 10px;
-    margin: 15px 0;
-    transition: color 0.3s, border-color 0.3s;
-  }
-  
-  .sidebar-link i {
-    margin-right: 20px;
-    font-size: 18px;
-    vertical-align: middle;
-  }
-  
-  .sidebar-link:hover {
-    color: #000000;
-    border-color: #ed9598;
-  }
-  
-  .active-link {
-    color: #000000;
-    font-weight: bold;
-    background-color:#ed9598 !important;
-    padding: 8px 5px !important;
-    width: 100%;
-    box-sizing: content-box;
-    border: 2px solidrgb(0, 0, 0);
-    border-radius: 10px;
-  }
-  
-  .submenu {
-    list-style-type: none;
-    padding-left: 0;
-    margin-left: 20px;
-  }
-  
-  .collapsed .sidebar-link {
     justify-content: center;
   }
-  
-  .sidebar-footer {
-    width: 100%;
-    display: flex;
-    justify-content: left;
-    padding: 0;
-    margin-top: auto; /* Ensures the logout stays at the bottom */
-    margin-bottom: auto; /* Adds space from the bottom */
+
+  .submenu {
+    display: none;
   }
-  
-  .sidebar-footer .sidebar-link {
-    color:rgba(14, 14, 14, 0.54);
-      font-size: 15px;
-    font-family: 'Arial', sans-serif;
-    padding: 10px 20px;
-    border-radius: 25px;
-    display: flex;
-    align-items: left;
-  }
-  
-  .sidebar-footer .sidebar-link i {
-    margin-right: 18px;
-  }
-  
-  .sidebar-footer .sidebar-link:hover {
-    color: rgb(0, 0, 0);
-  }
-  
-  </style>
-  
+}
+</style>

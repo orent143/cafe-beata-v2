@@ -110,6 +110,35 @@ def start_background_task():
     if background_fix_task is None:
         background_fix_task = asyncio.create_task(fix_sales_records_background())
         logger.info("Started background task to fix sales records")
+        
+def ensure_daily_snapshot(db, target_date):
+    """
+    Ensure a daily inventory snapshot exists for the given date.
+    """
+    cursor = db.cursor()
+    cursor.execute("""
+        SELECT COUNT(*) 
+        FROM daily_inventory_snapshot 
+        WHERE snapshot_date = %s
+    """, (target_date,))
+    snapshot_exists = cursor.fetchone()[0]
+
+    if not snapshot_exists:
+        cursor.execute("""
+            INSERT INTO daily_inventory_snapshot 
+            (product_id, product_name, beginning_quantity, current_quantity, additions, snapshot_date, process_type)
+            SELECT 
+                id, 
+                ProductName,
+                Quantity,
+                Quantity,
+                0,
+                %s,
+                ProcessType
+            FROM inventoryproduct
+        """, (target_date,))
+        db.commit()
+    cursor.close()
 
 # Fetch sales data
 @SalesRouter.get("/sales", response_model=List[SalesResponse])
@@ -222,7 +251,6 @@ async def get_daily_sales_data(date: Optional[str] = None, db=Depends(get_db)):
         logger.error(f"Error getting daily sales data: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Internal Server Error: {str(e)}")
 
-    
 @SalesRouter.get("/sales/category-report", response_model=SalesReportResponse)
 async def get_sales_by_category(
     date: Optional[str] = Query(None, description="Date in YYYY-MM-DD format"),
@@ -242,7 +270,10 @@ async def get_sales_by_category(
                     detail="Invalid date format. Use YYYY-MM-DD"
                 )
 
-        # Execute sales report query with beginning_quantity from stock_details.original_quantity
+        # Ensure we have a snapshot for the requested date
+        ensure_daily_snapshot(db, target_date)
+
+        # Execute sales report query
         cursor.execute("""
             SELECT 
                 c.CategoryName,
@@ -251,25 +282,25 @@ async def get_sales_by_category(
                 ip.ProductName,
                 ip.UnitPrice,
                 ip.ProcessType,
-                (
-                    SELECT COALESCE(SUM(sd.original_quantity), 0)
-                    FROM stock_details sd
-                    WHERE sd.ProductID = ip.id
-                    AND DATE(sd.created_at) = %s
-                ) AS beginning_quantity,
+                dis.beginning_quantity,
+                dis.additions,
                 COALESCE(SUM(s.quantity_sold), 0) AS quantity_sold,
                 COALESCE(SUM(s.remitted), 0) AS total_amount
             FROM categories c
             LEFT JOIN inventoryproduct ip ON c.id = ip.`CategoryID (FK)`
             LEFT JOIN sales s ON ip.id = s.product_id 
                 AND DATE(s.created_at) = %s
+            LEFT JOIN daily_inventory_snapshot dis ON ip.id = dis.product_id 
+                AND dis.snapshot_date = %s
             GROUP BY 
                 c.id, 
                 c.CategoryName,
                 ip.id,
                 ip.ProductName,
                 ip.UnitPrice,
-                ip.ProcessType
+                ip.ProcessType,
+                dis.beginning_quantity,
+                dis.additions
             ORDER BY 
                 c.CategoryName,
                 ip.ProductName
@@ -301,8 +332,7 @@ async def get_sales_by_category(
                     "unit_price": row['UnitPrice'],
                     "quantity_sold": row['quantity_sold'],
                     "total_amount": row['total_amount'],
-                    "beginning_quantity": row['beginning_quantity']
-                        if row['ProcessType'].lower() == "ready-made" else 0
+                    "beginning_quantity": row['beginning_quantity'] + row['additions']
                 }
 
                 categories_dict[category_name]['products'].append(product_detail)

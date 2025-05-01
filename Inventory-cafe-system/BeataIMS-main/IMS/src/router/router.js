@@ -6,6 +6,7 @@ import HomeIMS from '@/views/ims/HomeIMS.vue';
 import Products from '@/views/ims/Products.vue';
 import ViewInventoryVue from '@/views/ims/ViewInventory.vue';
 import ViewDetailsVue from '@/views/ims/ViewDetails.vue';
+import EditOrder from '@/views/ims/EditOrder.vue';
 import Suppliers from '@/views/ims/Suppliers.vue';
 import CreateOrder from '@/views/ims/CreateOrder.vue';
 import ReportsIMS from '@/views/ims/ReportsIMS.vue';
@@ -42,6 +43,7 @@ const routes = [
   { path: '/productsales', component: ProductSales, meta: { requiresAuth: true } },
   { path: '/suppliers', component: Suppliers, meta: { requiresAuth: true } },
   { path: '/vieworderdetails/:id', name: 'ViewOrderDetails', component: OrderDetailsVue, meta: { requiresAuth: true } },
+  { path: '/editorder/:id', name: 'EditOrder', component: () => import('@/views/ims/EditOrder.vue'),meta: { requiresAuth: true },},
   { path: '/category', component: Category, meta: { requiresAuth: true } },
   { path: '/reportsims', component: ReportsIMS, meta: { requiresAuth: true } },
   { path: '/reportsims/summary', component: SummaryReport, meta: { requiresAuth: true } },

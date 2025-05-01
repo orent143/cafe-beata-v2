@@ -49,7 +49,7 @@ export default {
           password: this.password,
         });
 
-        // Use our saveUser function to store with expiration
+        // Save user data and redirect based on role
         saveUser(userData);
 
         this.toast.success("Login successful!", {
@@ -57,7 +57,7 @@ export default {
           timeout: 3000,
         });
 
-        const redirectPath = this.$route.query.redirect; 
+        const redirectPath = this.$route.query.redirect;
         if (userData.role === "admin") {
           this.$router.push("/dashboard");
         } else if (userData.role === "cafe_staff") {
@@ -68,8 +68,17 @@ export default {
           }
         }
       } catch (error) {
-        this.errorMessage = error.response?.data?.detail || "Invalid username or password";
-        this.toast.error(this.errorMessage, { position: "top-right", timeout: 3000 });
+        // Handle specific error codes
+        if (error.response?.status === 403) {
+          this.errorMessage = "Your account is inactive. Please contact support.";
+        } else {
+          this.errorMessage = error.response?.data?.detail || "Invalid username or password";
+        }
+
+        this.toast.error(this.errorMessage, {
+          position: "top-right",
+          timeout: 3000,
+        });
       }
     },
     async handleForgotPassword() {

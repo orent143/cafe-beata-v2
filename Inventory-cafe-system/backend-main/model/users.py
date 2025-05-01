@@ -65,6 +65,16 @@ async def get_all_users():
         cursor.execute("SHOW COLUMNS FROM users LIKE 'created_at'")
         created_at_column_exists = cursor.fetchone()
         
+        cursor.execute("SHOW COLUMNS FROM users LIKE 'status'")
+        status_column_exists = cursor.fetchone()
+
+        if not status_column_exists:
+            logger.info("Adding status column to users table")
+            cursor.execute("""
+            ALTER TABLE users 
+            ADD COLUMN status ENUM('Active', 'Inactive') DEFAULT 'Active'
+            """)
+    
         cursor.execute("SHOW COLUMNS FROM users LIKE 'date_added'")
         date_added_column_exists = cursor.fetchone()
         
@@ -72,7 +82,7 @@ async def get_all_users():
         if email_column_exists and created_at_column_exists:
             # New schema
             query = """
-            SELECT id, username, email, role, profile_pic, created_at
+            SELECT id, username, email, role, profile_pic, created_at, status
             FROM users
             ORDER BY created_at DESC
             """
@@ -116,6 +126,16 @@ async def get_user_by_id(user_id: int):
         cursor.execute("SHOW COLUMNS FROM users LIKE 'created_at'")
         created_at_column_exists = cursor.fetchone()
         
+        cursor.execute("SHOW COLUMNS FROM users LIKE 'status'")
+        status_column_exists = cursor.fetchone()
+
+        if not status_column_exists:
+            logger.info("Adding status column to users table")
+            cursor.execute("""
+            ALTER TABLE users 
+            ADD COLUMN status ENUM('Active', 'Inactive') DEFAULT 'Active'
+         """)
+            
         cursor.execute("SHOW COLUMNS FROM users LIKE 'date_added'")
         date_added_column_exists = cursor.fetchone()
         
@@ -123,7 +143,7 @@ async def get_user_by_id(user_id: int):
         if email_column_exists and created_at_column_exists:
             # New schema
             query = """
-            SELECT id, username, email, role, profile_pic, created_at
+            SELECT id, username, email, role, profile_pic, created_at, status
             FROM users
             WHERE id = %s
             """
@@ -304,10 +324,10 @@ async def create_user(
 @UsersRouter.put("/{user_id}")
 async def update_user(
     user_id: int, 
-    username: str = Form(None),
-    email: str = Form(None),
-    role: str = Form(None),
-    status: str = Form(None),
+    username: Optional[str] = Form(None),
+    email: Optional[str] = Form(None),
+    role: Optional[str] = Form(None),
+    status: Optional[str] = Form(None),
     profile_pic: Optional[UploadFile] = File(None)
 ):
     """Update an existing user with support for both form data and JSON"""
@@ -322,85 +342,53 @@ async def update_user(
         if not existing_user:
             raise HTTPException(status_code=404, detail=f"User with ID {user_id} not found")
         
-        # Determine if this is a form submission or JSON
-        is_form_data = username is not None
-        
         # Initialize update fields and values
         update_fields = []
         update_values = []
         
-        if is_form_data:
-            # Process form data
-            if username:
-                update_fields.append("username = %s")
-                update_values.append(username)
-                
-            if email:
-                update_fields.append("email = %s")
-                update_values.append(email)
-                
-            if role:
-                update_fields.append("role = %s")
-                update_values.append(role)
-            
-            # Handle profile picture upload if provided
-            profile_pic_path = None
-            if profile_pic:
-                try:
-                    # Create directory if it doesn't exist
-                    os.makedirs("uploads/profile_pics", exist_ok=True)
-                    
-                    # Generate a safe filename with timestamp
-                    timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
-                    filename = f"{username or 'user'}_{timestamp}_{secure_filename(profile_pic.filename)}"
-                    
-                    # Create full file path for saving
-                    full_file_path = os.path.join("uploads/profile_pics", filename)
-                    
-                    # Create database path
-                    profile_pic_path = f"uploads/profile_pics/{filename}"
-                    
-                    # Save the file
-                    with open(full_file_path, "wb") as buffer:
-                        shutil.copyfileobj(profile_pic.file, buffer)
-                        
-                    logger.info(f"Profile picture saved at: {full_file_path}")
-                    
-                    # Add profile_pic to update fields
-                    update_fields.append("profile_pic = %s")
-                    update_values.append(profile_pic_path)
-                except Exception as e:
-                    logger.error(f"Error saving profile picture: {str(e)}")
+        if username:
+            update_fields.append("username = %s")
+            update_values.append(username)
+        
+        if email:
+            update_fields.append("email = %s")
+            update_values.append(email)
+        
+        if role:
+            update_fields.append("role = %s")
+            update_values.append(role)
+        
+        if status:
+            if status not in ['Active', 'Inactive']:
+                raise HTTPException(status_code=400, detail="Invalid status value")
+            update_fields.append("status = %s")
+            update_values.append(status)
+            logger.info(f"Status to update: {status}")  # Debugging log
         
         # If no fields to update, return early
         if not update_fields:
             return {"success": True, "message": "No fields to update"}
-            
+        
         # Construct the update query
         update_query = f"""
         UPDATE users
         SET {', '.join(update_fields)}
         WHERE id = %s
         """
-        
-        # Add user_id to values
         update_values.append(user_id)
+        
+        logger.info(f"Executing query: {update_query} with values {update_values}")  # Debugging log
         
         # Execute the update
         cursor.execute(update_query, update_values)
         connection.commit()
-        
-        # Get the updated user data to return
-        cursor.execute("SELECT id, username, email, role, profile_pic FROM users WHERE id = %s", (user_id,))
-        updated_user = cursor.fetchone()
         
         cursor.close()
         connection.close()
         
         return {
             "success": True,
-            "message": "User updated successfully",
-            "user": updated_user
+            "message": "User updated successfully"
         }
         
     except HTTPException:
@@ -410,7 +398,7 @@ async def update_user(
         if connection:
             connection.rollback()
         raise HTTPException(status_code=500, detail=f"Error updating user: {str(e)}")
-
+    
 @UsersRouter.options("/{user_id}")
 async def options_update_user(user_id: int):
     """Handle preflight requests for update user endpoint"""

@@ -223,9 +223,7 @@
               
               <div class="edit-actions">
                 <button type="button" class="btn-cancel" @click="closeEditMode">Cancel</button>
-                <button type="submit" class="btn-save">
-                  <i class="pi pi-check"></i> Save
-                </button>
+                <button @click.prevent="updateUser">Save</button>
               </div>
             </form>
           </div>
@@ -276,6 +274,7 @@ import sidebar from '@/components/admin/sidebar.vue';
 import Header from '@/components/Header.vue';
 import { useToast } from "vue-toastification";
 import userService from "@/api/userService";
+import axios from "axios";
 
 export default {
   name: 'UserManagement',
@@ -356,14 +355,38 @@ export default {
   }
 },
 
-    toggleStatus(user) {
-      user.status = user.status === 'Active' ? 'Inactive' : 'Active';
-      this.toast.info(`${user.username}'s status changed to ${user.status}`, {
-        timeout: 3000,
-        position: "top-right"
-      });
-    },
+async toggleStatus(user) {
+  try {
+    // Toggle the status locally
+    const newStatus = user.status === 'Active' ? 'Inactive' : 'Active';
 
+    // Prepare the data to send to the backend
+    const userData = { status: newStatus };
+
+    console.log("Sending data to backend:", userData);
+
+    // Call the backend PUT method
+    const response = await userService.updateUser(user.id, userData);
+
+    if (response && response.success) {
+      // Update the status in the local user list
+      user.status = newStatus;
+
+      this.toast.success(`${user.username}'s status updated to ${newStatus}`, {
+        timeout: 3000,
+        position: "top-right",
+      });
+    } else {
+      throw new Error(response?.detail || "Failed to update status");
+    }
+  } catch (error) {
+    console.error("Error updating user status:", error);
+    this.toast.error(`Failed to update status: ${error.message || "Unknown error"}`, {
+      timeout: 3000,
+      position: "top-right",
+    });
+  }
+},
     viewUserDetails(user) {
       this.selectedUser = user; 
     },
@@ -533,98 +556,63 @@ export default {
     },
 
     async updateUser() {
-      try {
-        this.isLoading = true;
-        
-        // Prepare user data
-        const userData = {
+  try {
+    this.isLoading = true;
+
+    // Prepare user data
+    const userData = new FormData();
+    userData.append('username', this.editedUser.username);
+    userData.append('email', this.editedUser.email || `${this.editedUser.username}@cafebeata.com`);
+    userData.append('role', this.editedUser.role);
+    userData.append('status', this.editedUser.status || 'Active');
+
+    // Only append profile_pic if a new file was selected
+    if (this.editedUser.profile_pic instanceof File) {
+      userData.append('profile_pic', this.editedUser.profile_pic);
+    }
+
+    // Send PUT request to update the user
+    const response = await userService.updateUser(this.selectedUser.id, userData);
+
+    if (response && response.success) {
+      // Update the user in the local array
+      const index = this.users.findIndex(user => user.id === this.selectedUser.id);
+      if (index !== -1) {
+        // Keep existing profile_pic if no new one was uploaded
+        const updatedUser = {
+          ...this.users[index],
           username: this.editedUser.username,
           email: this.editedUser.email || `${this.editedUser.username}@cafebeata.com`,
           role: this.editedUser.role,
           status: this.editedUser.status || 'Active'
         };
         
-        console.log("Updating user with data:", userData);
-        
-        // Create FormData if there's a profile picture
-        let dataToSend;
+        // Update profile_pic only if a new one was uploaded
         if (this.editedUser.profile_pic instanceof File) {
-          dataToSend = new FormData();
-          
-          // Add all fields to FormData
-          Object.entries(userData).forEach(([key, value]) => {
-            dataToSend.append(key, value);
-          });
-          
-          dataToSend.append('profile_pic', this.editedUser.profile_pic);
-          console.log('Adding profile picture to update request:', this.profilePicName);
-        } else {
-          dataToSend = userData;
-        }
-
-        console.log("User ID:", this.selectedUser.id);
-        const response = await userService.updateUser(this.selectedUser.id, dataToSend);
-        console.log("Update response:", response);
-
-        if (response && (response.success || response.user)) {
-          // If we have a response with the updated user data
-          let updatedUser;
-          
-          if (response.user) {
-            updatedUser = response.user;
-          } else {
-            // If no user object in response, use our updated data and preserve the profile pic URL
-            updatedUser = { 
-              ...this.selectedUser,
-              ...userData
-            };
-            
-            // If we uploaded a new profile pic but don't have the URL in the response,
-            // we need to either refetch the user or keep the old URL for now
-            if (this.editedUser.profile_pic instanceof File) {
-              try {
-                // Try to get the updated user details including the new profile pic URL
-                const userResponse = await userService.getUserById(this.selectedUser.id);
-                if (userResponse && userResponse.user) {
-                  updatedUser = userResponse.user;
-                }
-              } catch (error) {
-                console.error('Error fetching updated user details:', error);
-              }
-            }
-          }
-          
-          // Update the user in our local array
-          const index = this.users.findIndex(user => user.id === this.selectedUser.id);
-          if (index !== -1) {
-            this.users[index] = updatedUser;
-          }
-          
-          this.closeEditMode();
-          this.closeModal();
-          this.toast.success("User updated successfully!", {
-            timeout: 3000,
-            position: "top-right",
-            closeOnClick: true,
-          });
-          
-          // Reset the preview image
-          this.previewImage = null;
-        } else {
-          throw new Error(response?.detail || 'Failed to update user');
+          updatedUser.profile_pic = response.profile_pic || updatedUser.profile_pic;
         }
         
-        this.isLoading = false;
-      } catch (error) {
-        this.isLoading = false;
-        console.error('Error updating user:', error);
-        
-        this.toast.error(`Failed to update user: ${error.message || 'Unknown error'}`, {
-          timeout: 3000,
-          position: "top-right"
-        });
+        this.users[index] = updatedUser;
       }
-    },
+
+      this.closeEditMode();
+      this.toast.success("User updated successfully!", {
+        timeout: 3000,
+        position: "top-right",
+      });
+    } else {
+      throw new Error(response?.detail || "Failed to update user");
+    }
+  } catch (error) {
+    console.error("Error updating user:", error);
+    this.toast.error(`Failed to update user: ${error.message || "Unknown error"}`, {
+      timeout: 3000,
+      position: "top-right",
+    });
+  } finally {
+    this.isLoading = false;
+  }
+},
 
     confirmDelete(userId) {
       this.selectedUser = this.users.find(user => user.id === userId);
