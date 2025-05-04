@@ -10,50 +10,52 @@
   <div class="app-container" :class="{ 'sidebar-collapsed': isSidebarCollapsed }">
     <div class="header-container">
       <div class="header-title">
-      <h1 class="sales-header">Order History</h1>
-      <p class="sub-description">
-        Review past orders including customer info, payment method, and order totals. Use filters to narrow down results.
-      </p>
-    </div>
-    <div class="header-actions">
-  <div class="filter-container">
-    <div class="filter-label">Filter by</div>
-    <button class="filter-btn" @click="toggleFilterDropdown">
-      <span>{{ selectedStatus || 'Payment Method' }}</span>
-      <i class="fas fa-angle-down"></i>
-    </button>
-    <div v-if="showFilterDropdown" class="filter-dropdown">
-  <select v-model="selectedStatus" class="filter-select">
-    <option value="">All Orders</option>
-    <option value="Cash">Cash</option>
-    <option value="Tally">Tally</option>
-  </select>
-  <div class="date-range">
-    <div class="date-input">
-     <label for="start-date">FROM</label>
-     <input 
-      type="date"
-      v-model="startDate"
-      class="date-select"
-      placeholder="Start Date"
-      />
-    </div>
-    <div class="date-range">
-    <div class="date-input">
-    <label for="end-date">TO</label>
-    <input 
-      type="date"
-      v-model="endDate"
-      class="date-select"
-      placeholder="End Date"
-      />
+        <h1 class="sales-header">Order History</h1>
+        <p class="sub-description">
+          Review past orders including customer info, payment method, and order totals. Use filters to narrow down results.
+        </p>
       </div>
-    </div>
-    <button class="apply-filter" @click="filterByDateRange">Apply Filter</button>
-  </div>
-</div>
-  </div>
-</div>
+      <div class="header-actions">
+        <div class="filters-wrapper">
+          <!-- Filter Dropdown -->
+          <div class="filter-container">
+            <div class="filter-label">Filter by</div>
+            <button class="filter-btn" @click="toggleFilterDropdown">
+              <span>{{ selectedStatus || 'Payment Method' }}</span>
+              <i class="fas fa-angle-down"></i>
+            </button>
+            <div v-if="showFilterDropdown" class="filter-dropdown">
+              <select v-model="selectedStatus" class="filter-select">
+                <option value="">All Orders</option>
+                <option value="Cash">Cash</option>
+                <option value="Tally">Tally</option>
+              </select>
+              <div class="date-range">
+                <div class="date-input">
+                  <label for="start-date">FROM</label>
+                  <input 
+                    type="date"
+                    v-model="startDate"
+                    class="date-select"
+                  />
+                </div>
+                <div class="date-input">
+                  <label for="end-date">TO</label>
+                  <input 
+                    type="date"
+                    v-model="endDate"
+                    class="date-select"
+                  />
+                </div>
+                <button class="apply-filter" @click="filterByDateRange">Apply Filter</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Order Logs Button Card -->
+          <button class="btn-view-logs" @click="handleViewLogs">View Logs</button>
+        </div>
+      </div>
     </div>
 
     <div class="sales-container">
@@ -101,20 +103,30 @@
         </div>
       </div>
     </div>
+
+    <OrderLogsModal 
+  v-if="showOrderLogs"
+  :isVisible="showOrderLogs"
+  :logs="logs"
+  @close="showOrderLogs = false"
+/>
   </div>
 </template>
+
 
 <script>
 import axios from 'axios';
 import SideBar from '@/components/ims/SideBar.vue';
 import Header from '@/components/Header.vue';
 import { ORDER_SUMMARY_API } from '@/api/config.js';
+import OrderLogsModal from '@/components/ims/OrderLogsModal.vue';
 import { useToast } from 'vue-toastification';
 
 export default {
   components: {
     SideBar,
-    Header
+    Header,
+    OrderLogsModal
   },
   setup() {
     const toast = useToast();
@@ -123,6 +135,8 @@ export default {
   data() {
     return {
       isSidebarCollapsed: false,
+      showOrderLogs: false,
+      logs: [],
       orders: [],
       selectedStatus: '',
       showFilterDropdown: false,
@@ -163,9 +177,21 @@ export default {
     handleSidebarToggle(collapsed) {
       this.isSidebarCollapsed = collapsed;
     },
+    handleViewLogs() {
+    this.fetchLogs();
+    this.showOrderLogs = true;
+  },
     filterOrders() {
       // When search query changes, the computed filteredOrders will be recalculated automatically
     },
+    async fetchLogs() {
+  try {
+    const response = await axios.get(`${ORDER_SUMMARY_API}/orders/history-logs`);
+    this.logs = response.data;
+  } catch (error) {
+    this.toast.error('Failed to load logs.');
+  }
+},
     async fetchOrders(date = '') {
     this.loading = true;
     try {
@@ -589,5 +615,35 @@ input[type="checkbox"] {
 
 .apply-filter:hover {
   background-color: #d33d5e;
+}
+.filters-wrapper {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+  align-items: center;
+}
+
+
+
+.btn-view-logs {
+  padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+    color: #333;
+    transition: all 0.3s;
+    display: flex
+;
+    align-items: center;
+
+    gap: 8px;
+    background: white;
+    justify-content: space-between;
+}
+
+.btn-view-logs:hover {
+  border-color: #E54F70;
+  color: #E54F70;
 }
 </style>

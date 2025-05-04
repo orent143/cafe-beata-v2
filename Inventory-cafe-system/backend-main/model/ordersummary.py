@@ -135,7 +135,6 @@ async def get_order_history():
         finally:
             if cursor:
                 cursor.close()
-
 @OrderSummaryRouter.put("/orders/history/{history_id}/details")
 async def edit_order_history_details(
     history_id: int,
@@ -232,6 +231,17 @@ async def edit_order_history_details(
                     VALUES (%s, %s, %s, %s, %s)
                 """, (history_id, product_id, product_name, quantity, unit_price))
 
+            # Log the PUT transaction
+            cursor.execute("""
+                INSERT INTO order_transaction_logs (history_id, action_type, performed_by, remarks)
+                VALUES (%s, %s, %s, %s)
+            """, (
+                history_id,
+                "Updated",
+                admin_username,
+                f"Updated order with {len(updated_order.items)} items, new total amount: {updated_order.total_amount}"
+            ))
+
             db.commit()
 
             return {"success": True, "message": "Order history and details updated successfully"}
@@ -304,6 +314,17 @@ async def delete_order_history_details(
             # Delete order summary
             cursor.execute("DELETE FROM order_history WHERE history_id = %s", (history_id,))
 
+            # Log the DELETE transaction
+            cursor.execute("""
+                INSERT INTO order_transaction_logs (history_id, action_type, performed_by, remarks)
+                VALUES (%s, %s, %s, %s)
+            """, (
+                history_id,
+                "Deleted",
+                admin_username,
+                "Deleted order and restored inventory quantities"
+            ))
+
             db.commit()
 
             return {"success": True, "message": "Order history and details deleted successfully, and product quantities restored"}
@@ -313,6 +334,7 @@ async def delete_order_history_details(
         finally:
             if cursor:
                 cursor.close()
+                
 @OrderSummaryRouter.get("/orders/history/{history_id}", response_model=OrderHistoryDetail)
 async def get_order_history_detail(history_id: int):
     with db_connection() as db:
@@ -364,6 +386,36 @@ async def get_order_history_detail(history_id: int):
         except Exception as e:
             logger.error(f"Error getting order history detail: {str(e)}")
             raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+        finally:
+            if cursor:
+                cursor.close()
+                
+@OrderSummaryRouter.get("/orders/history-logs")
+async def get_order_transaction_logs():
+    with db_connection() as db:
+        cursor = None
+        try:
+            cursor = db.cursor()
+            cursor.execute("""
+                SELECT log_id, history_id, action_type, performed_by, performed_at, remarks
+                FROM order_transaction_logs
+                ORDER BY performed_at DESC
+            """)
+            logs = cursor.fetchall()
+            return [
+                {
+                    "log_id": row[0],
+                    "history_id": row[1],
+                    "action_type": row[2],
+                    "performed_by": row[3],
+                    "performed_at": row[4].strftime("%Y-%m-%d %H:%M:%S"),
+                    "remarks": row[5]
+                }
+                for row in logs
+            ]
+        except Exception as e:
+            logger.error(f"Error fetching transaction logs: {str(e)}")
+            raise HTTPException(status_code=500, detail="Database error")
         finally:
             if cursor:
                 cursor.close()

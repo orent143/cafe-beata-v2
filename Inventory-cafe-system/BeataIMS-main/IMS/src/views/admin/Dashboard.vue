@@ -12,7 +12,7 @@
         <div class="dashboard-grid">
     <div class="card stats">
       <h3>Total Sales</h3>
-      <div class="stat-value">${{ formatCurrency(dashboardStats.totalRevenue) }}</div>
+      <div class="stat-value">₱{{ formatCurrency(dashboardStats.totalRevenue) }}</div>
       <div class="stat-change positive">Current Revenue</div>
     </div>
 
@@ -436,7 +436,7 @@ export default {
               beginAtZero: true,
               ticks: {
                 callback: function(value) {
-                  return '$' + value;
+                  return '₱' + value;
                 }
               }
             }

@@ -284,12 +284,12 @@ async def get_stock_details(product_id: str, db=Depends(get_db)):
 @db_transaction
 async def delete_stock_transaction(product_id: str, TransactionID: int, db=Depends(get_db)):
     """
-    Delete a stock transaction by its ID and associated Product ID.
+    Delete a stock-in transaction and revert inventory quantity.
     """
     try:
         cursor = db.cursor(dictionary=True)
 
-        # Ensure the transaction exists and matches the product ID
+        # Step 1: Verify the transaction exists
         cursor.execute("""
             SELECT id, ProductID, transaction_type, quantity
             FROM stock_details
@@ -303,37 +303,36 @@ async def delete_stock_transaction(product_id: str, TransactionID: int, db=Depen
         transaction_type = transaction["transaction_type"]
         quantity = transaction["quantity"]
 
-        # Delete the transaction
-        cursor.execute("DELETE FROM stock_details WHERE id = %s", (TransactionID,))
+        # Step 2: Only allow deleting IN transactions
+        if transaction_type != "IN":
+            raise HTTPException(status_code=400, detail="Only stock-in transactions can be deleted")
 
-        # Update inventory quantity
-        if transaction_type == "IN":
-            cursor.execute("""
-                UPDATE inventoryproduct
-                SET Quantity = Quantity - %s
-                WHERE id = %s
-            """, (quantity, product_id))
-        elif transaction_type == "OUT":
-            cursor.execute("""
-                UPDATE inventoryproduct
-                SET Quantity = Quantity + %s
-                WHERE id = %s
-            """, (quantity, product_id))
+        # Step 3: Update inventory quantity (revert added stock)
+        cursor.execute("""
+            UPDATE inventoryproduct
+            SET Quantity = CASE 
+                WHEN Quantity - %s < 0 THEN 0 
+                ELSE Quantity - %s 
+            END
+            WHERE id = %s
+        """, (quantity, quantity, product_id))
+
+        # Step 4: Delete the stock-in record
+        cursor.execute("DELETE FROM stock_details WHERE id = %s", (TransactionID,))
 
         db.commit()
 
         return {
-            "message": f"Transaction {TransactionID} for product {product_id} deleted successfully",
-            "transaction_type": transaction_type,
+            "message": f"Stock-in transaction {TransactionID} deleted successfully.",
+            "RevertedQuantity": quantity,
             "ProductID": product_id
         }
 
     except HTTPException:
         raise
     except Exception as e:
-        if db:
-            db.rollback()
-        logger.error(f"Error deleting stock transaction: {str(e)}")
+        db.rollback()
+        logger.error(f"Error deleting stock-in transaction {TransactionID}: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Internal Server Error: {str(e)}")
     
 @StockRouter.delete("/stockout/{TransactionID}")
