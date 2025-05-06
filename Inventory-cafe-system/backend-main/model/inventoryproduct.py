@@ -9,6 +9,8 @@ from uuid import uuid4
 import mysql.connector
 import requests
 import logging
+import time
+from model.performance_metrics import record_stock_update_time, record_transaction_time
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -298,107 +300,67 @@ async def update_inventory_product(
     db=Depends(get_db),
 ):
     try:
+        # Start measuring execution time
+        start_time = time.time()
+        
         cursor = db.cursor()
         
-        cursor.execute(
-            "SELECT ProductName, UnitPrice, `CategoryID (FK)`, Threshold, ProcessType, Image FROM inventoryproduct WHERE id = %s",
-            (product_id,),
-        )
+        # Check if product exists
+        cursor.execute("SELECT id, ProductName, Quantity, UnitPrice, `CategoryID (FK)`, ProcessType, Threshold, Image FROM inventoryproduct WHERE id = %s", (product_id,))
         product = cursor.fetchone()
-
+        
         if not product:
             cursor.close()
             raise HTTPException(status_code=404, detail="Product not found")
-
-        update_fields = []
-        update_values = []
-        image_filename = product[5]
-
-        if ProductName is not None:
-            update_fields.append("ProductName = %s")
-            update_values.append(ProductName)
-
-        if UnitPrice is not None:
-            update_fields.append("UnitPrice = %s")
-            update_values.append(UnitPrice)
-
-        if CategoryID is not None:
-            update_fields.append("`CategoryID (FK)` = %s")
-            update_values.append(CategoryID)
-
-        if Threshold is not None:
-            update_fields.append("Threshold = %s")
-            update_values.append(Threshold)
-
+        
+        # Process the image if uploaded
+        image_filename = None
         if Image:
-            file_extension = Image.filename.split(".")[-1]
-            image_filename = f"{ProductName.replace(' ', '_')}_{int(datetime.utcnow().timestamp())}.{file_extension}"
+            file_extension = os.path.splitext(Image.filename)[1]
+            image_filename = f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_{product_id}{file_extension}"
             file_path = os.path.join(UPLOAD_DIR, image_filename)
-
+            
             with open(file_path, "wb") as buffer:
                 shutil.copyfileobj(Image.file, buffer)
-
-            if product[5]:
-                old_image_path = os.path.join(UPLOAD_DIR, product[5])
-                if os.path.exists(old_image_path):
-                    os.remove(old_image_path)
-
-            update_fields.append("Image = %s")
-            update_values.append(image_filename)
-
-        if not update_fields:
-            cursor.close()
-            raise HTTPException(status_code=400, detail="No fields provided for update")
-
-        # Update status based on process type and threshold
-        status = determine_status(None, product[4], Threshold)
-        update_fields.append("Status = %s")
-        update_values.append(status)
-
-        update_query = f"UPDATE inventoryproduct SET {', '.join(update_fields)} WHERE id = %s"
-        update_values.append(product_id)
-
-        cursor.execute(update_query, tuple(update_values))
-        db.commit()
         
-        try:
-            cursor.execute(
-                """
-                INSERT INTO product_transactions 
-                (product_id, product_name, transaction_type, process_type, unit_price, category_id)
-                VALUES (%s, %s, %s, %s, %s, %s)
-                """, 
-                (product_id, ProductName or product[0], "Edit", product[4], 
-                 UnitPrice if UnitPrice is not None else product[1],
-                 CategoryID if CategoryID is not None else product[2]
-            )
-            )
+        # Prepare the product data
+        product_data = {}
+        if ProductName:
+            product_data["ProductName"] = ProductName
+        if UnitPrice is not None:
+            product_data["UnitPrice"] = UnitPrice
+        if CategoryID is not None:
+            product_data["`CategoryID (FK)`"] = CategoryID
+        if Threshold is not None:
+            product_data["Threshold"] = Threshold
+        if image_filename:
+            product_data["Image"] = image_filename
+        
+        # Build the update query
+        if product_data:
+            set_clause = ", ".join([f"{field} = %s" for field in product_data.keys()])
+            params = list(product_data.values())
+            params.append(product_id)
+            
+            query = f"UPDATE inventoryproduct SET {set_clause} WHERE id = %s"
+            cursor.execute(query, params)
             db.commit()
-        except Exception as log_error:
-            logger.warning(f"Failed to log product transaction: {log_error}")
-
-        # Update log in a safer way
-        try:
-            log_activity_safe(
-                cursor=cursor, 
-                db=db, 
-                icon="pi pi-pencil", 
-                title=f"Product updated: {ProductName or product[0]}", 
-                status="Updated"
-            )
-        except Exception as log_error:
-            logger.warning(f"Failed to log activity: {log_error}")
-        
+            
+            # Log the activity
+            log_activity(db, "📝", f"Product {ProductName or product[1]} updated", "success")
+            
         cursor.close()
-
-        return {
-            "message": "Product updated successfully",
-            "Image": f"/uploads/products/{image_filename}" if image_filename else None,
-        }
-
+        
+        # Calculate execution time and record the metrics
+        execution_time = (time.time() - start_time) * 1000  # Convert to milliseconds
+        record_transaction_time("update_product", execution_time)
+        
+        # Return the updated product details
+        return {"message": "Product updated successfully"}
+        
     except Exception as e:
-        logger.error(f"Error updating inventory product: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Internal Server Error: {str(e)}")
+        logger.error(f"Error updating inventory product {product_id}: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
 
 # Helper function for safe activity logging
 def log_activity_safe(cursor, db, icon: str, title: str, status: str):
@@ -1118,3 +1080,105 @@ async def get_inventory_status(db=Depends(get_db)):
     except Exception as e:
         logger.error(f"Error getting inventory status: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Internal Server Error: {str(e)}")
+
+@InventoryRouter.post("/stockin/", response_model=dict)
+async def stock_in(request: StockInRequest, db=Depends(get_db)):
+    # Start measuring execution time
+    start_time = time.time()
+    
+    try:
+        cursor = db.cursor()
+        product_id = request.ProductID
+        
+        # Verify the product exists
+        cursor.execute("SELECT id, ProductName, Quantity, ProcessType, Threshold FROM inventoryproduct WHERE id = %s", (product_id,))
+        product = cursor.fetchone()
+        
+        if not product or not product[0]:
+            cursor.close()
+            raise HTTPException(status_code=404, detail="Product not found")
+        
+        if product[3] == "To Be Made":  # Check if product is "To Be Made"
+            cursor.close()
+            raise HTTPException(status_code=400, detail="Cannot add stock to 'To Be Made' products")
+        
+        # Update the inventory with new stock
+        current_quantity = product[2] or 0
+        total_new_quantity = sum(stock.quantity for stock in request.Stocks)
+        new_quantity = current_quantity + total_new_quantity
+        
+        # Update the product quantity
+        cursor.execute("UPDATE inventoryproduct SET Quantity = %s WHERE id = %s", (new_quantity, product_id))
+        
+        # Get the current timestamp
+        now = datetime.now()
+        
+        # Insert into stockin table for each stock item
+        for stock in request.Stocks:
+            stock_id = generate_unique_id()
+            
+            cursor.execute("""
+                INSERT INTO stockin (
+                    id, ProductID, StockLocation, BatchNumber, Quantity, ExpirationDate, 
+                    CostPrice, DateAdded, SupplierID
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+            """, (
+                stock_id, 
+                product_id, 
+                stock.stock_location, 
+                stock.batch_number, 
+                stock.quantity,
+                stock.expiration_date,
+                stock.cost_price,
+                now,
+                stock.SupplierID
+            ))
+            
+            # Insert into stockhistory for tracking
+            cursor.execute("""
+                INSERT INTO stockhistory (
+                    StockID, ProductID, Quantity, Action, ActionDate
+                ) VALUES (%s, %s, %s, %s, %s)
+            """, (
+                stock_id,
+                product_id,
+                stock.quantity,
+                "Stock In",
+                now
+            ))
+        
+        # Log the activity
+        log_activity(db, "📦", f"Stock added to {product[1]} (+{total_new_quantity})", "success")
+        
+        # Commit the transaction
+        db.commit()
+        cursor.close()
+        
+        # Attempt to notify Cafe Beata system about stock change
+        try:
+            notify_cafe_beata_stock_change(int(product_id))
+        except Exception as notify_e:
+            logger.warning(f"Failed to notify Cafe Beata about stock change: {notify_e}")
+        
+        # Calculate execution time and record the metrics
+        execution_time = (time.time() - start_time) * 1000  # Convert to milliseconds
+        record_stock_update_time(int(product_id), execution_time)
+        record_transaction_time("stock_in", execution_time)
+        
+        # Determine the new status based on the updated quantity and threshold
+        new_status = determine_status(new_quantity, product[3], product[4])
+        
+        return {
+            "message": "Stock added successfully",
+            "product_id": product_id,
+            "previous_quantity": current_quantity,
+            "added_quantity": total_new_quantity,
+            "new_quantity": new_quantity,
+            "status": new_status
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error adding stock: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")

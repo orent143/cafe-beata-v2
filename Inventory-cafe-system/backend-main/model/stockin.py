@@ -2,9 +2,11 @@ from fastapi import Depends, HTTPException, APIRouter, Form, UploadFile, File, R
 from typing import List, Optional
 from pydantic import BaseModel
 from model.db import get_db, db_transaction, db_connection
+from model.performance_metrics import record_stock_update_time
 from datetime import datetime
 import logging
 import os
+import time
 import shutil
 import uuid
 from model.inventoryproduct import notify_cafe_beata_stock_change, is_ready_made_product
@@ -43,8 +45,10 @@ async def stock_in(request: StockInRequest, db=Depends(get_db)):
         process_type = product[2]
         total_quantity_added = 0
 
+        # Start timing the stock update
+        start_time = time.time()
+
         for stock in request.Stocks:
-            # If ready-made, set original_quantity, else set to 0
             original_quantity = stock.quantity if process_type and process_type.lower() == "ready-made" else 0
 
             cursor.execute("""
@@ -53,9 +57,13 @@ async def stock_in(request: StockInRequest, db=Depends(get_db)):
             """, (product_id, stock.batch_number, stock.quantity, stock.expiration_date, stock.SupplierID, original_quantity))
             total_quantity_added += stock.quantity
 
-        # Update the quantity in inventoryproduct
         cursor.execute("UPDATE inventoryproduct SET Quantity = Quantity + %s WHERE id = %s", (total_quantity_added, product_id))
+
         db.commit()
+
+        # End timing and record it
+        execution_time_ms = (time.time() - start_time) * 1000
+        record_stock_update_time(product_id, execution_time_ms)
 
         return {"message": "Stock added successfully", "ProductName": product[1], "TotalQuantityAdded": total_quantity_added}
 

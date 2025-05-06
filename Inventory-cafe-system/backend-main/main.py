@@ -6,6 +6,7 @@ import logging
 from fastapi.responses import FileResponse, RedirectResponse, JSONResponse
 import uvicorn
 from typing import List
+import time
 
 # Import routers
 from model.auth import AuthRouter
@@ -20,6 +21,7 @@ from model.sales import SalesRouter, start_background_task
 from model.reports import ReportRouter
 from model.categories import CategoryRouter
 from model.suppliers import SupplierRouter
+from model.performance_metrics import PerformanceMetricsRouter, record_response_time, record_request, record_error, init_performance_metrics
 from model.db import ensure_tables_exist, init_connection_pool, start_connection_pool_cleanup, test_connection, get_db, db_transaction
 
 # Setup logging
@@ -127,6 +129,7 @@ app.include_router(SalesRouter, prefix="/api/sales", tags=["Sales"])
 app.include_router(ReportRouter, prefix="/api/reports", tags=["Reports"])
 app.include_router(CreateOrderRouter, prefix="/api/orders", tags=["CreateOrders"])
 app.include_router(OrderSummaryRouter, prefix="/api/ordersummary", tags=["OrderSummary"])
+app.include_router(PerformanceMetricsRouter, tags=["Performance Metrics"])
 
 # Test database connection at startup
 @app.on_event("startup")
@@ -165,6 +168,13 @@ async def startup_event():
         start_connection_pool_cleanup()
     except Exception as e:
         logger.error(f"Error initializing database services: {e}")
+    
+    # Initialize performance metrics tracking
+    try:
+        logger.info("Initializing performance metrics tracking...")
+        init_performance_metrics()
+    except Exception as e:
+        logger.error(f"Error initializing performance metrics: {e}")
     
     logger.info("Inventory System API is ready")
     
@@ -214,27 +224,46 @@ async def profile_redirect(user_id: int):
 # Log all incoming requests
 @app.middleware("http")
 async def log_requests(request: Request, call_next):
-    """Log all incoming requests for debugging"""
+    """Log all incoming requests for debugging and collect performance metrics"""
+    start_time = time.time()
+    
+    # Record the request for metrics
+    record_request()
+    
     logger.info(f"Request: {request.method} {request.url}")
     # Log headers
     for header, value in request.headers.items():
         logger.info(f"Header: {header}: {value}")
     
-    # Process the request
-    response = await call_next(request)
-    
-    # Get the origin from the request
-    origin = request.headers.get("Origin", "*")
-    
-    # Add CORS headers to response
-    response.headers["Access-Control-Allow-Origin"] = origin
-    response.headers["Access-Control-Allow-Credentials"] = "true"
-    response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS"
-    response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization, Origin"
-    
-    # Log response status
-    logger.info(f"Response status: {response.status_code}")
-    return response
+    try:
+        # Process the request
+        response = await call_next(request)
+        
+        # Get the origin from the request
+        origin = request.headers.get("Origin", "*")
+        
+        # Add CORS headers to response
+        response.headers["Access-Control-Allow-Origin"] = origin
+        response.headers["Access-Control-Allow-Credentials"] = "true"
+        response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS"
+        response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization, Origin"
+        
+        # Log response status
+        logger.info(f"Response status: {response.status_code}")
+        
+        # Calculate response time and record the metric
+        response_time = (time.time() - start_time) * 1000  # Convert to milliseconds
+        endpoint = f"{request.method} {request.url.path}"
+        record_response_time(endpoint, response_time)
+        
+        return response
+    except Exception as e:
+        # Record error in metrics
+        endpoint = f"{request.method} {request.url.path}"
+        error_type = type(e).__name__
+        error_message = str(e)
+        record_error(error_type, endpoint, error_message)
+        raise
 
 # Global exception handler
 @app.exception_handler(Exception)
@@ -256,4 +285,5 @@ if __name__ == "__main__":
         os.makedirs("uploads/products", exist_ok=True)
     
     uvicorn.run("main:app", host="127.0.0.1", port=8001, reload=True)
+
 

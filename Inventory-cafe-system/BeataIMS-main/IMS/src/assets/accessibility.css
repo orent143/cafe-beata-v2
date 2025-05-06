@@ -1,0 +1,163 @@
+/* High Contrast Mode */
+body.high-contrast {
+    background-color: #000 !important;
+    color: #fff !important;
+  }
+  
+  body.high-contrast .card,
+  body.high-contrast .container,
+  body.high-contrast .dashboard-container,
+  body.high-contrast .sidebar,
+  body.high-contrast .table {
+    background-color: #222 !important;
+    color: #fff !important;
+    border-color: #555 !important;
+  }
+  
+  body.high-contrast input,
+  body.high-contrast select,
+  body.high-contrast textarea,
+  body.high-contrast button {
+    background-color: #333 !important;
+    color: #fff !important;
+    border: 1px solid #666 !important;
+  }
+  
+  body.high-contrast a,
+  body.high-contrast .btn-link {
+    color: #3f9bff !important;
+  }
+  
+  body.high-contrast .btn-primary {
+    background-color: #2a6fc9 !important;
+    color: #fff !important;
+  }
+  
+  body.high-contrast .table th {
+    background-color: #444 !important;
+    color: #fff !important;
+  }
+  
+  body.high-contrast .table td {
+    border-color: #444 !important;
+  }
+  
+  /* Font Size Adjustments */
+  body.font-small {
+    font-size: 14px !important;
+  }
+  
+  body.font-small h1 {
+    font-size: 1.8em !important;
+  }
+  
+  body.font-small h2 {
+    font-size: 1.5em !important;
+  }
+  
+  body.font-small h3 {
+    font-size: 1.3em !important;
+  }
+  
+  body.font-medium {
+    font-size: 16px !important;
+  }
+  
+  body.font-medium h1 {
+    font-size: 2em !important;
+  }
+  
+  body.font-medium h2 {
+    font-size: 1.7em !important;
+  }
+  
+  body.font-medium h3 {
+    font-size: 1.4em !important;
+  }
+  
+  body.font-large {
+    font-size: 18px !important;
+  }
+  
+  body.font-large h1 {
+    font-size: 2.2em !important;
+  }
+  
+  body.font-large h2 {
+    font-size: 1.9em !important;
+  }
+  
+  body.font-large h3 {
+    font-size: 1.6em !important;
+  }
+  
+  /* Screen Reader Mode */
+  body.screen-reader-mode *:focus {
+    outline: 3px solid #2196f3 !important;
+    outline-offset: 2px !important;
+  }
+  
+  body.screen-reader-mode button,
+  body.screen-reader-mode a,
+  body.screen-reader-mode input,
+  body.screen-reader-mode select {
+    transition: outline-offset .2s ease !important;
+  }
+  
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+  }
+  
+  /* Focus indicators for keyboard navigation */
+  body.screen-reader-mode a:focus,
+  body.screen-reader-mode button:focus,
+  body.screen-reader-mode input:focus,
+  body.screen-reader-mode select:focus,
+  body.screen-reader-mode textarea:focus {
+    box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.8) !important;
+  }
+  
+  /* Skip links for screen readers */
+  .skip-link {
+    position: absolute;
+    top: -40px;
+    left: 0;
+    background: #000;
+    color: white;
+    padding: 8px;
+    z-index: 100;
+    transition: top 0.3s;
+  }
+  
+  .skip-link:focus {
+    top: 0;
+  }
+  
+  /* ARIA-enhanced elements */
+  [role="button"],
+  [role="link"] {
+    cursor: pointer;
+  }
+  
+  [aria-disabled="true"] {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+  
+  /* Motion reduction for users who prefer reduced motion */
+  @media (prefers-reduced-motion: reduce) {
+    * {
+      animation-duration: 0.001ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.001ms !important;
+      scroll-behavior: auto !important;
+    }
+  } 

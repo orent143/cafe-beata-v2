@@ -3,6 +3,8 @@ from typing import List, Optional
 from pydantic import BaseModel
 from model.db import get_db
 import logging
+from model.performance_metrics import record_transaction_time  # Import the function
+import time
 
 CreateOrderRouter = APIRouter(tags=["CreateOrders"])
 
@@ -69,6 +71,9 @@ async def get_all_menu_items(request: Request, db=Depends(get_db)):
 async def create_order(order_data: CreateOrderRequest, db=Depends(get_db)):
     cursor = None
     try:
+        # Start timing the transaction
+        start_time = time.time()
+
         cursor = db.cursor()
 
         # Validate total amount
@@ -101,7 +106,7 @@ async def create_order(order_data: CreateOrderRequest, db=Depends(get_db)):
 
             total_items += quantity_requested
 
-        # ✅ Insert into `order_history`
+        # Insert into `order_history`
         cursor.execute(
             """
             INSERT INTO order_history (customer_name, created_at, total_amount, payment_method, total_items)
@@ -116,12 +121,12 @@ async def create_order(order_data: CreateOrderRequest, db=Depends(get_db)):
         )
         db.commit()
 
-        # ✅ Retrieve the new `history_id`
+        # Retrieve the new `history_id`
         cursor.execute("SELECT LAST_INSERT_ID(), created_at FROM order_history ORDER BY history_id DESC LIMIT 1")
         result = cursor.fetchone()
         history_id, created_at = result[0], result[1]
 
-        # ✅ Insert into `order_history_detail` and deduct stock
+        # Insert into `order_history_detail` and deduct stock
         for item in order_data.items:
             product_id = item["id"]
             quantity_sold = item["quantity"]
@@ -147,7 +152,7 @@ async def create_order(order_data: CreateOrderRequest, db=Depends(get_db)):
                 (history_id, product_id, product_name, quantity_sold, unit_price)
             )
 
-            # ✅ Deduct stock (FIFO for "Ready-Made" items)
+            # Deduct stock (FIFO for "Ready-Made" items)
             if process_type != "To Be Made":
                 remaining_quantity = quantity_sold
 
@@ -185,23 +190,23 @@ async def create_order(order_data: CreateOrderRequest, db=Depends(get_db)):
                         )
                         remaining_quantity = 0
 
-                    # ✅ Log the deduction in `inventory_transactions`
+                    # Log the deduction in `inventory_transactions`
                     cursor.execute(
                         """
                         INSERT INTO inventory_transactions 
                         (ProductID, product_name, transaction_type, quantity, created_at)
                         VALUES (%s, %s, %s, %s, NOW())
                         """,
-                        (product_id, product_name, "Deduct", quantity_sold)  # Added `ProductID`
+                        (product_id, product_name, "Deduct", quantity_sold)
                     )
 
-                # ✅ Update `inventoryproduct` table
+                # Update `inventoryproduct` table
                 cursor.execute(
                     "UPDATE inventoryproduct SET Quantity = Quantity - %s WHERE id = %s",
                     (quantity_sold, product_id)
                 )
 
-            # ✅ Update sales table
+            # Update sales table
             remitted_amount = unit_price * quantity_sold
             cursor.execute(
                 """
@@ -214,6 +219,10 @@ async def create_order(order_data: CreateOrderRequest, db=Depends(get_db)):
             )
 
         db.commit()
+
+        # End timing and record transaction time
+        execution_time_ms = (time.time() - start_time) * 1000
+        record_transaction_time("create_order", execution_time_ms)
 
         return {
             "message": "Order created successfully and moved to history",
