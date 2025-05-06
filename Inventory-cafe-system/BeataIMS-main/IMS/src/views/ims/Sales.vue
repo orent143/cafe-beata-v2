@@ -9,9 +9,9 @@
   <div class="app-container" :class="{ 'sidebar-collapsed': isSidebarCollapsed }">
     <div class="header-container">
       <div class="header-title">
-      <h1 class="sales-header">Sales Product</h1>
-      <p class="sub-description">Track daily product sales, review quantities sold, and monitor remittances for better performance insights.</p>
-    </div>
+        <h1 class="sales-header">Sales Product</h1>
+        <p class="sub-description">Track daily product sales, review quantities sold, and monitor remittances for better performance insights.</p>
+      </div>
       <div class="header-actions">
         <div class="filter-container">
           <button class="filter-btn" @click="toggleFilterDropdown">
@@ -27,6 +27,9 @@
             />
           </div>
         </div>
+        <button class="add-quantity-btn" @click="openAddQuantityModal">
+           Add Quantity
+        </button>
       </div>
     </div>
 
@@ -43,8 +46,8 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="sale in salesData" :key="sale.name">
-              <td>{{ sale.name }}</td>
+            <tr v-for="sale in salesData" :key="sale.product_id">
+              <td>{{ sale.name }}</td>              
               <td>{{ sale.quantity }}</td>
               <td>₱{{ sale.unit_price.toFixed(2) }}</td>
               <td>{{ sale.items_sold }}</td>
@@ -69,6 +72,84 @@
         <p>Loading sales data...</p>
       </div>
     </div>
+    
+    <!-- Add Quantity Modal -->
+    <!-- Add Quantity Modal -->
+<div v-if="showAddQuantityModal" class="modal-overlay">
+  <div class="modal-content">
+    <h3>Add Beginning Quantity</h3>
+
+    <div class="modal-form-group">
+      <label for="productInput">Product</label>
+      <!-- Input field for product name -->
+      <input 
+        type="text" 
+        id="productInput" 
+        v-model="selectedProductName"
+        class="modal-input" 
+        placeholder="Enter product name"
+        @input="filterProductByName"
+      />
+      <div class="filtered-products-list">
+  <li 
+    v-for="product in filteredProducts" 
+    :key="product.product_id"
+    @click="selectProduct(product)"
+  >
+    {{ product.name }}
+  </li>
+</div>
+
+    </div>
+
+    <div class="modal-form-group">
+      <label for="quantityInput">Quantity</label>
+      <input
+        type="number"
+        id="quantityInput"
+        v-model.number="modalQuantity"
+        min="0"
+        class="modal-input"
+        placeholder="Enter quantity"
+      />
+    </div>
+
+    <div class="modal-form-group">
+      <label for="dateInput">Date</label>
+      <input
+        type="date"
+        id="dateInput"
+        v-model="modalDate"
+        class="modal-input"
+      />
+    </div>
+
+    <div class="modal-actions">
+      <button class="cancel-btn" @click="closeAddQuantityModal">Cancel</button>
+      <button class="confirm-btn" @click="confirmAddQuantity">Confirm</button>
+    </div>
+  </div>
+</div>
+
+    
+    <!-- Confirmation Modal -->
+    <div v-if="showConfirmationModal" class="modal-overlay">
+      <div class="modal-content confirmation-modal">
+        <h3>Confirm Update</h3>
+        <p>Are you sure you want to update the beginning quantity?</p>
+        
+        <div class="confirmation-details">
+          <p><strong>Product:</strong> {{ selectedProductName }}</p>
+          <p><strong>Quantity:</strong> {{ modalQuantity }}</p>
+          <p><strong>Date:</strong> {{ modalDate }}</p>
+        </div>
+        
+        <div class="modal-actions">
+          <button class="confirm-btn" @click="submitQuantityUpdate">Yes, Update</button>
+          <button class="cancel-btn" @click="closeConfirmationModal">Cancel</button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -85,10 +166,20 @@ export default {
     return {
       isSidebarCollapsed: false,
       salesData: [],
+      filteredProducts: [],  
       showFilterDropdown: false,
-      selectedDate: '', // Date filter
+      selectedDate: new Date().toISOString().slice(0, 10), // Default to today
       toast: useToast(),
       searchTerm: '',
+      
+      // Add Quantity Modal
+      showAddQuantityModal: false,
+      selectedProductName: '',
+      modalQuantity: '',
+      modalDate: new Date().toISOString().slice(0, 10), // Default to today
+      
+      // Confirmation Modal
+      showConfirmationModal: false
     };
   },
   computed: {
@@ -103,52 +194,34 @@ export default {
     handleSidebarToggle(collapsed) {
       this.isSidebarCollapsed = collapsed;
     },
+    
     async fetchSalesData() {
       try {
-        const params = this.selectedDate ? { filter_date: this.selectedDate } : {}; // Include date filter if selected
+        const params = this.selectedDate ? { filter_date: this.selectedDate } : {};
         const response = await axios.get(`${SALES_API}/sales`, { params });
         this.salesData = response.data;
+
+        console.log("Sales data:", this.salesData);
+        console.log("Fetched Sales Data:", this.salesData);
       } catch (error) {
         console.error("Error fetching sales data:", error);
         this.toast.error("Failed to fetch sales data. Please try again.");
       }
     },
-    async updateSales(productId, quantitySold, remitted) {
-      try {
-        const response = await axios.post(`${SALES_API}/update`, {
-          product_id: productId,
-          quantity_sold: quantitySold,
-          remitted: remitted
-        });
-
-        console.log(response.data.message);
-        this.toast.success("Sales data updated successfully!");
-      } catch (error) {
-        console.error("Error updating sales:", error.response?.data?.detail || "Unknown error");
-        this.toast.error(error.response?.data?.detail || "Failed to update sales");
-      }
-    },
+    
     toggleFilterDropdown() {
       this.showFilterDropdown = !this.showFilterDropdown;
     },
+    
     filterSalesData() {
-      // If no search term, just return the original data
       if (!this.searchTerm) {
         return;
       }
       
-      // Create a filtered copy of the sales data
       const searchLower = this.searchTerm.toLowerCase();
-      const filteredData = this.salesData.filter(sale => 
-        sale.name.toLowerCase().includes(searchLower)
-      );
-      
-      // Update the table display with filtered data
-      // We're not actually changing this.salesData to preserve the original data
       this.$nextTick(() => {
         const tableElement = document.querySelector('.sales-table tbody');
         if (tableElement) {
-          // Hide rows that don't match the search
           const rows = tableElement.querySelectorAll('tr');
           rows.forEach(row => {
             const nameCell = row.querySelector('td:first-child');
@@ -160,6 +233,113 @@ export default {
         }
       });
     },
+
+    openAddQuantityModal() {
+  this.fetchSalesData(); // ensure updated list
+  this.selectedProductName = '';
+  this.selectedProductId = '';
+  this.modalQuantity = '';
+  this.modalDate = this.selectedDate || new Date().toISOString().slice(0, 10);
+  
+  // If no sales data is available, show a message
+  if (this.salesData.length === 0) {
+    this.toast.error("No sales data available. Please try again later.");
+  }
+  
+  this.showAddQuantityModal = true;
+},
+    
+    closeAddQuantityModal() {
+      this.showAddQuantityModal = false;
+    },
+    
+    // Filter Product by Name as user types
+    filterProductByName() {
+  // Filter sales data based on product name
+  this.filteredProducts = this.salesData.filter(product => 
+    product.name.toLowerCase().includes(this.selectedProductName.toLowerCase())
+  );
+},
+
+    selectProduct(product) {
+  this.selectedProductName = product.name;
+  if (!this.selectedProductName) {
+  this.toast.error("Please select a product");
+  return;
+}
+  console.log("Selected Product ID: ", this.selectedProductId);  // Debugging line
+  console.log("Selected Product Name: ", this.selectedProductName);  // Debugging line
+  this.filteredProducts = [];  // Clear filtered list after selection
+},
+
+confirmAddQuantity() {
+  console.log({
+    selectedProductName: this.selectedProductName,
+    modalQuantity: this.modalQuantity,
+    modalDate: this.modalDate
+  });
+
+  if (!this.selectedProductName) {
+    this.toast.error("Please select a product");
+    return;
+  }
+
+  if (!this.modalQuantity || this.modalQuantity < 0) {
+    this.toast.error("Please enter a valid quantity");
+    return;
+  }
+
+  if (!this.modalDate) {
+    this.toast.error("Please select a date");
+    return;
+  }
+
+  // Proceed with the update or submission of the quantity
+  this.showConfirmationModal = true;
+},
+    
+    // Confirmation Modal Methods
+    closeConfirmationModal() {
+      this.showConfirmationModal = false;
+    },
+    
+    async submitQuantityUpdate() {
+  try {
+    // Make sure all the required fields are populated
+    if (!this.selectedProductName) {
+  this.toast.error("Please select a product");
+  return;
+}
+
+    if (!this.modalQuantity || this.modalQuantity < 0) {
+      this.toast.error("Please enter a valid quantity");
+      return;
+    }
+
+    if (!this.modalDate) {
+      this.toast.error("Please select a date");
+      return;
+    }
+
+    // Send a PUT request to the backend
+    const response = await axios.put(`${SALES_API}/inventory/beginning-quantity`, {
+  product_name: this.selectedProductName,
+  quantity: this.modalQuantity,
+  date: this.modalDate
+});
+
+    // Handle the response
+    this.toast.success("Beginning quantity updated successfully");
+    this.closeConfirmationModal();
+    this.closeAddQuantityModal();
+    this.fetchSalesData(); // Refresh the sales data after update
+  } catch (error) {
+    console.error("Error updating beginning quantity:", error.response?.data?.detail || error);
+    this.toast.error("Failed to update beginning quantity");
+    this.closeConfirmationModal();
+  }
+}
+
   },
   mounted() {
     this.fetchSalesData(); // Initial fetch on page load
@@ -167,8 +347,9 @@ export default {
 };
 </script>
 
+
 <style scoped>
-/* Add any relevant styles for your table and layout here */
+/* Base styles from original component */
 .loading {
   text-align: center;
   margin-top: 20px;
@@ -193,23 +374,27 @@ export default {
   margin-left: 18px;
   width: 95%;
 }
+
 .header-title {
   display: flex;
   flex-direction: column;
-  width: 95%;
+  width: 70%; /* Reduced to make room for buttons */
 }
+
 .sales-header {
   color: #333;
   font-size: 30px;
   font-family: 'Arial', sans-serif;
   font-weight: 900;
 }
+
 .sub-description {
   font-size: 14px;
   color: #666;
   margin-top: -10px;
   margin-bottom: 15px;
 }
+
 .header-actions {
   display: flex;
   align-items: center;
@@ -247,31 +432,6 @@ export default {
   color: #343a40;
 }
 
-.search-container {
-  position: relative;
-  margin-right: 3px;
-}
-
-.search-icon {
-  position: absolute;
-  right: 10px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: #333;
-  pointer-events: none;
-}
-
-.search-bar {
-  padding: 8px 30px 8px 8px;
-  border: 1px solid #94949400;
-  border-radius: 10px;
-  width: 130px;
-  font-size: 14px;
-  font-weight: bold;
-  color: #333;
-  background-color: #D9D9D9;
-}
-
 .filter-btn {
   padding: 10px;
   background-color: white;
@@ -289,10 +449,12 @@ export default {
 .filter-btn i {
   font-size: 18px;
 }
+
 .filter-btn:hover {
   border-color: #E54F70;
   color: #E54F70;
 }
+
 .filter-container {
   position: relative;
 }
@@ -342,41 +504,151 @@ export default {
   margin-right: 5px;
 }
 
-.add-to-reports-btn {
-  width: 35px;
-  height: 35px;
-  background-color: #4CAF50;
-  color: #0000009d;
+/* Add Quantity Button */
+.add-quantity-btn {
+  padding: 10px;
+  background-color: #E54F70;
+      border: 1px solid #ccc;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+    color: white;
+    transition: color 0.3s;
+    display: flex
+;
+    align-items: center;
+    gap: 8px;
+}
+
+.add-quantity-btn:hover {
+  background-color: #752939;
+}
+
+.add-quantity-btn i {
+  font-size: 14px;
+}
+
+/* Modal Styles */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background-color: white;
+  padding: 25px;
+  border-radius: 10px;
+  width: 400px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.modal-content h3 {
+  font-size: 25px;
+    font-family: 'Arial', sans-serif;
+    font-weight: 1000;
+    color: #000000;
+}
+
+.modal-form-group {
+  margin-bottom: 15px;
+}
+
+.modal-form-group label {
+  font-weight: 600;
+    font-size: 14px;
+    margin-bottom: 5px;
+    display: block;
+    color: #272727;
+}
+
+.modal-input {
+  width: 100%;
+  padding: 10px;
+  font-size: 16px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  box-sizing: border-box;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 20px;
+}
+
+.modal-actions button {
+  padding: 10px 20px;
+  background-color: #E54F70;
+  color: #dbdbdb;
   border: none;
-  border-radius: 50%;
-  font-size: 19px;
+  border-radius: 10px;
+  font-size: 14px;
   font-weight: bold;
   cursor: pointer;
-  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
-  display: flex;
-  align-items: center; /* Center vertically */
-  justify-content: center; /* Center horizontally */
-  position: fixed; /* Fixed position */
-  bottom: 20px; /* Distance from the bottom */
-  right: 20px; /* Distance from the right */
-  z-index: 10;
+  transition: background-color 0.3s;
 }
 
-.add-to-reports-btn:hover {
-  background-color: #218838; /* Darker green on hover */
+
+.confirm-btn:hover {
+  background-color: #a33950;
 }
 
-.selected {
-  background-color: #e3f2fd;
+.cancel-btn {
+  background-color: #f44336;
+  color: white;
 }
 
-tr {
+.cancel-btn:hover {
+  background-color: #d32f2f;
+}
+
+/* Confirmation Modal */
+.confirmation-modal {
+  text-align: center;
+}
+
+.confirmation-details {
+  margin: 20px 0;
+  text-align: left;
+  padding: 15px;
+  background-color: #f9f9f9;
+  border-radius: 5px;
+}
+
+.confirmation-details p {
+  margin: 10px 0;
+}
+
+.confirmation-details strong {
+  display: inline-block;
+  width: 80px;
+}
+.filtered-products-list {
+  max-height: 120px; /* Adjust as needed */
+  overflow-y: auto;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  margin-top: 5px;
+  padding: 5px;
+  background-color: #fff;
+}
+
+.filtered-products-list li {
+  padding: 6px;
   cursor: pointer;
+  list-style-type: none;
 }
 
-input[type="checkbox"] {
-  cursor: pointer;
-  width: 100%;
-  height: 16px;
+.filtered-products-list li:hover {
+  background-color: #f0f0f0;
 }
+
 </style>

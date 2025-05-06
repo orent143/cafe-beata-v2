@@ -22,8 +22,7 @@
           </button>
         </div>
         <button @click="toggleTransactionLog" class="transaction-log-btn">
-          <i class="pi pi-history"></i>
-          Transaction Log
+          View Logs
         </button>
       </div>
     </div>
@@ -433,20 +432,21 @@ export default {
   
   
   .filter-btn {
-    padding: 8px 12px;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 14px;
-    color: #333;
-    transition: all 0.3s;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    background: white;
-    min-width: 150px;
-    justify-content: space-between;
-  }
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 14px;
+  color: #333;
+  transition: all 0.3s;
+  display: flex;
+  text-align: center;
+  align-items: center;
+  gap: 8px;
+  background: white;
+  min-width: 150px;
+  justify-content: center; /* Center contents horizontally */
+}
+
 
   .filter-container {
     position: relative;
@@ -459,6 +459,7 @@ export default {
     font-size: 14px;
     color: #666;
     font-weight: 500;
+    text-align: center;
   }
 
   .action-btn {
@@ -618,17 +619,19 @@ export default {
     font-weight: 500;
   }
   .transaction-log-btn {
-    padding: 8px 16px;
-    background-color: #fff;
-    color: #333;
+    padding: 8px 12px;
     border: 1px solid #ddd;
     border-radius: 5px;
     cursor: pointer;
     font-size: 14px;
-    display: flex;
+    color: #333;
+    transition: all 0.3s;
+    display: flex
+;
     align-items: center;
     gap: 8px;
-    transition: all 0.3s;
+    background: white;
+    justify-content: space-between;
   }
   
   .transaction-log-btn:hover {

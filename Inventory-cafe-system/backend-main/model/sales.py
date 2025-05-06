@@ -24,6 +24,11 @@ class SalesResponse(BaseModel):
     remitted: float
     image_url: str  # Include image URL
 
+class BeginningQuantityUpdate(BaseModel):
+    product_name: str  
+    quantity: int
+    date: Optional[str] = None  # Defaults to today if not provided
+
 class CategorySalesDetail(BaseModel):
     product_id: int
     product_name: str
@@ -145,42 +150,38 @@ def ensure_daily_snapshot(db, target_date):
 async def get_sales_data(db=Depends(get_db)):
     try:
         cursor = db.cursor(dictionary=True)
-        today = datetime.now().date()  # Get today's date
+        today = datetime.now().date()
 
-        # Fetch and aggregate sales per product for today, including beginning_quantity from stock_details
         cursor.execute("""
-            SELECT 
-                ip.ProductName, ip.Quantity, ip.UnitPrice, ip.Image,
+            SELECT
+                ip.id AS id,  
+                ip.ProductName, ip.UnitPrice, ip.Image,
                 COALESCE(SUM(s.quantity_sold), 0) AS total_items_sold, 
                 COALESCE(SUM(s.remitted), 0) AS total_remitted,
-                ip.ProcessType,
                 (
                     SELECT COALESCE(SUM(sd.original_quantity), 0)
                     FROM stock_details sd
-                    WHERE sd.ProductID = ip.id
-                    AND DATE(sd.created_at) = %s
+                    WHERE sd.ProductID = ip.id AND DATE(sd.created_at) = %s
                 ) AS beginning_quantity
             FROM inventoryproduct ip
             LEFT JOIN sales s ON ip.id = s.product_id AND DATE(s.created_at) = %s  
-            GROUP BY ip.id, ip.ProductName, ip.Quantity, ip.UnitPrice, ip.Image, ip.ProcessType
+            GROUP BY ip.id, ip.ProductName, ip.UnitPrice, ip.Image
             ORDER BY ip.id ASC
         """, (today, today))
 
         sales_data = cursor.fetchall()
         cursor.close()
 
-        if not sales_data:
-            return []
-
         return [
             {
+                "product_id": row["id"],  # Changed from "id" to "product_id"
                 "name": row["ProductName"],
-                "quantity": row["beginning_quantity"] if row["ProcessType"].lower() == "ready-made" else row["Quantity"],
+                "quantity": row["beginning_quantity"],
                 "unit_price": float(row["UnitPrice"]),
                 "items_sold": row["total_items_sold"],
                 "remitted": float(row["total_remitted"]),
-                "image_url": row["Image"] if row["Image"] else "",
-                "beginning_quantity": row["beginning_quantity"] if row["ProcessType"].lower() == "ready-made" else 0
+                "image_url": row["Image"] or "",
+                "beginning_quantity": row["beginning_quantity"]
             }
             for row in sales_data
         ]
@@ -189,13 +190,82 @@ async def get_sales_data(db=Depends(get_db)):
         logger.error(f"Error getting sales data: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Internal Server Error: {str(e)}")
 
+@SalesRouter.put("/inventory/beginning-quantity")
+async def update_beginning_quantity(data: BeginningQuantityUpdate, db=Depends(get_db)):
+    logger.info(f"Received product_name: {data.product_name}, quantity: {data.quantity}, date: {data.date}")
+
+    try:
+        cursor = db.cursor(dictionary=True)
+
+        # Determine the target date
+        target_date = datetime.now().date()
+        if data.date:
+            try:
+                target_date = datetime.strptime(data.date, '%Y-%m-%d').date()
+            except ValueError:
+                raise HTTPException(status_code=400, detail="Invalid date format. Use YYYY-MM-DD")
+
+        # Fetch product ID by product_name
+        cursor.execute("""
+            SELECT id FROM inventoryproduct WHERE ProductName = %s
+        """, (data.product_name,))
+        product = cursor.fetchone()
+
+        if not product:
+            raise HTTPException(status_code=404, detail="Product not found by name")
+
+        product_id = product["id"]
+
+        # Check if an entry already exists for the product and date
+        cursor.execute("""
+            SELECT id FROM stock_details
+            WHERE ProductID = %s AND DATE(created_at) = %s
+        """, (product_id, target_date))
+        existing = cursor.fetchone()
+
+        if existing:
+            cursor.execute("""
+                UPDATE stock_details
+                SET original_quantity = %s
+                WHERE id = %s
+            """, (data.quantity, existing["id"]))
+        else:
+            cursor.execute("""
+                INSERT INTO stock_details (ProductID, original_quantity, created_at)
+                VALUES (%s, %s, %s)
+            """, (product_id, data.quantity, target_date))
+
+        db.commit()
+
+        # Fetch product details (name, unit price, image)
+        cursor.execute("""
+            SELECT ProductName, UnitPrice, Image
+            FROM inventoryproduct
+            WHERE id = %s
+        """, (product_id,))
+        product_details = cursor.fetchone()
+
+        cursor.close()
+
+        return {
+            "message": "Beginning quantity updated successfully",
+            "product_name": product_details["ProductName"],
+            "quantity": data.quantity,
+            "unit_price": float(product_details["UnitPrice"]),
+            "image_url": product_details["Image"] or "",
+            "date": target_date.strftime('%Y-%m-%d')
+        }
+
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Error updating beginning quantity: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Internal Server Error: {str(e)}")
 
 @SalesRouter.get("/sales/daily", response_model=List[SalesResponse])
 async def get_daily_sales_data(date: Optional[str] = None, db=Depends(get_db)):
     try:
         cursor = db.cursor(dictionary=True)
-        
-        # Parse the date or use today's date
+
         target_date = datetime.now().date()
         if date:
             try:
@@ -203,46 +273,36 @@ async def get_daily_sales_data(date: Optional[str] = None, db=Depends(get_db)):
             except ValueError:
                 raise HTTPException(status_code=400, detail="Invalid date format. Use YYYY-MM-DD")
 
-        # Fetch and aggregate sales per product for the specific date including original_quantity
         cursor.execute("""
             SELECT 
-                ip.id,
-                ip.ProductName,
-                ip.Quantity,
-                ip.UnitPrice,
-                ip.Image,
-                ip.ProcessType,
-                COALESCE(SUM(s.quantity_sold), 0) AS total_items_sold, 
+                ip.id, ip.ProductName, ip.UnitPrice, ip.Image,
+                COALESCE(SUM(s.quantity_sold), 0) AS total_items_sold,
                 COALESCE(SUM(s.remitted), 0) AS total_remitted,
                 MAX(s.created_at) AS created_at,
                 (
                     SELECT COALESCE(SUM(sd.original_quantity), 0)
                     FROM stock_details sd
-                    WHERE sd.ProductID = ip.id
-                    AND DATE(sd.created_at) = %s
+                    WHERE sd.ProductID = ip.id AND DATE(sd.created_at) = %s
                 ) AS beginning_quantity
             FROM inventoryproduct ip
-            LEFT JOIN sales s ON ip.id = s.product_id AND DATE(s.created_at) = %s  
-            GROUP BY ip.id, ip.ProductName, ip.Quantity, ip.UnitPrice, ip.Image, ip.ProcessType
+            LEFT JOIN sales s ON ip.id = s.product_id AND DATE(s.created_at) = %s
+            GROUP BY ip.id, ip.ProductName, ip.UnitPrice, ip.Image
             ORDER BY created_at DESC
         """, (target_date, target_date))
 
         sales_data = cursor.fetchall()
         cursor.close()
 
-        if not sales_data:
-            return []  
-
         return [
             {
                 "name": row["ProductName"],
-                "quantity": row["beginning_quantity"] if row["ProcessType"].lower() == "ready-made" else row["Quantity"],
+                "quantity": row["beginning_quantity"],
                 "unit_price": float(row["UnitPrice"]),
                 "items_sold": row["total_items_sold"],
                 "remitted": float(row["total_remitted"]),
-                "image_url": row["Image"] if row["Image"] else "",
+                "image_url": row["Image"] or "",
                 "created_at": row["created_at"].isoformat() if row["created_at"] else None,
-                "beginning_quantity": row["beginning_quantity"] if row["ProcessType"].lower() == "ready-made" else 0
+                "beginning_quantity": row["beginning_quantity"]
             }
             for row in sales_data
         ]
@@ -259,21 +319,15 @@ async def get_sales_by_category(
     try:
         cursor = db.cursor(dictionary=True)
 
-        # Use provided date or default to today
         target_date = datetime.now().date()
         if date:
             try:
                 target_date = datetime.strptime(date, '%Y-%m-%d').date()
             except ValueError:
-                raise HTTPException(
-                    status_code=400,
-                    detail="Invalid date format. Use YYYY-MM-DD"
-                )
+                raise HTTPException(status_code=400, detail="Invalid date format. Use YYYY-MM-DD")
 
-        # Ensure we have a snapshot for the requested date
         ensure_daily_snapshot(db, target_date)
 
-        # Execute sales report query
         cursor.execute("""
             SELECT 
                 c.CategoryName,
@@ -281,39 +335,26 @@ async def get_sales_by_category(
                 ip.id AS product_id,
                 ip.ProductName,
                 ip.UnitPrice,
-                ip.ProcessType,
-                dis.beginning_quantity,
-                dis.additions,
+                (
+                    SELECT COALESCE(SUM(sd.original_quantity), 0)
+                    FROM stock_details sd
+                    WHERE sd.ProductID = ip.id AND DATE(sd.created_at) = %s
+                ) AS beginning_quantity,
                 COALESCE(SUM(s.quantity_sold), 0) AS quantity_sold,
                 COALESCE(SUM(s.remitted), 0) AS total_amount
             FROM categories c
             LEFT JOIN inventoryproduct ip ON c.id = ip.`CategoryID (FK)`
-            LEFT JOIN sales s ON ip.id = s.product_id 
-                AND DATE(s.created_at) = %s
-            LEFT JOIN daily_inventory_snapshot dis ON ip.id = dis.product_id 
-                AND dis.snapshot_date = %s
-            GROUP BY 
-                c.id, 
-                c.CategoryName,
-                ip.id,
-                ip.ProductName,
-                ip.UnitPrice,
-                ip.ProcessType,
-                dis.beginning_quantity,
-                dis.additions
-            ORDER BY 
-                c.CategoryName,
-                ip.ProductName
+            LEFT JOIN sales s ON ip.id = s.product_id AND DATE(s.created_at) = %s
+            GROUP BY c.id, c.CategoryName, ip.id, ip.ProductName, ip.UnitPrice
+            ORDER BY c.CategoryName, ip.ProductName
         """, (target_date, target_date))
 
         sales_data = cursor.fetchall()
 
-        # Initialize totals
         overall_total = 0
         overall_items = 0
         categories_dict = {}
 
-        # Process sales rows into structured output
         for row in sales_data:
             category_name = row['CategoryName']
 
@@ -332,7 +373,7 @@ async def get_sales_by_category(
                     "unit_price": row['UnitPrice'],
                     "quantity_sold": row['quantity_sold'],
                     "total_amount": row['total_amount'],
-                    "beginning_quantity": row['beginning_quantity'] + row['additions']
+                    "beginning_quantity": row['beginning_quantity']
                 }
 
                 categories_dict[category_name]['products'].append(product_detail)
@@ -341,7 +382,6 @@ async def get_sales_by_category(
                 overall_total += row['total_amount']
                 overall_items += row['quantity_sold']
 
-        # Build and sort category list
         categories_list = sorted([
             {
                 "category_name": cat['category_name'],
@@ -361,10 +401,7 @@ async def get_sales_by_category(
 
     except Exception as e:
         logger.error(f"Error getting sales by category: {str(e)}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Internal Server Error: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Internal Server Error: {str(e)}")
     finally:
         if cursor:
             cursor.close()
